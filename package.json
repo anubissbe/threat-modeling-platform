@@ -3,19 +3,43 @@
   "version": "0.1.0",
   "description": "Enterprise-grade threat modeling platform supporting multiple methodologies",
   "private": true,
+  "workspaces": [
+    "backend/services/*",
+    "backend/shared",
+    "frontend"
+  ],
   "scripts": {
-    "test": "echo \"No tests implemented yet\" && exit 0",
-    "test:unit": "echo \"No unit tests implemented yet\" && exit 0",
-    "test:integration": "echo \"No integration tests implemented yet\" && exit 0",
-    "test:coverage": "echo \"No coverage implemented yet\" && exit 0",
-    "lint": "echo \"No linting configured yet\" && exit 0",
-    "typecheck": "echo \"No TypeScript configured yet\" && exit 0",
-    "format:check": "echo \"No formatting configured yet\" && exit 0",
-    "typecheck:strict": "echo \"No TypeScript configured yet\" && exit 0",
-    "build": "echo \"No build configured yet\" && exit 0",
-    "size": "echo \"No size check configured yet\" && exit 0",
-    "docs:generate": "echo \"No docs generation configured yet\" && exit 0",
-    "docs:coverage": "echo \"No docs coverage configured yet\" && exit 0"
+    "build": "npm run build --workspaces",
+    "build:backend": "npm run build --workspace=backend/services/* --workspace=backend/shared",
+    "build:frontend": "npm run build --workspace=frontend",
+    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "dev:backend": "npm run dev --workspace=backend/services/auth --workspace=backend/services/core",
+    "dev:frontend": "npm run dev --workspace=frontend",
+    "test": "npm run test --workspaces",
+    "test:unit": "npm run test --workspaces",
+    "test:integration": "npm run test:integration --workspaces",
+    "test:coverage": "npm run test:coverage --workspaces",
+    "lint": "npm run lint --workspaces",
+    "lint:fix": "npm run lint:fix --workspaces",
+    "typecheck": "npm run typecheck --workspaces",
+    "format:check": "npm run format:check --workspaces",
+    "typecheck:strict": "npm run typecheck --workspaces",
+    "size": "npm run size --workspaces",
+    "docs:generate": "npm run docs:generate --workspaces",
+    "docs:coverage": "npm run docs:coverage --workspaces",
+    "install:all": "npm install && npm install --workspaces",
+    "clean": "npm run clean --workspaces && rm -rf node_modules",
+    "docker:build": "docker-compose build",
+    "docker:up": "docker-compose up -d",
+    "docker:down": "docker-compose down",
+    "docker:logs": "docker-compose logs -f"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2",
+    "typescript": "^5.3.0",
+    "@types/node": "^20.10.0",
+    "prettier": "^3.1.0",
+    "eslint": "^8.54.0"
   },
   "repository": {
     "type": "git",
@@ -28,7 +52,10 @@
     "PASTA",
     "LINDDUN",
     "DREAD",
-    "cybersecurity"
+    "cybersecurity",
+    "microservices",
+    "typescript",
+    "react"
   ],
   "author": "Threat Modeling Platform Team",
   "license": "MIT",
@@ -36,6 +63,8 @@
     "url": "https://github.com/anubissbe/threat-modeling-platform/issues"
   },
   "homepage": "https://github.com/anubissbe/threat-modeling-platform#readme",
-  "devDependencies": {},
-  "dependencies": {}
+  "engines": {
+    "node": ">=20.0.0",
+    "npm": ">=10.0.0"
+  }
 }
