@@ -13,6 +13,46 @@
 
 An enterprise-grade threat modeling platform that democratizes security analysis by supporting multiple methodologies (STRIDE, PASTA, LINDDUN, VAST, DREAD) with AI-powered features. This platform transforms threat modeling from a manual, expert-driven process into an accessible, automated workflow integrated with modern DevSecOps practices.
 
+## 📊 Project Status
+
+### Current Phase: Architecture & Design ✅
+
+| Phase | Status | Progress | Description |
+|-------|--------|----------|-------------|
+| **Phase 1: Architecture & Design** | ✅ Complete | 100% | System architecture, database design, API specifications |
+| **Phase 2: Core Backend Development** | 🚧 In Progress | 0% | Auth service, core business logic, database setup |
+| **Phase 3: AI/ML Features** | 📅 Planned | 0% | Threat prediction, NLP analysis, risk scoring |
+| **Phase 4: Frontend Development** | 📅 Planned | 0% | React UI, DFD editor, real-time collaboration |
+| **Phase 5: Integration & Testing** | 📅 Planned | 0% | External integrations, comprehensive testing |
+| **Phase 6: Deployment & Launch** | 📅 Planned | 0% | Production deployment, documentation, training |
+
+### Recent Achievements 🎯
+
+- ✅ **System Architecture**: Comprehensive microservices design with 12 services
+- ✅ **Database Design**: PostgreSQL schema supporting 5+ methodologies
+- ✅ **API Design**: Complete REST (OpenAPI) and GraphQL specifications
+- ✅ **Development Environment**: Docker Compose setup with all services
+- ✅ **Repository Setup**: Professional standards, CI/CD, documentation
+
+### Next Milestones 🎯
+
+- [ ] Initialize TypeScript project structure for microservices
+- [ ] Implement JWT authentication with SSO support
+- [ ] Create core threat modeling engine
+- [ ] Develop RESTful API endpoints
+- [ ] Build React frontend foundation
+
+### 📈 Development Metrics
+
+| Metric | Value |
+|--------|-------|
+| **Total Commits** | 2 |
+| **Contributors** | 1 |
+| **Code Coverage** | 0% (pending implementation) |
+| **Technical Debt** | 0% |
+| **Open Issues** | 0 |
+| **Documentation** | 90% |
+
 ### 🎯 Key Features
 
 - **Multi-Methodology Support**: STRIDE, PASTA, LINDDUN, VAST, DREAD, OCTAVE, and custom methodologies
@@ -299,12 +339,45 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - MITRE for ATT&CK framework
 - The open-source community for amazing tools and libraries
 
+## 🗺️ Roadmap
+
+### Q3 2025 - Foundation
+- [x] Architecture design and planning
+- [ ] Core microservices implementation
+- [ ] Basic authentication system
+- [ ] Initial threat modeling engine
+
+### Q4 2025 - Core Features
+- [ ] Multi-methodology support
+- [ ] DFD editor implementation
+- [ ] Basic AI threat suggestions
+- [ ] Initial reporting capabilities
+
+### Q1 2026 - Advanced Features
+- [ ] Advanced AI/ML capabilities
+- [ ] Real-time collaboration
+- [ ] Enterprise integrations
+- [ ] Compliance reporting
+
+### Q2 2026 - Production Ready
+- [ ] Performance optimization
+- [ ] Security hardening
+- [ ] Complete documentation
+- [ ] Enterprise deployment guides
+
+## 📈 Progress Tracking
+
+Track our progress and contribute:
+- **Project Board**: [GitHub Projects](https://github.com/anubissbe/threat-modeling-platform/projects)
+- **Milestones**: [View Milestones](https://github.com/anubissbe/threat-modeling-platform/milestones)
+- **Issues**: [Open Issues](https://github.com/anubissbe/threat-modeling-platform/issues)
+
 ## 📞 Support
 
-- 📧 Email: support@threatmodeling.io
-- 💬 Discord: [Join our community](https://discord.gg/threatmodeling)
-- 📖 Documentation: [docs.threatmodeling.io](https://docs.threatmodeling.io)
-- 🐛 Issues: [GitHub Issues](https://github.com/anubissbe/threat-modeling-platform/issues)
+- 🐛 **Issues**: [GitHub Issues](https://github.com/anubissbe/threat-modeling-platform/issues)
+- 💬 **Discussions**: [GitHub Discussions](https://github.com/anubissbe/threat-modeling-platform/discussions)
+- 📧 **Email**: support@threatmodeling.io
+- 📖 **Wiki**: [GitHub Wiki](https://github.com/anubissbe/threat-modeling-platform/wiki)
 
 ---
 
