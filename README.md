@@ -9,6 +9,8 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.x-blue.svg)](https://www.typescriptlang.org/)
 [![React](https://img.shields.io/badge/React-18.x-61dafb.svg)](https://reactjs.org/)
 
+<a href="https://www.buymeacoffee.com/anubissbe" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" height="41" width="174"></a>
+
 ## 🚀 Overview
 
 An enterprise-grade threat modeling platform that democratizes security analysis by supporting multiple methodologies (STRIDE, PASTA, LINDDUN, VAST, DREAD) with AI-powered features. This platform transforms threat modeling from a manual, expert-driven process into an accessible, automated workflow integrated with modern DevSecOps practices.
