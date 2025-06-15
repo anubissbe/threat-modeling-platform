@@ -1,0 +1,137 @@
+{
+  "project": "threat-modeling-app",
+  "lastUpdated": "2025-06-12T17:40:00Z",
+  "phases": {
+    "phase2": {
+      "name": "Architecture & Design",
+      "status": "in_progress",
+      "tasks": [
+        {
+          "id": "task-001",
+          "title": "Create detailed system architecture diagram",
+          "description": "Design and create a comprehensive system architecture diagram for the threat modeling application",
+          "status": "in_progress",
+          "priority": "high",
+          "phase": "Phase 2",
+          "startedAt": "2025-06-12T17:40:00Z",
+          "dependencies": [],
+          "assignee": null,
+          "tags": ["architecture", "design", "documentation"]
+        },
+        {
+          "id": "task-002",
+          "title": "Design database schema for multi-methodology support",
+          "description": "Design a flexible database schema that can support multiple threat modeling methodologies (STRIDE, LINDDUN, PASTA, etc.)",
+          "status": "pending",
+          "priority": "high",
+          "phase": "Phase 2",
+          "dependencies": ["task-001"],
+          "assignee": null,
+          "tags": ["database", "design", "multi-methodology"]
+        },
+        {
+          "id": "task-003",
+          "title": "Plan RESTful API structure with GraphQL considerations",
+          "description": "Design the API architecture supporting both REST and GraphQL endpoints",
+          "status": "pending",
+          "priority": "high",
+          "phase": "Phase 2",
+          "dependencies": ["task-001"],
+          "assignee": null,
+          "tags": ["api", "rest", "graphql", "design"]
+        },
+        {
+          "id": "task-004",
+          "title": "Design microservices architecture",
+          "description": "Define microservices boundaries and communication patterns",
+          "status": "pending",
+          "priority": "high",
+          "phase": "Phase 2",
+          "dependencies": ["task-001"],
+          "assignee": null,
+          "tags": ["microservices", "architecture", "design"]
+        },
+        {
+          "id": "task-005",
+          "title": "Plan AI/ML integration architecture",
+          "description": "Design the architecture for integrating AI/ML capabilities for threat detection and analysis",
+          "status": "pending",
+          "priority": "medium",
+          "phase": "Phase 2",
+          "dependencies": ["task-001"],
+          "assignee": null,
+          "tags": ["ai", "ml", "architecture", "integration"]
+        },
+        {
+          "id": "task-006",
+          "title": "Design TMAC (Threat Modeling as Code) support",
+          "description": "Design support for treating threat models as code with version control integration",
+          "status": "pending",
+          "priority": "medium",
+          "phase": "Phase 2",
+          "dependencies": ["task-001"],
+          "assignee": null,
+          "tags": ["tmac", "version-control", "design"]
+        },
+        {
+          "id": "task-007",
+          "title": "Plan authentication and authorization system",
+          "description": "Design comprehensive auth system supporting SSO, SAML, OIDC, and RBAC",
+          "status": "pending",
+          "priority": "high",
+          "phase": "Phase 2",
+          "dependencies": ["task-001"],
+          "assignee": null,
+          "tags": ["authentication", "authorization", "security", "sso"]
+        },
+        {
+          "id": "task-008",
+          "title": "Design integration points for Jira and CI/CD",
+          "description": "Plan integration architecture for Jira issue tracking and CI/CD pipelines",
+          "status": "pending",
+          "priority": "medium",
+          "phase": "Phase 2",
+          "dependencies": ["task-001"],
+          "assignee": null,
+          "tags": ["integration", "jira", "cicd", "webhooks"]
+        }
+      ]
+    },
+    "phase3": {
+      "name": "Implementation",
+      "status": "pending",
+      "tasks": [
+        {
+          "id": "task-009",
+          "title": "Set up Docker development environment",
+          "description": "Create Docker configuration for local development and deployment",
+          "status": "pending",
+          "priority": "high",
+          "phase": "Phase 3",
+          "dependencies": ["task-001", "task-002", "task-003", "task-004"],
+          "assignee": null,
+          "tags": ["docker", "devops", "environment", "setup"]
+        },
+        {
+          "id": "task-010",
+          "title": "Implement authentication service with SSO/SAML/OIDC",
+          "description": "Build the authentication microservice based on the design from task 7",
+          "status": "pending",
+          "priority": "high",
+          "phase": "Phase 3",
+          "dependencies": ["task-004", "task-007", "task-009"],
+          "assignee": null,
+          "tags": ["implementation", "authentication", "microservice", "sso"]
+        }
+      ]
+    }
+  },
+  "statistics": {
+    "total": 10,
+    "in_progress": 1,
+    "pending": 9,
+    "completed": 0,
+    "blocked": 0,
+    "progressPercentage": 10
+  }
+}

@@ -1,0 +1,1240 @@
+openapi: 3.0.3
+info:
+  title: Threat Modeling Platform API
+  description: |
+    Enterprise-grade threat modeling platform supporting multiple methodologies (STRIDE, PASTA, LINDDUN, VAST, DREAD).
+    This API specification covers all microservices endpoints.
+  version: 1.0.0
+  contact:
+    name: API Support
+    email: api@threatmodeling.io
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: https://api.threatmodeling.io/v1
+    description: Production server
+  - url: https://staging-api.threatmodeling.io/v1
+    description: Staging server
+  - url: http://localhost:3000/v1
+    description: Development server
+
+tags:
+  - name: Auth
+    description: Authentication and authorization endpoints
+  - name: Projects
+    description: Project management endpoints
+  - name: ThreatModels
+    description: Threat model operations
+  - name: Diagrams
+    description: Diagram and DFD management
+  - name: Threats
+    description: Threat identification and management
+  - name: Mitigations
+    description: Mitigation tracking
+  - name: AI
+    description: AI/ML powered features
+  - name: Reports
+    description: Report generation
+  - name: Integrations
+    description: External system integrations
+
+paths:
+  # Authentication Endpoints
+  /auth/login:
+    post:
+      tags: [Auth]
+      summary: User login
+      operationId: login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+                  format: password
+      responses:
+        200:
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        401:
+          $ref: '#/components/responses/Unauthorized'
+
+  /auth/sso/{provider}:
+    get:
+      tags: [Auth]
+      summary: SSO authentication
+      operationId: ssoAuth
+      parameters:
+        - name: provider
+          in: path
+          required: true
+          schema:
+            type: string
+            enum: [saml, oidc, azure, google]
+      responses:
+        302:
+          description: Redirect to SSO provider
+        400:
+          $ref: '#/components/responses/BadRequest'
+
+  /auth/refresh:
+    post:
+      tags: [Auth]
+      summary: Refresh access token
+      operationId: refreshToken
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [refresh_token]
+              properties:
+                refresh_token:
+                  type: string
+      responses:
+        200:
+          description: Token refreshed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+
+  # Project Endpoints
+  /projects:
+    get:
+      tags: [Projects]
+      summary: List projects
+      operationId: listProjects
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/LimitParam'
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [draft, active, review, approved, archived]
+        - name: team_id
+          in: query
+          schema:
+            type: string
+            format: uuid
+      responses:
+        200:
+          description: List of projects
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Project'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+
+    post:
+      tags: [Projects]
+      summary: Create a new project
+      operationId: createProject
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateProjectRequest'
+      responses:
+        201:
+          description: Project created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Project'
+        400:
+          $ref: '#/components/responses/BadRequest'
+
+  /projects/{projectId}:
+    get:
+      tags: [Projects]
+      summary: Get project details
+      operationId: getProject
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ProjectIdParam'
+      responses:
+        200:
+          description: Project details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Project'
+        404:
+          $ref: '#/components/responses/NotFound'
+
+    patch:
+      tags: [Projects]
+      summary: Update project
+      operationId: updateProject
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ProjectIdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateProjectRequest'
+      responses:
+        200:
+          description: Project updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Project'
+
+    delete:
+      tags: [Projects]
+      summary: Archive project
+      operationId: archiveProject
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ProjectIdParam'
+      responses:
+        204:
+          description: Project archived
+
+  # Threat Model Endpoints
+  /projects/{projectId}/threat-models:
+    get:
+      tags: [ThreatModels]
+      summary: List threat models
+      operationId: listThreatModels
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ProjectIdParam'
+        - name: methodology
+          in: query
+          schema:
+            type: string
+            enum: [STRIDE, PASTA, LINDDUN, VAST, DREAD, OCTAVE, TRIKE, CUSTOM]
+      responses:
+        200:
+          description: List of threat models
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ThreatModel'
+
+    post:
+      tags: [ThreatModels]
+      summary: Create threat model
+      operationId: createThreatModel
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ProjectIdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateThreatModelRequest'
+      responses:
+        201:
+          description: Threat model created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ThreatModel'
+
+  /threat-models/{modelId}:
+    get:
+      tags: [ThreatModels]
+      summary: Get threat model
+      operationId: getThreatModel
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ModelIdParam'
+      responses:
+        200:
+          description: Threat model details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ThreatModel'
+
+    patch:
+      tags: [ThreatModels]
+      summary: Update threat model
+      operationId: updateThreatModel
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ModelIdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateThreatModelRequest'
+      responses:
+        200:
+          description: Threat model updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ThreatModel'
+
+  # Diagram Endpoints
+  /threat-models/{modelId}/diagrams:
+    get:
+      tags: [Diagrams]
+      summary: List diagrams
+      operationId: listDiagrams
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ModelIdParam'
+      responses:
+        200:
+          description: List of diagrams
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Diagram'
+
+    post:
+      tags: [Diagrams]
+      summary: Create diagram
+      operationId: createDiagram
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ModelIdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateDiagramRequest'
+      responses:
+        201:
+          description: Diagram created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Diagram'
+
+  /diagrams/{diagramId}:
+    get:
+      tags: [Diagrams]
+      summary: Get diagram
+      operationId: getDiagram
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/DiagramIdParam'
+      responses:
+        200:
+          description: Diagram details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Diagram'
+
+    put:
+      tags: [Diagrams]
+      summary: Update diagram
+      operationId: updateDiagram
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/DiagramIdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateDiagramRequest'
+      responses:
+        200:
+          description: Diagram updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Diagram'
+
+  # Threat Endpoints
+  /threat-models/{modelId}/threats:
+    get:
+      tags: [Threats]
+      summary: List threats
+      operationId: listThreats
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ModelIdParam'
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [identified, analyzing, mitigated, accepted, transferred]
+        - name: risk_level
+          in: query
+          schema:
+            type: string
+            enum: [critical, high, medium, low, info]
+        - name: category
+          in: query
+          schema:
+            type: string
+      responses:
+        200:
+          description: List of threats
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Threat'
+                  summary:
+                    $ref: '#/components/schemas/ThreatSummary'
+
+    post:
+      tags: [Threats]
+      summary: Create threat
+      operationId: createThreat
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ModelIdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateThreatRequest'
+      responses:
+        201:
+          description: Threat created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Threat'
+
+  /threats/{threatId}:
+    get:
+      tags: [Threats]
+      summary: Get threat details
+      operationId: getThreat
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ThreatIdParam'
+      responses:
+        200:
+          description: Threat details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Threat'
+
+    patch:
+      tags: [Threats]
+      summary: Update threat
+      operationId: updateThreat
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ThreatIdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateThreatRequest'
+      responses:
+        200:
+          description: Threat updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Threat'
+
+  # AI Endpoints
+  /ai/suggest-threats:
+    post:
+      tags: [AI]
+      summary: Get AI-suggested threats
+      operationId: suggestThreats
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [diagram_id, element_id]
+              properties:
+                diagram_id:
+                  type: string
+                  format: uuid
+                element_id:
+                  type: string
+                context:
+                  type: object
+      responses:
+        200:
+          description: Suggested threats
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  suggestions:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ThreatSuggestion'
+
+  /ai/analyze-requirements:
+    post:
+      tags: [AI]
+      summary: Analyze requirements for threats
+      operationId: analyzeRequirements
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [text]
+              properties:
+                text:
+                  type: string
+                  description: Requirements text to analyze
+                methodology:
+                  type: string
+                  enum: [STRIDE, PASTA, LINDDUN, VAST, DREAD]
+      responses:
+        200:
+          description: Analysis results
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  assets:
+                    type: array
+                    items:
+                      type: object
+                  potential_threats:
+                    type: array
+                    items:
+                      type: object
+                  recommendations:
+                    type: array
+                    items:
+                      type: string
+
+  # Report Endpoints
+  /reports/generate:
+    post:
+      tags: [Reports]
+      summary: Generate report
+      operationId: generateReport
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GenerateReportRequest'
+      responses:
+        202:
+          description: Report generation started
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  job_id:
+                    type: string
+                  status_url:
+                    type: string
+
+  /reports/{reportId}/download:
+    get:
+      tags: [Reports]
+      summary: Download report
+      operationId: downloadReport
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: reportId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        200:
+          description: Report file
+          content:
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+            text/html:
+              schema:
+                type: string
+        404:
+          $ref: '#/components/responses/NotFound'
+
+  # Integration Endpoints
+  /integrations/jira/projects:
+    get:
+      tags: [Integrations]
+      summary: List Jira projects
+      operationId: listJiraProjects
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: integration_id
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        200:
+          description: List of Jira projects
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  projects:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        key:
+                          type: string
+                        name:
+                          type: string
+
+  /integrations/jira/export:
+    post:
+      tags: [Integrations]
+      summary: Export threats to Jira
+      operationId: exportToJira
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [integration_id, threat_ids, project_key]
+              properties:
+                integration_id:
+                  type: string
+                  format: uuid
+                threat_ids:
+                  type: array
+                  items:
+                    type: string
+                    format: uuid
+                project_key:
+                  type: string
+                issue_type:
+                  type: string
+                  default: Task
+      responses:
+        200:
+          description: Export successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  created_issues:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        threat_id:
+                          type: string
+                        issue_key:
+                          type: string
+                        issue_url:
+                          type: string
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    PageParam:
+      name: page
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+        default: 1
+
+    LimitParam:
+      name: limit
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 20
+
+    ProjectIdParam:
+      name: projectId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+    ModelIdParam:
+      name: modelId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+    DiagramIdParam:
+      name: diagramId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+    ThreatIdParam:
+      name: threatId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+  responses:
+    BadRequest:
+      description: Bad request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+    Forbidden:
+      description: Forbidden
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+    NotFound:
+      description: Not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+  schemas:
+    Error:
+      type: object
+      required: [error, message]
+      properties:
+        error:
+          type: string
+        message:
+          type: string
+        details:
+          type: object
+
+    Pagination:
+      type: object
+      properties:
+        page:
+          type: integer
+        limit:
+          type: integer
+        total:
+          type: integer
+        pages:
+          type: integer
+
+    AuthResponse:
+      type: object
+      required: [access_token, refresh_token, user]
+      properties:
+        access_token:
+          type: string
+        refresh_token:
+          type: string
+        expires_in:
+          type: integer
+        user:
+          $ref: '#/components/schemas/User'
+
+    User:
+      type: object
+      required: [id, email, name, role]
+      properties:
+        id:
+          type: string
+          format: uuid
+        email:
+          type: string
+          format: email
+        name:
+          type: string
+        role:
+          type: string
+          enum: [admin, architect, developer, reviewer, viewer]
+        avatar_url:
+          type: string
+        organization:
+          $ref: '#/components/schemas/Organization'
+
+    Organization:
+      type: object
+      required: [id, name, slug]
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        slug:
+          type: string
+
+    Project:
+      type: object
+      required: [id, name, status]
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        description:
+          type: string
+        status:
+          type: string
+          enum: [draft, active, review, approved, archived]
+        team:
+          $ref: '#/components/schemas/Team'
+        created_by:
+          $ref: '#/components/schemas/User'
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    Team:
+      type: object
+      required: [id, name]
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        description:
+          type: string
+
+    CreateProjectRequest:
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        team_id:
+          type: string
+          format: uuid
+
+    UpdateProjectRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        status:
+          type: string
+          enum: [draft, active, review, approved, archived]
+
+    ThreatModel:
+      type: object
+      required: [id, name, methodology, version]
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        description:
+          type: string
+        version:
+          type: integer
+        methodology:
+          type: string
+          enum: [STRIDE, PASTA, LINDDUN, VAST, DREAD, OCTAVE, TRIKE, CUSTOM]
+        scope:
+          type: string
+        assumptions:
+          type: array
+          items:
+            type: string
+        is_active:
+          type: boolean
+        created_by:
+          $ref: '#/components/schemas/User'
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    CreateThreatModelRequest:
+      type: object
+      required: [name, methodology]
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        methodology:
+          type: string
+          enum: [STRIDE, PASTA, LINDDUN, VAST, DREAD, OCTAVE, TRIKE, CUSTOM]
+        scope:
+          type: string
+        assumptions:
+          type: array
+          items:
+            type: string
+
+    UpdateThreatModelRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        scope:
+          type: string
+        assumptions:
+          type: array
+          items:
+            type: string
+
+    Diagram:
+      type: object
+      required: [id, name, type, data]
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        type:
+          type: string
+          enum: [dfd, sequence, component]
+        level:
+          type: integer
+        data:
+          type: object
+          description: Diagram JSON data structure
+        thumbnail_url:
+          type: string
+        created_by:
+          $ref: '#/components/schemas/User'
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    CreateDiagramRequest:
+      type: object
+      required: [name, type]
+      properties:
+        name:
+          type: string
+        type:
+          type: string
+          enum: [dfd, sequence, component]
+        level:
+          type: integer
+          default: 0
+        data:
+          type: object
+
+    UpdateDiagramRequest:
+      type: object
+      required: [data]
+      properties:
+        name:
+          type: string
+        data:
+          type: object
+
+    Threat:
+      type: object
+      required: [id, title, status, risk_level]
+      properties:
+        id:
+          type: string
+          format: uuid
+        title:
+          type: string
+        description:
+          type: string
+        category:
+          type: string
+        status:
+          type: string
+          enum: [identified, analyzing, mitigated, accepted, transferred]
+        likelihood:
+          type: integer
+          minimum: 1
+          maximum: 5
+        impact:
+          type: integer
+          minimum: 1
+          maximum: 5
+        risk_level:
+          type: string
+          enum: [critical, high, medium, low, info]
+        risk_score:
+          type: number
+        methodology_data:
+          type: object
+          description: Methodology-specific data
+        mitigations:
+          type: array
+          items:
+            $ref: '#/components/schemas/Mitigation'
+        identified_by:
+          $ref: '#/components/schemas/User'
+        identified_at:
+          type: string
+          format: date-time
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    CreateThreatRequest:
+      type: object
+      required: [title]
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        category:
+          type: string
+        diagram_element_id:
+          type: string
+          format: uuid
+        asset_id:
+          type: string
+          format: uuid
+        likelihood:
+          type: integer
+          minimum: 1
+          maximum: 5
+        impact:
+          type: integer
+          minimum: 1
+          maximum: 5
+        methodology_data:
+          type: object
+
+    UpdateThreatRequest:
+      type: object
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        status:
+          type: string
+          enum: [identified, analyzing, mitigated, accepted, transferred]
+        likelihood:
+          type: integer
+          minimum: 1
+          maximum: 5
+        impact:
+          type: integer
+          minimum: 1
+          maximum: 5
+        methodology_data:
+          type: object
+
+    Mitigation:
+      type: object
+      required: [id, title, status]
+      properties:
+        id:
+          type: string
+          format: uuid
+        title:
+          type: string
+        description:
+          type: string
+        type:
+          type: string
+          enum: [preventive, detective, corrective]
+        status:
+          type: string
+          enum: [proposed, approved, implemented, tested]
+        effectiveness:
+          type: integer
+          minimum: 1
+          maximum: 5
+        effort_estimate:
+          type: integer
+        cost_estimate:
+          type: number
+        assigned_to:
+          $ref: '#/components/schemas/User'
+        due_date:
+          type: string
+          format: date
+        completed_at:
+          type: string
+          format: date-time
+
+    ThreatSummary:
+      type: object
+      properties:
+        total:
+          type: integer
+        by_status:
+          type: object
+          additionalProperties:
+            type: integer
+        by_risk_level:
+          type: object
+          additionalProperties:
+            type: integer
+        risk_score_average:
+          type: number
+
+    ThreatSuggestion:
+      type: object
+      required: [title, category, confidence]
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        category:
+          type: string
+        confidence:
+          type: number
+          minimum: 0
+          maximum: 1
+        reasoning:
+          type: string
+        references:
+          type: array
+          items:
+            type: string
+
+    GenerateReportRequest:
+      type: object
+      required: [threat_model_id, type, format]
+      properties:
+        threat_model_id:
+          type: string
+          format: uuid
+        type:
+          type: string
+          enum: [executive, technical, compliance]
+        format:
+          type: string
+          enum: [pdf, html, json]
+        template_id:
+          type: string
+        options:
+          type: object
+          properties:
+            include_diagrams:
+              type: boolean
+              default: true
+            include_mitigations:
+              type: boolean
+              default: true
+            include_risk_matrix:
+              type: boolean
+              default: true

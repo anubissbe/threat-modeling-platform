@@ -1,0 +1,716 @@
+# Threat Modeling Platform GraphQL Schema
+# This schema complements the REST API for complex queries and real-time subscriptions
+
+scalar DateTime
+scalar UUID
+scalar JSON
+
+# Enums
+enum UserRole {
+  ADMIN
+  ARCHITECT
+  DEVELOPER
+  REVIEWER
+  VIEWER
+}
+
+enum ProjectStatus {
+  DRAFT
+  ACTIVE
+  REVIEW
+  APPROVED
+  ARCHIVED
+}
+
+enum ThreatStatus {
+  IDENTIFIED
+  ANALYZING
+  MITIGATED
+  ACCEPTED
+  TRANSFERRED
+}
+
+enum RiskLevel {
+  CRITICAL
+  HIGH
+  MEDIUM
+  LOW
+  INFO
+}
+
+enum Methodology {
+  STRIDE
+  PASTA
+  LINDDUN
+  VAST
+  DREAD
+  OCTAVE
+  TRIKE
+  CUSTOM
+}
+
+enum ElementType {
+  PROCESS
+  DATA_STORE
+  EXTERNAL_ENTITY
+  DATA_FLOW
+  TRUST_BOUNDARY
+}
+
+enum MitigationType {
+  PREVENTIVE
+  DETECTIVE
+  CORRECTIVE
+}
+
+enum MitigationStatus {
+  PROPOSED
+  APPROVED
+  IMPLEMENTED
+  TESTED
+}
+
+# Input Types
+input ProjectFilter {
+  status: ProjectStatus
+  teamId: UUID
+  createdAfter: DateTime
+  createdBefore: DateTime
+  search: String
+}
+
+input ThreatFilter {
+  status: ThreatStatus
+  riskLevel: RiskLevel
+  category: String
+  assignedTo: UUID
+  hasUnresolvedMitigations: Boolean
+}
+
+input PaginationInput {
+  page: Int = 1
+  limit: Int = 20
+  sortBy: String
+  sortOrder: SortOrder = DESC
+}
+
+enum SortOrder {
+  ASC
+  DESC
+}
+
+# Object Types
+type Organization {
+  id: UUID!
+  name: String!
+  slug: String!
+  settings: JSON
+  users: [User!]!
+  teams: [Team!]!
+  projects(filter: ProjectFilter, pagination: PaginationInput): ProjectConnection!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+type User {
+  id: UUID!
+  email: String!
+  name: String!
+  role: UserRole!
+  avatarUrl: String
+  organization: Organization!
+  teams: [Team!]!
+  assignedThreats: [Threat!]!
+  assignedMitigations: [Mitigation!]!
+  lastLogin: DateTime
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+type Team {
+  id: UUID!
+  name: String!
+  description: String
+  organization: Organization!
+  members: [TeamMember!]!
+  projects: [Project!]!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+type TeamMember {
+  user: User!
+  role: String!
+  joinedAt: DateTime!
+}
+
+type Project {
+  id: UUID!
+  name: String!
+  description: String
+  status: ProjectStatus!
+  organization: Organization!
+  team: Team
+  threatModels: [ThreatModel!]!
+  createdBy: User!
+  collaborators: [User!]!
+  metadata: JSON
+  statistics: ProjectStatistics!
+  activityFeed(limit: Int = 10): [Activity!]!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+type ProjectStatistics {
+  totalThreatModels: Int!
+  totalThreats: Int!
+  threatsByRiskLevel: RiskLevelCount!
+  threatsByStatus: StatusCount!
+  mitigationCoverage: Float!
+  averageRiskScore: Float
+}
+
+type RiskLevelCount {
+  critical: Int!
+  high: Int!
+  medium: Int!
+  low: Int!
+  info: Int!
+}
+
+type StatusCount {
+  identified: Int!
+  analyzing: Int!
+  mitigated: Int!
+  accepted: Int!
+  transferred: Int!
+}
+
+type ThreatModel {
+  id: UUID!
+  project: Project!
+  name: String!
+  description: String
+  version: Int!
+  methodology: Methodology!
+  scope: String
+  assumptions: [String!]!
+  dependencies: JSON
+  isActive: Boolean!
+  diagrams: [Diagram!]!
+  threats(filter: ThreatFilter, pagination: PaginationInput): ThreatConnection!
+  assets: [Asset!]!
+  reports: [Report!]!
+  createdBy: User!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+type Diagram {
+  id: UUID!
+  threatModel: ThreatModel!
+  name: String!
+  type: String!
+  level: Int!
+  data: JSON!
+  elements: [DiagramElement!]!
+  thumbnailUrl: String
+  createdBy: User!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+type DiagramElement {
+  id: UUID!
+  diagram: Diagram!
+  elementId: String!
+  type: ElementType!
+  name: String!
+  description: String
+  properties: JSON
+  trustBoundary: DiagramElement
+  threats: [Threat!]!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+type Asset {
+  id: UUID!
+  threatModel: ThreatModel!
+  name: String!
+  type: String
+  description: String
+  valueRating: Int
+  classification: String
+  properties: JSON
+  threats: [Threat!]!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+type Threat {
+  id: UUID!
+  threatModel: ThreatModel!
+  title: String!
+  description: String
+  category: String
+  status: ThreatStatus!
+  likelihood: Int
+  impact: Int
+  riskLevel: RiskLevel!
+  riskScore: Float
+  methodologyData: JSON
+  diagramElement: DiagramElement
+  asset: Asset
+  mitigations: [Mitigation!]!
+  comments: [Comment!]!
+  attachments: [Attachment!]!
+  identifiedBy: User!
+  identifiedAt: DateTime!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+type Mitigation {
+  id: UUID!
+  threat: Threat!
+  title: String!
+  description: String
+  type: MitigationType!
+  status: MitigationStatus!
+  effectiveness: Int
+  effortEstimate: Int
+  costEstimate: Float
+  implementationNotes: String
+  assignedTo: User
+  dueDate: DateTime
+  completedAt: DateTime
+  createdBy: User!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+type Comment {
+  id: UUID!
+  entityType: String!
+  entityId: UUID!
+  parentComment: Comment
+  replies: [Comment!]!
+  user: User!
+  content: String!
+  isResolved: Boolean!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+type Attachment {
+  id: UUID!
+  filename: String!
+  mimeType: String!
+  size: Int!
+  url: String!
+  uploadedBy: User!
+  uploadedAt: DateTime!
+}
+
+type Report {
+  id: UUID!
+  threatModel: ThreatModel!
+  name: String!
+  type: String!
+  format: String!
+  templateId: String
+  fileUrl: String
+  generatedBy: User!
+  generatedAt: DateTime!
+}
+
+type Activity {
+  id: UUID!
+  action: String!
+  entityType: String!
+  entityId: UUID!
+  entityName: String
+  user: User!
+  details: JSON
+  createdAt: DateTime!
+}
+
+# AI Types
+type ThreatSuggestion {
+  title: String!
+  description: String!
+  category: String!
+  confidence: Float!
+  reasoning: String!
+  references: [String!]!
+}
+
+type RequirementAnalysis {
+  assets: [AssetSuggestion!]!
+  potentialThreats: [ThreatSuggestion!]!
+  recommendations: [String!]!
+}
+
+type AssetSuggestion {
+  name: String!
+  type: String!
+  classification: String!
+  reasoning: String!
+}
+
+# Connection Types for Pagination
+type ProjectConnection {
+  edges: [ProjectEdge!]!
+  pageInfo: PageInfo!
+  totalCount: Int!
+}
+
+type ProjectEdge {
+  node: Project!
+  cursor: String!
+}
+
+type ThreatConnection {
+  edges: [ThreatEdge!]!
+  pageInfo: PageInfo!
+  totalCount: Int!
+  summary: ThreatSummary!
+}
+
+type ThreatEdge {
+  node: Threat!
+  cursor: String!
+}
+
+type ThreatSummary {
+  total: Int!
+  byStatus: StatusCount!
+  byRiskLevel: RiskLevelCount!
+  averageRiskScore: Float
+}
+
+type PageInfo {
+  hasNextPage: Boolean!
+  hasPreviousPage: Boolean!
+  startCursor: String
+  endCursor: String
+}
+
+# Root Query Type
+type Query {
+  # Organization queries
+  currentOrganization: Organization!
+  
+  # User queries
+  me: User!
+  user(id: UUID!): User
+  users(search: String, role: UserRole, pagination: PaginationInput): [User!]!
+  
+  # Project queries
+  project(id: UUID!): Project
+  projects(filter: ProjectFilter, pagination: PaginationInput): ProjectConnection!
+  
+  # Threat Model queries
+  threatModel(id: UUID!): ThreatModel
+  threatModels(projectId: UUID!, methodology: Methodology): [ThreatModel!]!
+  
+  # Threat queries
+  threat(id: UUID!): Threat
+  threats(
+    threatModelId: UUID!
+    filter: ThreatFilter
+    pagination: PaginationInput
+  ): ThreatConnection!
+  
+  # Search queries
+  searchThreats(query: String!, limit: Int = 10): [Threat!]!
+  searchProjects(query: String!, limit: Int = 10): [Project!]!
+  
+  # AI queries
+  suggestThreats(
+    diagramId: UUID!
+    elementId: String!
+    context: JSON
+  ): [ThreatSuggestion!]!
+  
+  analyzeRequirements(
+    text: String!
+    methodology: Methodology
+  ): RequirementAnalysis!
+  
+  # Statistics queries
+  organizationDashboard: OrganizationDashboard!
+  projectRiskMatrix(projectId: UUID!): RiskMatrix!
+  
+  # Template queries
+  threatTemplates(methodology: Methodology): [ThreatTemplate!]!
+  reportTemplates(type: String): [ReportTemplate!]!
+}
+
+# Additional types for queries
+type OrganizationDashboard {
+  totalProjects: Int!
+  activeProjects: Int!
+  totalThreats: Int!
+  unresolvedThreats: Int!
+  riskDistribution: RiskLevelCount!
+  recentActivity: [Activity!]!
+  upcomingMitigations: [Mitigation!]!
+}
+
+type RiskMatrix {
+  cells: [RiskMatrixCell!]!
+  totalThreats: Int!
+}
+
+type RiskMatrixCell {
+  likelihood: Int!
+  impact: Int!
+  threats: [Threat!]!
+  count: Int!
+  riskLevel: RiskLevel!
+}
+
+type ThreatTemplate {
+  id: UUID!
+  name: String!
+  description: String!
+  category: String!
+  methodology: Methodology!
+  appliesTo: [ElementType!]!
+  templateData: JSON!
+  isPublic: Boolean!
+}
+
+type ReportTemplate {
+  id: UUID!
+  name: String!
+  description: String!
+  type: String!
+  format: String!
+  preview: String
+}
+
+# Root Mutation Type
+type Mutation {
+  # Project mutations
+  createProject(input: CreateProjectInput!): Project!
+  updateProject(id: UUID!, input: UpdateProjectInput!): Project!
+  archiveProject(id: UUID!): Project!
+  
+  # Threat Model mutations
+  createThreatModel(projectId: UUID!, input: CreateThreatModelInput!): ThreatModel!
+  updateThreatModel(id: UUID!, input: UpdateThreatModelInput!): ThreatModel!
+  cloneThreatModel(id: UUID!, newName: String!): ThreatModel!
+  
+  # Diagram mutations
+  createDiagram(threatModelId: UUID!, input: CreateDiagramInput!): Diagram!
+  updateDiagram(id: UUID!, input: UpdateDiagramInput!): Diagram!
+  deleteDiagram(id: UUID!): Boolean!
+  
+  # Threat mutations
+  createThreat(threatModelId: UUID!, input: CreateThreatInput!): Threat!
+  updateThreat(id: UUID!, input: UpdateThreatInput!): Threat!
+  bulkUpdateThreats(ids: [UUID!]!, input: BulkUpdateThreatInput!): [Threat!]!
+  
+  # Mitigation mutations
+  createMitigation(threatId: UUID!, input: CreateMitigationInput!): Mitigation!
+  updateMitigation(id: UUID!, input: UpdateMitigationInput!): Mitigation!
+  
+  # Comment mutations
+  addComment(input: AddCommentInput!): Comment!
+  updateComment(id: UUID!, content: String!): Comment!
+  resolveComment(id: UUID!): Comment!
+  
+  # Integration mutations
+  exportToJira(input: ExportToJiraInput!): ExportResult!
+  syncFromJira(integrationId: UUID!): SyncResult!
+  
+  # Report mutations
+  generateReport(input: GenerateReportInput!): ReportJob!
+}
+
+# Mutation Input Types
+input CreateProjectInput {
+  name: String!
+  description: String
+  teamId: UUID
+}
+
+input UpdateProjectInput {
+  name: String
+  description: String
+  status: ProjectStatus
+}
+
+input CreateThreatModelInput {
+  name: String!
+  description: String
+  methodology: Methodology!
+  scope: String
+  assumptions: [String!]
+}
+
+input UpdateThreatModelInput {
+  name: String
+  description: String
+  scope: String
+  assumptions: [String!]
+}
+
+input CreateDiagramInput {
+  name: String!
+  type: String!
+  level: Int = 0
+  data: JSON
+}
+
+input UpdateDiagramInput {
+  name: String
+  data: JSON!
+}
+
+input CreateThreatInput {
+  title: String!
+  description: String
+  category: String
+  diagramElementId: UUID
+  assetId: UUID
+  likelihood: Int
+  impact: Int
+  methodologyData: JSON
+}
+
+input UpdateThreatInput {
+  title: String
+  description: String
+  status: ThreatStatus
+  likelihood: Int
+  impact: Int
+  methodologyData: JSON
+}
+
+input BulkUpdateThreatInput {
+  status: ThreatStatus
+  assignedTo: UUID
+}
+
+input CreateMitigationInput {
+  title: String!
+  description: String
+  type: MitigationType!
+  effectiveness: Int
+  effortEstimate: Int
+  costEstimate: Float
+  assignedTo: UUID
+  dueDate: DateTime
+}
+
+input UpdateMitigationInput {
+  title: String
+  description: String
+  status: MitigationStatus
+  effectiveness: Int
+  effortEstimate: Int
+  costEstimate: Float
+  assignedTo: UUID
+  dueDate: DateTime
+  implementationNotes: String
+}
+
+input AddCommentInput {
+  entityType: String!
+  entityId: UUID!
+  parentCommentId: UUID
+  content: String!
+}
+
+input ExportToJiraInput {
+  integrationId: UUID!
+  threatIds: [UUID!]!
+  projectKey: String!
+  issueType: String = "Task"
+}
+
+input GenerateReportInput {
+  threatModelId: UUID!
+  type: String!
+  format: String!
+  templateId: String
+  options: ReportOptionsInput
+}
+
+input ReportOptionsInput {
+  includeDiagrams: Boolean = true
+  includeMitigations: Boolean = true
+  includeRiskMatrix: Boolean = true
+}
+
+# Mutation Result Types
+type ExportResult {
+  success: Boolean!
+  createdIssues: [CreatedIssue!]!
+  errors: [String!]
+}
+
+type CreatedIssue {
+  threatId: UUID!
+  issueKey: String!
+  issueUrl: String!
+}
+
+type SyncResult {
+  success: Boolean!
+  syncedItems: Int!
+  errors: [String!]
+}
+
+type ReportJob {
+  jobId: String!
+  status: String!
+  statusUrl: String!
+}
+
+# Root Subscription Type
+type Subscription {
+  # Real-time threat model updates
+  threatModelUpdated(id: UUID!): ThreatModel!
+  
+  # Real-time diagram collaboration
+  diagramUpdated(id: UUID!): DiagramUpdate!
+  
+  # Real-time threat updates
+  threatCreated(threatModelId: UUID!): Threat!
+  threatUpdated(threatModelId: UUID!): Threat!
+  
+  # Real-time comments
+  commentAdded(entityType: String!, entityId: UUID!): Comment!
+  
+  # Activity feed
+  projectActivity(projectId: UUID!): Activity!
+  
+  # AI processing updates
+  aiAnalysisProgress(jobId: String!): AnalysisProgress!
+}
+
+type DiagramUpdate {
+  diagram: Diagram!
+  changeType: ChangeType!
+  changedBy: User!
+  changes: JSON!
+}
+
+enum ChangeType {
+  CREATED
+  UPDATED
+  DELETED
+}
+
+type AnalysisProgress {
+  jobId: String!
+  status: String!
+  progress: Float!
+  message: String
+  result: JSON
+}

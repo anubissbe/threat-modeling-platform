@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vault Status Visualization</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: #1a1a1a;
+            color: #fff;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .container {
+            background-color: #252525;
+            border-radius: 8px;
+            padding: 40px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            text-align: center;
+            max-width: 600px;
+            width: 90%;
+        }
+        .vault-logo {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 30px;
+            background-color: #00d1ff;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+            font-weight: bold;
+            color: #1a1a1a;
+        }
+        h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+            font-weight: 300;
+        }
+        .status {
+            font-size: 18px;
+            color: #888;
+            margin-bottom: 30px;
+        }
+        .warning-box {
+            background-color: rgba(255, 152, 0, 0.1);
+            border: 1px solid #ff9800;
+            border-radius: 4px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+        .warning-icon {
+            color: #ff9800;
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+        .init-button {
+            background-color: #00d1ff;
+            color: #1a1a1a;
+            border: none;
+            padding: 12px 30px;
+            font-size: 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+        .init-button:hover {
+            background-color: #00b8e6;
+        }
+        .info-text {
+            font-size: 14px;
+            color: #666;
+            margin-top: 30px;
+            line-height: 1.6;
+        }
+        .url-info {
+            background-color: rgba(0, 209, 255, 0.1);
+            border: 1px solid #00d1ff;
+            border-radius: 4px;
+            padding: 10px;
+            margin-top: 20px;
+            font-family: monospace;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="vault-logo">V</div>
+        <h1>HashiCorp Vault</h1>
+        <div class="status">Version 1.19.5</div>
+        
+        <div class="warning-box">
+            <div class="warning-icon">⚠️</div>
+            <strong>Vault is not initialized</strong>
+            <p style="margin: 10px 0 0 0; font-size: 14px;">
+                This Vault instance needs to be initialized before it can be used to store secrets.
+            </p>
+        </div>
+        
+        <button class="init-button">Initialize Vault</button>
+        
+        <div class="info-text">
+            During initialization, you will:
+            <ul style="text-align: left; display: inline-block; margin: 10px 0;">
+                <li>Set the number of key shares</li>
+                <li>Set the key threshold</li>
+                <li>Receive your root token</li>
+                <li>Receive your unseal keys</li>
+            </ul>
+        </div>
+        
+        <div class="url-info">
+            URL: http://192.168.1.25:8200<br>
+            Storage: file
+        </div>
+    </div>
+</body>
+</html>
