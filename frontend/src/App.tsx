@@ -8,6 +8,7 @@ import CssBaseline from '@mui/material/CssBaseline';
 import { store } from '@/store';
 import { theme } from '@/theme';
 import { Layout } from '@/components/Layout';
+import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { Dashboard } from '@/pages/Dashboard';
 import { Projects } from '@/pages/Projects';
 import { ThreatModels } from '@/pages/ThreatModels';
