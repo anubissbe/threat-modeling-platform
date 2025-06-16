@@ -55,6 +55,64 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Health check endpoints with database connectivity monitoring
 - Async request handlers with proper error propagation
 
+## [0.3.0] - 2024-06-16
+
+### Added - Visual Threat Model Editor
+- **Complete Visual Editor**: Full-featured drag-and-drop interface for threat modeling
+  - Custom Canvas API implementation with HTML5 Canvas
+  - Drag-and-drop component creation and positioning
+  - Real-time connection creation between elements
+  - Pan, zoom, and grid functionality
+  - Visual selection and hover feedback
+
+- **Component Palette**: 13 pre-defined threat modeling elements
+  - **Actors**: User, Administrator, Threat Actor
+  - **Systems**: Process, Web Server, API, Mobile App
+  - **Data Stores**: Database, Cache, File Storage
+  - **Infrastructure**: Firewall, Load Balancer, External System
+  - Organized by category with descriptive tooltips
+
+- **Properties Panel**: Comprehensive element configuration
+  - **General Tab**: Name, trust boundary, description, technologies
+  - **Security Tab**: Authentication, encryption, controls, compliance
+  - **Threats Tab**: Threat creation and management per element
+  - Real-time updates with immediate visual feedback
+
+- **Threat Panel**: Advanced threat analysis interface
+  - Statistics dashboard with threat metrics
+  - Search and filter capabilities by category and severity
+  - STRIDE/PASTA/LINDDUN methodology support
+  - Click-to-navigate between threats and elements
+  - Inline threat editing and mitigation tracking
+
+- **Redux Integration**: Complete state management
+  - Editor slice with actions for nodes, connections, threats
+  - Canvas state management (zoom, pan, selection)
+  - Undo/redo infrastructure (foundation)
+  - Optimistic updates with error handling
+
+### Technical Features
+- TypeScript strict mode implementation
+- Material-UI integration for consistent design
+- Custom Canvas rendering engine (no external dependencies)
+- Responsive design for various screen sizes
+- Keyboard shortcuts support
+- Context menus for quick actions
+
+### User Experience
+- Intuitive drag-and-drop interface
+- Visual feedback for all interactions
+- Contextual property editing
+- Threat-to-element navigation
+- Professional toolbar with common operations
+- Floating action buttons for quick access
+
+### Integration
+- Seamless routing integration with existing app
+- Connected to threat models list page
+- Mock data integration for demonstration
+- Prepared for API integration
+
 ## [0.1.0] - 2024-06-15
 
 ### Added - Core Foundation Complete
