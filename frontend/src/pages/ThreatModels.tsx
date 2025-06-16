@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Box,
   Typography,
@@ -31,6 +32,7 @@ import {
   Warning,
   CheckCircle,
   Schedule,
+  Brush,
 } from '@mui/icons-material';
 
 interface ThreatModel {
@@ -116,6 +118,7 @@ const methodologyColors = {
 } as const;
 
 export const ThreatModels: React.FC = () => {
+  const navigate = useNavigate();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [selectedModel, setSelectedModel] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
@@ -333,9 +336,11 @@ export const ThreatModels: React.FC = () => {
                   <Button 
                     size="small" 
                     variant="contained"
+                    startIcon={<Brush />}
+                    onClick={() => navigate(`/threat-models/${model.id}/edit`)}
                     sx={{ minWidth: 'auto' }}
                   >
-                    Open
+                    Edit Model
                   </Button>
                   <Button 
                     size="small" 
@@ -385,9 +390,18 @@ export const ThreatModels: React.FC = () => {
         open={Boolean(anchorEl)}
         onClose={handleMenuClose}
       >
+        <MenuItem onClick={() => {
+          if (selectedModel) {
+            navigate(`/threat-models/${selectedModel}/edit`);
+          }
+          handleMenuClose();
+        }}>
+          <Brush sx={{ mr: 1 }} />
+          Edit in Visual Editor
+        </MenuItem>
         <MenuItem onClick={handleMenuClose}>
           <Edit sx={{ mr: 1 }} />
-          Edit
+          Edit Properties
         </MenuItem>
         <MenuItem onClick={handleMenuClose}>
           <Share sx={{ mr: 1 }} />

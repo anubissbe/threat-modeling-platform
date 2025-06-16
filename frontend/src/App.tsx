@@ -12,8 +12,8 @@ import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { Dashboard } from '@/pages/Dashboard';
 import { Projects } from '@/pages/Projects';
 import { ThreatModels } from '@/pages/ThreatModels';
+import { ThreatModelEditorPage } from '@/pages/ThreatModelEditor';
 import { Login } from '@/pages/Login';
-import { ProtectedRoute } from '@/components/ProtectedRoute';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -42,6 +42,7 @@ function App(): JSX.Element {
                         <Route path="/" element={<Dashboard />} />
                         <Route path="/projects" element={<Projects />} />
                         <Route path="/threat-models" element={<ThreatModels />} />
+                        <Route path="/threat-models/:id/edit" element={<ThreatModelEditorPage />} />
                       </Routes>
                     </Layout>
                   </ProtectedRoute>
