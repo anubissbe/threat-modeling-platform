@@ -8,11 +8,52 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Planned
-- Core threat modeling engine implementation
 - Visual threat model editor with drag-and-drop
-- AI-powered threat suggestions and analysis
+- Enhanced AI-powered threat suggestions and analysis
 - Real-time collaboration features
 - Integration with external security tools
+- TMAC (Threat Modeling as Code) implementation
+
+## [0.2.0] - 2024-06-16
+
+### Added - Core Threat Modeling Engine
+- **Core Service Implementation**: Complete threat modeling engine with TypeScript
+  - Project management service with CRUD operations and statistics
+  - Threat model service with validation, cloning, and version control
+  - Comprehensive threat service with full lifecycle management
+  - Mitigation tracking and effectiveness analysis
+  
+- **Threat Analysis Features**:
+  - Multi-methodology support (STRIDE, PASTA, LINDDUN, VAST, DREAD)
+  - AI-powered threat suggestions (basic implementation)
+  - Risk scoring and prioritization algorithms
+  - Threat-to-mitigation mapping
+  
+- **API Endpoints**:
+  - `/api/projects` - Full project management with filtering and pagination
+  - `/api/threat-models` - Threat model CRUD with validation and cloning
+  - `/api/threats` - Threat management with filtering and mitigations
+  - `/api/methodologies` - Methodology information and recommendations
+  - `/api/health` - Service health monitoring with detailed checks
+  
+- **Validation & Security**:
+  - Zod schema validation for all endpoints
+  - Request validation middleware
+  - Rate limiting for resource-intensive operations
+  - Role-based access control integration
+
+- **Type System**:
+  - Comprehensive TypeScript types for all domain models
+  - Methodology-specific type extensions (STRIDE, PASTA, LINDDUN)
+  - Request/Response type interfaces
+  - Express type augmentation for custom properties
+
+### Technical Improvements
+- Database connection pooling with PostgreSQL
+- Structured logging with winston
+- Error handling middleware with detailed error responses
+- Health check endpoints with database connectivity monitoring
+- Async request handlers with proper error propagation
 
 ## [0.1.0] - 2024-06-15
 
