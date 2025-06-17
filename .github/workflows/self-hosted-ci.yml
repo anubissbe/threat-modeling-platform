@@ -1,0 +1,65 @@
+name: CI/CD Self-Hosted
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  test-and-build:
+    runs-on: [self-hosted, runnerhub]
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+        
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        if [ -f requirements.txt ]; then
+          pip install -r requirements.txt
+        elif [ -f pyproject.toml ]; then
+          pip install -e .
+        fi
+        
+    - name: Run tests
+      run: |
+        if [ -f pytest.ini ] || [ -f pyproject.toml ]; then
+          pytest
+        elif [ -f test_*.py ] || [ -d tests/ ]; then
+          python -m pytest
+        fi
+      continue-on-error: true
+        
+    - name: Run linting
+      run: |
+        if command -v flake8 &> /dev/null; then
+          flake8 .
+        elif command -v pylint &> /dev/null; then
+          pylint **/*.py
+        fi
+      continue-on-error: true
+
+  docker-build:
+    runs-on: [self-hosted, runnerhub]
+    needs: test-and-build
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Build Docker images
+      run: |
+        if [ -f docker-compose.yml ]; then
+          docker-compose build
+        elif [ -f Dockerfile ]; then
+          docker build -t ${{ github.repository }}:latest .
+        fi
