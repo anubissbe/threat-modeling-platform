@@ -21,7 +21,7 @@
     "zod": "^3.22.4",
     "winston": "^3.11.0",
     "canvas": "^2.11.2",
-    "sharp": "^0.33.0"
+    "sharp": "^0.34.0"
   },
   "devDependencies": {
     "@types/express": "^4.17.21",
