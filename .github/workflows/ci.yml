@@ -9,7 +9,7 @@ on:
 jobs:
   lint:
     name: Lint Code
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, runnerhub]
     
     steps:
     - uses: actions/checkout@v4
@@ -30,7 +30,7 @@ jobs:
 
   test:
     name: Run Tests
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, runnerhub]
     
     services:
       postgres:
@@ -87,7 +87,7 @@ jobs:
 
   build:
     name: Build Check
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, runnerhub]
     needs: [lint, test]
     
     steps:
@@ -106,7 +106,7 @@ jobs:
 
   security:
     name: Security Check
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, runnerhub]
     needs: [build]
     if: github.event_name != 'pull_request'
     
