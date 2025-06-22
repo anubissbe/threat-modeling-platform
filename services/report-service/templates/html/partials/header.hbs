@@ -1,0 +1,10 @@
+<header class="header">
+    {{#if branding.logo}}
+    <img src="{{branding.logo}}" alt="Logo" class="logo">
+    {{/if}}
+    <h1>{{metadata.title}}</h1>
+    <div class="header-info">
+        <span class="version">Version {{metadata.version}}</span>
+        <span class="date">{{formatDate generatedAt}}</span>
+    </div>
+</header>

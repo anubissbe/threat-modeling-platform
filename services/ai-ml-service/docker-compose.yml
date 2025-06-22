@@ -1,0 +1,57 @@
+version: '3.8'
+
+services:
+  ai-ml-service:
+    build: .
+    container_name: threatmodel-ai-ml-service
+    ports:
+      - "3006:3006"
+    environment:
+      - NODE_ENV=development
+      - PORT=3006
+      - HOST=0.0.0.0
+      - JWT_SECRET=dev-jwt-secret-change-in-production
+      - REDIS_URL=redis://redis:6379
+      - CACHE_TTL=3600
+      - CACHE_MAX_SIZE=1000
+      - RATE_LIMIT_MAX=100
+      - RATE_LIMIT_WINDOW=60000
+      - ML_CONFIDENCE_THRESHOLD=0.7
+      - ML_MAX_PREDICTIONS=10
+      - CORS_ORIGINS=http://localhost:3000,http://localhost:3001
+    depends_on:
+      - redis
+    networks:
+      - threatmodel-network
+    volumes:
+      - ./models:/app/models
+      - ./data:/app/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3006/api/ai/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  redis:
+    image: redis:7-alpine
+    container_name: threatmodel-ai-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    networks:
+      - threatmodel-network
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+networks:
+  threatmodel-network:
+    driver: bridge
+
+volumes:
+  redis-data:

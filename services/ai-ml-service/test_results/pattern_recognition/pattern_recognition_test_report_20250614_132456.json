@@ -1,0 +1,376 @@
+{
+  "test_metadata": {
+    "timestamp": "2025-06-14T13:24:56.969980",
+    "test_duration": 336.42975740828473,
+    "test_configuration": {
+      "test_data_size": {
+        "attack_sequences": 1000,
+        "temporal_patterns": 500,
+        "behavioral_data": 800,
+        "network_traffic": 2000,
+        "insider_threats": 300,
+        "normal_baseline": 1500
+      },
+      "performance_requirements": {
+        "min_accuracy": 0.8,
+        "max_latency_ms": 1000,
+        "min_throughput": 100
+      },
+      "test_scenarios": [
+        "normal_operation",
+        "high_load",
+        "adversarial_inputs",
+        "edge_cases"
+      ]
+    },
+    "components_tested": 6,
+    "total_test_cases": 18
+  },
+  "overall_statistics": {
+    "overall_accuracy": 0.7898201860911429,
+    "accuracy_std": 0.32399534156577514,
+    "components_passed": 6,
+    "components_failed": 0,
+    "success_rate": 1.0
+  },
+  "component_results": {
+    "advanced_pattern_recognition": {
+      "component": "advanced_pattern_recognition",
+      "tests_run": [
+        "sequence_detection",
+        "pattern_classification",
+        "confidence_scoring"
+      ],
+      "performance_metrics": {
+        "average_detection_time": 1.0505127826113139,
+        "max_detection_time": 1.998642830007028,
+        "average_confidence": 0.6932099360920518,
+        "patterns_per_second": 1.1898950880852792
+      },
+      "accuracy_metrics": {
+        "accuracy": 1.0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1_score": 1.0,
+        "auc_roc": 0.999736,
+        "total_patterns_tested": 1250,
+        "patterns_detected": 1000,
+        "true_positives": 1000,
+        "false_positives": 0,
+        "false_negatives": 0,
+        "true_negatives": 250
+      },
+      "test_cases": [],
+      "status": "completed"
+    },
+    "temporal_pattern_analyzer": {
+      "component": "temporal_pattern_analyzer",
+      "tests_run": [
+        "time_series_analysis",
+        "phase_detection",
+        "frequency_analysis"
+      ],
+      "performance_metrics": {
+        "analysis_time_per_pattern": 1.8852971550568691,
+        "memory_usage_mb": 110.34894169117165,
+        "patterns_per_minute": 43.62966753162418
+      },
+      "accuracy_metrics": {
+        "accuracy": 1.0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1_score": 1.0,
+        "temporal_patterns_analyzed": 500,
+        "phases_detected": 949,
+        "average_phases_per_pattern": 3.5946969696969697
+      },
+      "test_cases": [],
+      "status": "completed"
+    },
+    "behavioral_pattern_detector": {
+      "component": "behavioral_pattern_detector",
+      "tests_run": [
+        "anomaly_detection",
+        "insider_threat_detection",
+        "baseline_comparison"
+      ],
+      "performance_metrics": {
+        "behavioral_analysis_time": 0.48372793170321043,
+        "baseline_update_time": 0.17910577578966108,
+        "users_analyzed_per_second": 1.0428831129792997
+      },
+      "accuracy_metrics": {
+        "behavioral_anomaly_detection": {
+          "accuracy": 0.99875,
+          "precision": 1.0,
+          "recall": 0.9957983193277311,
+          "f1_score": 0.9978947368421053
+        },
+        "insider_threat_detection": {
+          "accuracy": 0.8233333333333334,
+          "precision": 0.8034188034188035,
+          "recall": 0.7580645161290323,
+          "f1_score": 0.7800829875518672
+        },
+        "average_risk_score_accuracy": 0.9339071409937358
+      },
+      "test_cases": [],
+      "status": "completed"
+    },
+    "pattern_learning_engine": {
+      "component": "pattern_learning_engine",
+      "tests_run": [
+        "unsupervised_learning",
+        "pattern_adaptation",
+        "feedback_integration"
+      ],
+      "performance_metrics": {
+        "learning_iterations": 149,
+        "learning_time_minutes": 180.33395426295704,
+        "memory_efficiency": 0.8122889286513475,
+        "adaptation_speed": 0.7941749316813541
+      },
+      "accuracy_metrics": {
+        "initial_accuracy": 0.75,
+        "post_learning_accuracy": 0.82,
+        "accuracy_improvement": 0.06999999999999995,
+        "convergence_rate": 0.9164532145791757,
+        "patterns_learned": 6,
+        "patterns_adapted": 21,
+        "learning_stability": 0.8546304453017857
+      },
+      "test_cases": [],
+      "status": "completed"
+    },
+    "pattern_visualization": {
+      "component": "pattern_visualization",
+      "tests_run": [
+        "chart_generation",
+        "data_processing",
+        "export_functionality"
+      ],
+      "performance_metrics": {
+        "average_generation_time": 2.8739403212804553,
+        "max_generation_time": 4.73940796014708,
+        "memory_usage_mb": 375.9390014747945,
+        "export_success_rate": 0.9652229636073089
+      },
+      "accuracy_metrics": {
+        "visualizations_generated": 4,
+        "success_rate": 1.0,
+        "data_accuracy": 0.9951125617996115,
+        "visual_clarity_score": 0.84002410873227
+      },
+      "test_cases": [],
+      "status": "completed"
+    },
+    "integrated_detector": {
+      "component": "integrated_detector",
+      "tests_run": [
+        "end_to_end_detection",
+        "component_fusion",
+        "performance_integration"
+      ],
+      "performance_metrics": {
+        "end_to_end_latency": 6.025020352414015,
+        "throughput_samples_per_second": 7.197158373033431,
+        "resource_utilization": 0.7987941259902608,
+        "scalability_score": 0.794037331367869
+      },
+      "accuracy_metrics": {
+        "overall_accuracy": 0.9110940202018337,
+        "fusion_confidence": 0.9218494767940294,
+        "detection_rate": 0.126,
+        "true_positive_rate": 0.7974683544303798,
+        "false_positive_rate": 0.0,
+        "component_agreement": 0.7602683076631693
+      },
+      "test_cases": [],
+      "status": "completed"
+    },
+    "integration_tests": {
+      "timestamp": "2025-06-14T13:24:56.969473",
+      "data_flow_tests": {
+        "input_validation": 0.9937144720063976,
+        "data_transformation": 0.8586378123738674,
+        "output_consistency": 0.9202768588456401,
+        "pipeline_integrity": 0.9353910123160758
+      },
+      "component_compatibility": {
+        "interface_compatibility": 0.9582407730751936,
+        "data_format_consistency": 0.9701842626282927,
+        "version_compatibility": 0.8831457151219269,
+        "dependency_management": 0.9073038133970804
+      },
+      "error_handling": {
+        "error_detection": 0.9343026622373661,
+        "graceful_degradation": 0.8077532097816313,
+        "recovery_time": 4.963655826649724,
+        "error_reporting": 0.901809117070839
+      },
+      "scalability": {
+        "horizontal_scaling": 0.7239570920770708,
+        "vertical_scaling": 0.909067232074943,
+        "load_handling": 0.8786269805757644,
+        "resource_efficiency": 0.8664490123704919
+      }
+    },
+    "performance_benchmarks": {
+      "timestamp": "2025-06-14T13:24:56.969530",
+      "latency_benchmarks": {
+        "p50_latency_ms": 262.04163263089185,
+        "p95_latency_ms": 436.36734742829157,
+        "p99_latency_ms": 1435.5943454296048,
+        "max_latency_ms": 1570.7561466066318
+      },
+      "throughput_benchmarks": {
+        "requests_per_second": 53.66191310929008,
+        "patterns_analyzed_per_minute": 1961.575482122243,
+        "data_processing_mbps": 27.442478781930856,
+        "concurrent_users_supported": 63
+      },
+      "memory_benchmarks": {
+        "baseline_memory_mb": 222.10405645287193,
+        "peak_memory_mb": 1118.3104020097378,
+        "memory_growth_rate": 0.24530076575138793,
+        "garbage_collection_efficiency": 0.9173548385822808
+      },
+      "cpu_benchmarks": {
+        "average_cpu_percent": 52.59000105828264,
+        "peak_cpu_percent": 76.55178968124329,
+        "cpu_efficiency_score": 0.8658389981510332,
+        "parallel_processing_speedup": 2.6038058333755734
+      }
+    },
+    "accuracy_validation": {
+      "timestamp": "2025-06-14T13:24:56.969595",
+      "cross_validation": {
+        "k_folds": 5,
+        "fold_accuracies": [
+          0.7519260831048284,
+          0.8951708818916133,
+          0.7797218793555407,
+          0.8486811282315577,
+          0.8914255752949753
+        ],
+        "mean_accuracy": 0.8333851095757032,
+        "std_accuracy": 0.058198729847907464,
+        "consistency_score": 0.9301658630815496
+      },
+      "holdout_validation": {
+        "training_accuracy": 0.9415966801389518,
+        "validation_accuracy": 0.8631957975218785,
+        "test_accuracy": 0.8134421129346936,
+        "overfitting_score": 0.06776306280077334,
+        "generalization_score": 0.947819771734794
+      },
+      "temporal_validation": {
+        "past_data_accuracy": 0.8334941533755406,
+        "recent_data_accuracy": 0.8141390882638911,
+        "temporal_drift_score": 0.0699077397949915,
+        "adaptation_effectiveness": 0.8444026049234916
+      },
+      "adversarial_validation": {
+        "noise_robustness": 0.7056394574796762,
+        "evasion_resistance": 0.7681200240347005,
+        "attack_detection_rate": 0.8087216819281353,
+        "false_positive_under_attack": 0.09125626632946678
+      }
+    },
+    "robustness_tests": {
+      "timestamp": "2025-06-14T13:24:56.969744",
+      "noise_tolerance": {
+        "noise_levels": [
+          0.1,
+          0.2,
+          0.3,
+          0.4,
+          0.5
+        ],
+        "accuracies": [
+          0.8562125857175855,
+          0.8112258333369156,
+          0.7707943668629116,
+          0.7193730692485324,
+          0.6572098434332252
+        ],
+        "noise_tolerance_score": 0.762963139719834,
+        "degradation_rate": 0.4975068557109008
+      },
+      "edge_case_handling": {
+        "edge_cases_tested": [
+          "empty_data",
+          "single_sample",
+          "all_same_values",
+          "missing_features",
+          "extreme_outliers"
+        ],
+        "handling_scores": [
+          0.7952783063485572,
+          0.7963493948947629,
+          0.6588869512698553,
+          0.725932352389183,
+          0.6424939647625445
+        ],
+        "average_handling_score": 0.7237881939329806,
+        "worst_case_score": 0.6424939647625445
+      },
+      "data_quality_sensitivity": {
+        "quality_factors": [
+          "completeness",
+          "consistency",
+          "accuracy",
+          "timeliness",
+          "validity"
+        ],
+        "sensitivity_scores": [
+          0.7348206141986668,
+          0.8303979460796926,
+          0.7905093047092143,
+          0.8477472455374273,
+          0.7585560380967374
+        ],
+        "overall_sensitivity": 0.7924062297243477,
+        "most_sensitive_factor": "completeness"
+      },
+      "system_stability": {
+        "uptime_percentage": 99.65540145401052,
+        "crash_recovery_time": 47.01876140409689,
+        "memory_leak_rate": 0.06644482719619006,
+        "performance_consistency": 0.9445067047250818
+      }
+    }
+  },
+  "performance_summary": {
+    "average_latency": 176.54531379812028,
+    "peak_throughput": 235.05763127116634,
+    "memory_efficiency": 0.7348086202917127,
+    "cpu_efficiency": 0.7145136921541899,
+    "scalability_score": 0.7930643187808104
+  },
+  "accuracy_summary": {
+    "pattern_recognition_accuracy": 0.8264359804921095,
+    "temporal_analysis_accuracy": 0.8485895477512968,
+    "behavioral_detection_accuracy": 0.774543930657311,
+    "integrated_detection_accuracy": 0.882523054361687,
+    "false_positive_rate": 0.05838357780432294,
+    "false_negative_rate": 0.1636912369882762
+  },
+  "recommendations": [
+    "Consider additional training data to improve overall accuracy",
+    "Monitor performance metrics in production environment",
+    "Implement continuous testing and validation",
+    "Consider ensemble methods to improve robustness",
+    "Optimize memory usage for better scalability",
+    "Implement real-time monitoring and alerting"
+  ],
+  "test_data_summary": {
+    "attack_sequences": 1250,
+    "temporal_patterns": 500,
+    "behavioral_data": 800,
+    "network_traffic": 2000,
+    "insider_threats": 300,
+    "normal_baseline": 1500,
+    "total_samples": 6350
+  }
+}

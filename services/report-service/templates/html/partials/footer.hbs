@@ -1,0 +1,17 @@
+<footer class="footer">
+    <div class="footer-content">
+        <div class="footer-left">
+            {{#if branding.footerText}}
+                {{branding.footerText}}
+            {{else}}
+                © {{formatDate generatedAt 'YYYY'}} Threat Modeling Application. All rights reserved.
+            {{/if}}
+        </div>
+        <div class="footer-right">
+            <span class="confidentiality">{{metadata.confidentiality}}</span>
+            {{#if metadata.checksum}}
+            <span class="checksum" title="Document checksum">{{metadata.checksum}}</span>
+            {{/if}}
+        </div>
+    </div>
+</footer>

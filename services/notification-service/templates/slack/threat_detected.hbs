@@ -1,0 +1,19 @@
+🚨 *{{threat.severity}} Threat Detected*
+
+*{{threat.title}}*
+
+• *ID:* {{threat.id}}
+• *Category:* {{threat.category}}
+• *Severity:* {{threat.severity}}
+• *Detected:* {{formatDate threat.detectedAt 'short'}}
+
+{{threat.description}}
+
+{{#if threat.recommendations}}
+*Recommended Actions:*
+{{#each threat.recommendations}}
+• {{this}}
+{{/each}}
+{{/if}}
+
+<{{actionUrl}}|View Threat Details>

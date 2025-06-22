@@ -1,0 +1,59 @@
+version: '3.8'
+
+services:
+  report-service:
+    build: .
+    container_name: threatmodel-report-service
+    ports:
+      - "3007:3007"
+    environment:
+      - NODE_ENV=development
+      - PORT=3007
+      - HOST=0.0.0.0
+      - JWT_SECRET=dev-jwt-secret-change-in-production
+      - REDIS_URL=redis://redis:6379
+      - STORAGE_TYPE=local
+      - STORAGE_PATH=/app/reports
+      - PUPPETEER_HEADLESS=true
+      - PDF_PAGE_SIZE=A4
+      - TEMPLATE_PATH=/app/templates
+      - AUTH_SERVICE_URL=http://auth-service:3001
+      - PROJECT_SERVICE_URL=http://project-service:3003
+      - THREAT_ENGINE_URL=http://threat-engine:3004
+      - CORS_ORIGINS=http://localhost:3000
+    depends_on:
+      - redis
+    networks:
+      - threatmodel-network
+    volumes:
+      - ./reports:/app/reports
+      - ./templates:/app/templates
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3007/api/reports/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  redis:
+    image: redis:7-alpine
+    container_name: threatmodel-report-redis
+    ports:
+      - "6380:6379"
+    volumes:
+      - redis-data:/data
+    networks:
+      - threatmodel-network
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+networks:
+  threatmodel-network:
+    driver: bridge
+
+volumes:
+  redis-data:

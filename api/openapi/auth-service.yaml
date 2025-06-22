@@ -1,0 +1,626 @@
+openapi: 3.0.3
+info:
+  title: Authentication Service API
+  description: Authentication and authorization service for the Threat Modeling Application
+  version: 1.0.0
+  contact:
+    name: API Support
+    email: api-support@threatmodel.io
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: https://api.threatmodel.io/api/v1
+    description: Production server
+  - url: https://staging-api.threatmodel.io/api/v1
+    description: Staging server
+  - url: http://localhost:8001/api/v1
+    description: Development server
+
+tags:
+  - name: Authentication
+    description: Authentication operations
+  - name: Authorization
+    description: Authorization and permissions
+  - name: MFA
+    description: Multi-factor authentication
+
+paths:
+  /auth/login:
+    post:
+      tags:
+        - Authentication
+      summary: User login
+      description: Authenticate user with email and password
+      operationId: login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: user@example.com
+                password:
+                  type: string
+                  format: password
+                  minLength: 8
+                  example: SecureP@ssw0rd
+                mfa_code:
+                  type: string
+                  pattern: '^[0-9]{6}$'
+                  description: 6-digit MFA code if MFA is enabled
+                  example: "123456"
+                remember_me:
+                  type: boolean
+                  default: false
+                  description: Extend token lifetime
+      responses:
+        '200':
+          description: Successful authentication
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: MFA required
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: mfa_required
+                  message:
+                    type: string
+                    example: Multi-factor authentication code required
+                  mfa_type:
+                    type: string
+                    enum: [totp, sms, email]
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+
+  /auth/logout:
+    post:
+      tags:
+        - Authentication
+      summary: User logout
+      description: Invalidate current session and tokens
+      operationId: logout
+      security:
+        - bearerAuth: []
+      responses:
+        '204':
+          description: Successfully logged out
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /auth/refresh:
+    post:
+      tags:
+        - Authentication
+      summary: Refresh access token
+      description: Get new access token using refresh token
+      operationId: refreshToken
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - refresh_token
+              properties:
+                refresh_token:
+                  type: string
+                  description: Valid refresh token
+      responses:
+        '200':
+          description: New access token
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  access_token:
+                    type: string
+                    description: New JWT access token
+                  expires_in:
+                    type: integer
+                    description: Token lifetime in seconds
+                    example: 3600
+                  token_type:
+                    type: string
+                    default: Bearer
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /auth/verify:
+    get:
+      tags:
+        - Authentication
+      summary: Verify token
+      description: Verify if current token is valid
+      operationId: verifyToken
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Token is valid
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  valid:
+                    type: boolean
+                    example: true
+                  user_id:
+                    type: string
+                    format: uuid
+                  expires_at:
+                    type: string
+                    format: date-time
+                  permissions:
+                    type: array
+                    items:
+                      type: string
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /auth/password/reset:
+    post:
+      tags:
+        - Authentication
+      summary: Request password reset
+      description: Send password reset email
+      operationId: requestPasswordReset
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+              properties:
+                email:
+                  type: string
+                  format: email
+      responses:
+        '202':
+          description: Password reset email sent
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+
+  /auth/password/confirm:
+    post:
+      tags:
+        - Authentication
+      summary: Confirm password reset
+      description: Reset password with token
+      operationId: confirmPasswordReset
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - token
+                - password
+              properties:
+                token:
+                  type: string
+                  description: Password reset token from email
+                password:
+                  type: string
+                  format: password
+                  minLength: 8
+      responses:
+        '200':
+          description: Password successfully reset
+        '400':
+          description: Invalid or expired token
+
+  /auth/mfa/setup:
+    post:
+      tags:
+        - MFA
+      summary: Setup MFA
+      description: Initialize multi-factor authentication
+      operationId: setupMFA
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - type
+              properties:
+                type:
+                  type: string
+                  enum: [totp, sms, email]
+                phone_number:
+                  type: string
+                  pattern: '^\+[1-9]\d{1,14}$'
+                  description: Required for SMS MFA
+      responses:
+        '200':
+          description: MFA setup initiated
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/TOTPSetup'
+                  - $ref: '#/components/schemas/SMSSetup'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /auth/mfa/verify:
+    post:
+      tags:
+        - MFA
+      summary: Verify MFA setup
+      description: Complete MFA setup verification
+      operationId: verifyMFASetup
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - code
+              properties:
+                code:
+                  type: string
+                  pattern: '^[0-9]{6}$'
+      responses:
+        '200':
+          description: MFA successfully enabled
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  backup_codes:
+                    type: array
+                    items:
+                      type: string
+                    description: One-time backup codes
+        '400':
+          description: Invalid verification code
+
+  /auth/permissions:
+    get:
+      tags:
+        - Authorization
+      summary: Get user permissions
+      description: List all permissions for current user
+      operationId: getUserPermissions
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: User permissions
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user_id:
+                    type: string
+                    format: uuid
+                  roles:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Role'
+                  permissions:
+                    type: array
+                    items:
+                      type: string
+                    description: Flattened list of all permissions
+                  organization_permissions:
+                    type: object
+                    additionalProperties:
+                      type: array
+                      items:
+                        type: string
+
+  /auth/api-keys:
+    get:
+      tags:
+        - Authentication
+      summary: List API keys
+      description: Get all API keys for current user
+      operationId: listAPIKeys
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: List of API keys
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/APIKey'
+
+    post:
+      tags:
+        - Authentication
+      summary: Create API key
+      description: Generate new API key
+      operationId: createAPIKey
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+              properties:
+                name:
+                  type: string
+                  description: Descriptive name for the API key
+                expires_at:
+                  type: string
+                  format: date-time
+                  description: Optional expiration date
+                permissions:
+                  type: array
+                  items:
+                    type: string
+                  description: Subset of user permissions
+      responses:
+        '201':
+          description: API key created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    format: uuid
+                  key:
+                    type: string
+                    description: The API key (shown only once)
+                  name:
+                    type: string
+                  created_at:
+                    type: string
+                    format: date-time
+                  expires_at:
+                    type: string
+                    format: date-time
+
+  /auth/api-keys/{keyId}:
+    delete:
+      tags:
+        - Authentication
+      summary: Revoke API key
+      description: Delete an API key
+      operationId: revokeAPIKey
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: keyId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: API key revoked
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+    apiKey:
+      type: apiKey
+      in: header
+      name: X-API-Key
+
+  schemas:
+    AuthResponse:
+      type: object
+      properties:
+        access_token:
+          type: string
+          description: JWT access token
+        refresh_token:
+          type: string
+          description: JWT refresh token
+        token_type:
+          type: string
+          default: Bearer
+        expires_in:
+          type: integer
+          description: Token lifetime in seconds
+          example: 3600
+        user:
+          $ref: '#/components/schemas/AuthUser'
+
+    AuthUser:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        email:
+          type: string
+          format: email
+        username:
+          type: string
+        first_name:
+          type: string
+        last_name:
+          type: string
+        avatar_url:
+          type: string
+          format: uri
+        mfa_enabled:
+          type: boolean
+        email_verified:
+          type: boolean
+        last_login:
+          type: string
+          format: date-time
+
+    Role:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        description:
+          type: string
+        permissions:
+          type: array
+          items:
+            type: string
+
+    APIKey:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        last_used:
+          type: string
+          format: date-time
+        created_at:
+          type: string
+          format: date-time
+        expires_at:
+          type: string
+          format: date-time
+
+    TOTPSetup:
+      type: object
+      properties:
+        type:
+          type: string
+          enum: [totp]
+        secret:
+          type: string
+          description: Base32 encoded secret
+        qr_code:
+          type: string
+          format: uri
+          description: QR code image URL
+        manual_entry_key:
+          type: string
+          description: Key for manual entry
+
+    SMSSetup:
+      type: object
+      properties:
+        type:
+          type: string
+          enum: [sms]
+        phone_number:
+          type: string
+          description: Masked phone number
+        verification_sent:
+          type: boolean
+
+    Error:
+      type: object
+      required:
+        - type
+        - title
+        - status
+      properties:
+        type:
+          type: string
+          format: uri
+        title:
+          type: string
+        status:
+          type: integer
+        detail:
+          type: string
+        instance:
+          type: string
+          format: uri
+
+  responses:
+    BadRequest:
+      description: Bad request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+    Unauthorized:
+      description: Authentication required
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+    Forbidden:
+      description: Insufficient permissions
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+    TooManyRequests:
+      description: Rate limit exceeded
+      headers:
+        X-RateLimit-Limit:
+          schema:
+            type: integer
+        X-RateLimit-Remaining:
+          schema:
+            type: integer
+        X-RateLimit-Reset:
+          schema:
+            type: integer
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+security:
+  - bearerAuth: []
+  - apiKey: []

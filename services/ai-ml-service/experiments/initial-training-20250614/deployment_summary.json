@@ -1,0 +1,279 @@
+{
+  "experiment_id": "initial-training-20250614",
+  "deployment_timestamp": "2025-06-14T12:28:54.531366",
+  "deployment_result": {
+    "deployment_id": "deploy-initial-training-20250614-1749904133",
+    "status": "configuration_ready",
+    "timestamp": "2025-06-14T12:28:53.765647",
+    "endpoints": [
+      {
+        "model": "signature_detector",
+        "endpoint": "http://localhost:3007/predict/signature_detector",
+        "health_endpoint": "http://localhost:3007/health/signature_detector"
+      },
+      {
+        "model": "anomaly_detector",
+        "endpoint": "http://localhost:3007/predict/anomaly_detector",
+        "health_endpoint": "http://localhost:3007/health/anomaly_detector"
+      },
+      {
+        "model": "ensemble_rf",
+        "endpoint": "http://localhost:3007/predict/ensemble_rf",
+        "health_endpoint": "http://localhost:3007/health/ensemble_rf"
+      },
+      {
+        "model": "ensemble_lr",
+        "endpoint": "http://localhost:3007/predict/ensemble_lr",
+        "health_endpoint": "http://localhost:3007/health/ensemble_lr"
+      },
+      {
+        "model": "ensemble_svm",
+        "endpoint": "http://localhost:3007/predict/ensemble_svm",
+        "health_endpoint": "http://localhost:3007/health/ensemble_svm"
+      }
+    ],
+    "health_checks": [],
+    "manual_deployment": {
+      "instructions": [
+        "1. Copy model files to serving infrastructure",
+        "2. Load models using the provided configuration",
+        "3. Start serving endpoints",
+        "4. Configure monitoring and alerting",
+        "5. Run health checks"
+      ],
+      "model_files": [
+        "models/signature_detector_v2.0.0.joblib",
+        "models/anomaly_detector_v2.0.0.joblib",
+        "models/ensemble_rf_v2.0.0.joblib",
+        "models/ensemble_lr_v2.0.0.joblib",
+        "models/ensemble_svm_v2.0.0.joblib"
+      ],
+      "config_file": {
+        "service_name": "threat-detection-models",
+        "version": "2.0.0",
+        "deployment_id": "deploy-initial-training-20250614-1749904133",
+        "models": [
+          {
+            "name": "signature_detector",
+            "version": "2.0.0",
+            "file_path": "models/signature_detector_v2.0.0.joblib",
+            "endpoint": "/predict/signature_detector",
+            "health_endpoint": "/health/signature_detector",
+            "performance_metrics": {
+              "classification_report": {
+                "0": {
+                  "precision": 0.8680412371134021,
+                  "recall": 0.9964497041420118,
+                  "f1-score": 0.9278236914600551,
+                  "support": 845.0
+                },
+                "1": {
+                  "precision": 0.9,
+                  "recall": 0.17419354838709677,
+                  "f1-score": 0.2918918918918919,
+                  "support": 155.0
+                },
+                "accuracy": 0.869,
+                "macro avg": {
+                  "precision": 0.884020618556701,
+                  "recall": 0.5853216262645543,
+                  "f1-score": 0.6098577916759735,
+                  "support": 1000.0
+                },
+                "weighted avg": {
+                  "precision": 0.8729948453608248,
+                  "recall": 0.869,
+                  "f1-score": 0.8292542625269899,
+                  "support": 1000.0
+                }
+              },
+              "confusion_matrix": [
+                [
+                  842,
+                  3
+                ],
+                [
+                  128,
+                  27
+                ]
+              ],
+              "roc_auc": 0.6777247566329452,
+              "accuracy": 0.869
+            },
+            "resource_requirements": {
+              "cpu": "500m",
+              "memory": "1Gi",
+              "gpu": 0
+            }
+          },
+          {
+            "name": "anomaly_detector",
+            "version": "2.0.0",
+            "file_path": "models/anomaly_detector_v2.0.0.joblib",
+            "endpoint": "/predict/anomaly_detector",
+            "health_endpoint": "/health/anomaly_detector",
+            "performance_metrics": {
+              "classification_report": {
+                "0": {
+                  "precision": 0.8629500580720093,
+                  "recall": 0.8792899408284024,
+                  "f1-score": 0.8710433763188745,
+                  "support": 845.0
+                },
+                "1": {
+                  "precision": 0.26618705035971224,
+                  "recall": 0.23870967741935484,
+                  "f1-score": 0.25170068027210885,
+                  "support": 155.0
+                },
+                "accuracy": 0.78,
+                "macro avg": {
+                  "precision": 0.5645685542158607,
+                  "recall": 0.5589998091238786,
+                  "f1-score": 0.5613720282954917,
+                  "support": 1000.0
+                },
+                "weighted avg": {
+                  "precision": 0.7704517918766033,
+                  "recall": 0.78,
+                  "f1-score": 0.7750452584316259,
+                  "support": 1000.0
+                }
+              },
+              "confusion_matrix": [
+                [
+                  743,
+                  102
+                ],
+                [
+                  118,
+                  37
+                ]
+              ],
+              "accuracy": 0.78
+            },
+            "resource_requirements": {
+              "cpu": "500m",
+              "memory": "1Gi",
+              "gpu": 0
+            }
+          },
+          {
+            "name": "ensemble_rf",
+            "version": "2.0.0",
+            "file_path": "models/ensemble_rf_v2.0.0.joblib",
+            "endpoint": "/predict/ensemble_rf",
+            "health_endpoint": "/health/ensemble_rf",
+            "performance_metrics": {},
+            "resource_requirements": {
+              "cpu": "500m",
+              "memory": "1Gi",
+              "gpu": 0
+            }
+          },
+          {
+            "name": "ensemble_lr",
+            "version": "2.0.0",
+            "file_path": "models/ensemble_lr_v2.0.0.joblib",
+            "endpoint": "/predict/ensemble_lr",
+            "health_endpoint": "/health/ensemble_lr",
+            "performance_metrics": {},
+            "resource_requirements": {
+              "cpu": "500m",
+              "memory": "1Gi",
+              "gpu": 0
+            }
+          },
+          {
+            "name": "ensemble_svm",
+            "version": "2.0.0",
+            "file_path": "models/ensemble_svm_v2.0.0.joblib",
+            "endpoint": "/predict/ensemble_svm",
+            "health_endpoint": "/health/ensemble_svm",
+            "performance_metrics": {},
+            "resource_requirements": {
+              "cpu": "500m",
+              "memory": "1Gi",
+              "gpu": 0
+            }
+          }
+        ],
+        "ensemble_config": {
+          "enabled": true,
+          "voting_strategy": "weighted_average",
+          "weights": {
+            "signature_detector": 0.3,
+            "anomaly_detector": 0.2,
+            "ensemble_rf": 0.5
+          }
+        },
+        "serving_config": {
+          "batch_size": 32,
+          "timeout_ms": 5000,
+          "max_concurrent_requests": 100,
+          "health_check_interval": 30,
+          "auto_scaling": {
+            "enabled": true,
+            "min_replicas": 1,
+            "max_replicas": 5,
+            "target_cpu_percent": 70,
+            "target_memory_percent": 80
+          }
+        },
+        "monitoring": {
+          "enabled": true,
+          "metrics": [
+            "prediction_latency",
+            "prediction_accuracy",
+            "model_drift",
+            "data_drift",
+            "resource_usage"
+          ],
+          "alerting": {
+            "accuracy_threshold": 0.8,
+            "latency_threshold_ms": 1000,
+            "error_rate_threshold": 0.05,
+            "drift_threshold": 0.1
+          }
+        },
+        "security": {
+          "authentication_required": true,
+          "rate_limiting": {
+            "requests_per_minute": 1000,
+            "burst_size": 100
+          },
+          "input_validation": true,
+          "output_sanitization": true
+        }
+      }
+    }
+  },
+  "test_results": {
+    "timestamp": "2025-06-14T12:28:53.766643",
+    "tests": [
+      {
+        "test": "model_loading",
+        "status": "passed",
+        "details": "Successfully loaded 5 models"
+      },
+      {
+        "test": "preprocessor_loading",
+        "status": "passed",
+        "details": "Successfully loaded preprocessors"
+      }
+    ],
+    "summary": {
+      "total_tests": 2,
+      "passed": 2,
+      "failed": 0,
+      "success_rate": 1.0
+    }
+  },
+  "status": "ready_for_deployment",
+  "next_steps": [
+    "Set up MLOps serving infrastructure",
+    "Deploy models using provided configuration",
+    "Configure monitoring and alerting",
+    "Run deployment validation tests"
+  ]
+}

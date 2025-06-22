@@ -1,0 +1,79 @@
+================================================================================
+PATTERN RECOGNITION SYSTEM - TEST REPORT SUMMARY
+================================================================================
+Test Date: 2025-06-14T17:11:58.096891
+Test Duration: 595.51 seconds
+Components Tested: 6
+Total Test Cases: 18
+
+OVERALL RESULTS:
+----------------------------------------
+Overall Accuracy: 0.787
+Components Passed: 6/6
+Success Rate: 100.0%
+
+COMPONENT RESULTS:
+----------------------------------------
+advanced_pattern_recognition: COMPLETED
+  Accuracy Metrics:
+    accuracy: 1.000
+    precision: 1.000
+    recall: 1.000
+    f1_score: 1.000
+    auc_roc: 1.000
+    total_patterns_tested: 1250.000
+    patterns_detected: 1000.000
+    true_positives: 1000.000
+    false_positives: 0.000
+    false_negatives: 0.000
+    true_negatives: 250.000
+temporal_pattern_analyzer: COMPLETED
+  Accuracy Metrics:
+    accuracy: 1.000
+    precision: 1.000
+    recall: 1.000
+    f1_score: 1.000
+    temporal_patterns_analyzed: 500.000
+    phases_detected: 900.000
+    average_phases_per_pattern: 3.516
+behavioral_pattern_detector: COMPLETED
+  Accuracy Metrics:
+    average_risk_score_accuracy: 0.938
+pattern_learning_engine: COMPLETED
+  Accuracy Metrics:
+    initial_accuracy: 0.750
+    post_learning_accuracy: 0.820
+    accuracy_improvement: 0.070
+    convergence_rate: 0.895
+    patterns_learned: 9.000
+    patterns_adapted: 11.000
+    learning_stability: 0.949
+pattern_visualization: COMPLETED
+  Accuracy Metrics:
+    visualizations_generated: 4.000
+    success_rate: 1.000
+    data_accuracy: 0.993
+    visual_clarity_score: 0.837
+integrated_detector: COMPLETED
+  Accuracy Metrics:
+    overall_accuracy: 0.895
+    fusion_confidence: 0.885
+    detection_rate: 0.134
+    true_positive_rate: 0.798
+    false_positive_rate: 0.000
+    component_agreement: 0.868
+integration_tests: UNKNOWN
+performance_benchmarks: UNKNOWN
+accuracy_validation: UNKNOWN
+robustness_tests: UNKNOWN
+
+RECOMMENDATIONS:
+----------------------------------------
+1. Consider additional training data to improve overall accuracy
+2. Monitor performance metrics in production environment
+3. Implement continuous testing and validation
+4. Consider ensemble methods to improve robustness
+5. Optimize memory usage for better scalability
+6. Implement real-time monitoring and alerting
+
+================================================================================

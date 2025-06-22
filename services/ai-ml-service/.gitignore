@@ -1,0 +1,85 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build output
+dist/
+build/
+*.tsbuildinfo
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Testing
+coverage/
+.nyc_output/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+
+# ML Models and Data
+models/*.h5
+models/*.json
+models/*.weights
+data/training/*.json
+data/training/*.csv
+data/cache/
+
+# Temporary files
+*.tmp
+*.temp
+.cache/
+
+# OS files
+Thumbs.db
+
+# Sensitive Data - Multi-Language Implementation
+*.key
+*.pem
+secrets/
+credentials/
+.secrets
+api-keys.json
+
+# Private configuration
+config/private/
+config/production/
+
+# Sensitive URLs or IPs (production environments)
+*192.168.*
+*10.0.*
+*172.16.*
+
+# Language model files (can be large)
+language-models/
+*.lang
+*.dict
+*.vocab
+
+# Training data (often sensitive)
+data/sensitive/
+training-data/private/
+
+# Certificates
+*.crt
+*.p12
+*.pfx
+
+# Database files with sensitive data
+*.db
+*.sqlite
+*.sqlite3

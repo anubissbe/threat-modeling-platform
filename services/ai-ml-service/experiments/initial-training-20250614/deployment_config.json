@@ -1,0 +1,31 @@
+{
+  "deployment_name": "threat-detection-models",
+  "version": "2.0.0",
+  "models": [],
+  "serving_config": {
+    "replicas": 2,
+    "resources": {
+      "cpu": "1000m",
+      "memory": "2Gi",
+      "gpu": 0
+    },
+    "auto_scaling": {
+      "min_replicas": 1,
+      "max_replicas": 5,
+      "target_cpu_utilization": 70
+    }
+  },
+  "monitoring": {
+    "enabled": true,
+    "metrics": [
+      "accuracy",
+      "latency",
+      "throughput"
+    ],
+    "alerts": {
+      "accuracy_threshold": 0.8,
+      "latency_threshold": 1000,
+      "error_rate_threshold": 0.05
+    }
+  }
+}

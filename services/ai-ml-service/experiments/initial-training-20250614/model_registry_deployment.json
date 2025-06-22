@@ -1,0 +1,145 @@
+{
+  "experiment_id": "initial-training-20250614",
+  "models": [
+    {
+      "name": "signature_detector",
+      "version": "2.0.0",
+      "type": "threat_detection",
+      "framework": "scikit-learn",
+      "file_path": "models/signature_detector_v2.0.0.joblib",
+      "stage": "staging",
+      "performance_metrics": {
+        "classification_report": {
+          "0": {
+            "precision": 0.8680412371134021,
+            "recall": 0.9964497041420118,
+            "f1-score": 0.9278236914600551,
+            "support": 845.0
+          },
+          "1": {
+            "precision": 0.9,
+            "recall": 0.17419354838709677,
+            "f1-score": 0.2918918918918919,
+            "support": 155.0
+          },
+          "accuracy": 0.869,
+          "macro avg": {
+            "precision": 0.884020618556701,
+            "recall": 0.5853216262645543,
+            "f1-score": 0.6098577916759735,
+            "support": 1000.0
+          },
+          "weighted avg": {
+            "precision": 0.8729948453608248,
+            "recall": 0.869,
+            "f1-score": 0.8292542625269899,
+            "support": 1000.0
+          }
+        },
+        "confusion_matrix": [
+          [
+            842,
+            3
+          ],
+          [
+            128,
+            27
+          ]
+        ],
+        "roc_auc": 0.6777247566329452,
+        "accuracy": 0.869
+      },
+      "created_at": "2025-06-14T12:28:53.763301",
+      "description": "Advanced threat detection model: signature_detector"
+    },
+    {
+      "name": "anomaly_detector",
+      "version": "2.0.0",
+      "type": "threat_detection",
+      "framework": "scikit-learn",
+      "file_path": "models/anomaly_detector_v2.0.0.joblib",
+      "stage": "staging",
+      "performance_metrics": {
+        "classification_report": {
+          "0": {
+            "precision": 0.8629500580720093,
+            "recall": 0.8792899408284024,
+            "f1-score": 0.8710433763188745,
+            "support": 845.0
+          },
+          "1": {
+            "precision": 0.26618705035971224,
+            "recall": 0.23870967741935484,
+            "f1-score": 0.25170068027210885,
+            "support": 155.0
+          },
+          "accuracy": 0.78,
+          "macro avg": {
+            "precision": 0.5645685542158607,
+            "recall": 0.5589998091238786,
+            "f1-score": 0.5613720282954917,
+            "support": 1000.0
+          },
+          "weighted avg": {
+            "precision": 0.7704517918766033,
+            "recall": 0.78,
+            "f1-score": 0.7750452584316259,
+            "support": 1000.0
+          }
+        },
+        "confusion_matrix": [
+          [
+            743,
+            102
+          ],
+          [
+            118,
+            37
+          ]
+        ],
+        "accuracy": 0.78
+      },
+      "created_at": "2025-06-14T12:28:53.763337",
+      "description": "Advanced threat detection model: anomaly_detector"
+    },
+    {
+      "name": "ensemble_rf",
+      "version": "2.0.0",
+      "type": "threat_detection",
+      "framework": "scikit-learn",
+      "file_path": "models/ensemble_rf_v2.0.0.joblib",
+      "stage": "staging",
+      "performance_metrics": {},
+      "created_at": "2025-06-14T12:28:53.763371",
+      "description": "Advanced threat detection model: ensemble_rf"
+    },
+    {
+      "name": "ensemble_lr",
+      "version": "2.0.0",
+      "type": "threat_detection",
+      "framework": "scikit-learn",
+      "file_path": "models/ensemble_lr_v2.0.0.joblib",
+      "stage": "staging",
+      "performance_metrics": {},
+      "created_at": "2025-06-14T12:28:53.763405",
+      "description": "Advanced threat detection model: ensemble_lr"
+    },
+    {
+      "name": "ensemble_svm",
+      "version": "2.0.0",
+      "type": "threat_detection",
+      "framework": "scikit-learn",
+      "file_path": "models/ensemble_svm_v2.0.0.joblib",
+      "stage": "staging",
+      "performance_metrics": {},
+      "created_at": "2025-06-14T12:28:53.763437",
+      "description": "Advanced threat detection model: ensemble_svm"
+    }
+  ],
+  "timestamp": "2025-06-14T12:28:53.763277",
+  "preprocessors": {
+    "version": "2.0.0",
+    "file_path": "models/preprocessors_v2.0.0.joblib",
+    "created_at": "2025-06-14T12:28:53.763470"
+  }
+}
