@@ -25,7 +25,7 @@ async function startServer() {
     const app = await createApp();
     
     await app.listen({
-      port: config.PORT,
+      port: Number(config.PORT),
       host: config.HOST,
     });
 

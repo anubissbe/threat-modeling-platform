@@ -32,6 +32,7 @@ export interface ModelConfig {
 export interface PredictionRequest {
   modelType: ModelType;
   input: any;
+  data?: any;
   context?: PredictionContext;
   options?: PredictionOptions;
 }
