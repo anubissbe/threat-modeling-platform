@@ -24,6 +24,9 @@ FROM node:18-alpine
 # Install runtime dependencies for TensorFlow.js
 RUN apk add --no-cache python3 py3-pip
 
+# Create app user for security
+RUN addgroup -g 1001 -S nodejs && adduser -S nodeuser -u 1001
+
 WORKDIR /app
 
 # Copy package files
@@ -41,6 +44,12 @@ COPY --from=builder /app/data ./data 2>/dev/null || true
 
 # Create directories for models and data
 RUN mkdir -p models data
+
+# Change ownership to non-root user
+RUN chown -R nodeuser:nodejs /app
+
+# Switch to non-root user
+USER nodeuser
 
 # Expose port
 EXPOSE 3006

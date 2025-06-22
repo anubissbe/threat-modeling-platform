@@ -22,14 +22,14 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        language: [ 'javascript', 'typescript' ]
+        language: [ 'javascript' ]
         
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
         
       - name: Initialize CodeQL
-        uses: github/codeql-action/init@v2
+        uses: github/codeql-action/init@v3
         with:
           languages: ${{ matrix.language }}
           
@@ -51,7 +51,7 @@ jobs:
           done
           
       - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@v2
+        uses: github/codeql-action/analyze@v3
 
   # Dependency Scanning
   dependency-scan:
@@ -114,7 +114,7 @@ jobs:
           output: 'trivy-${{ matrix.service }}.sarif'
           
       - name: Upload Trivy scan results to GitHub Security tab
-        uses: github/codeql-action/upload-sarif@v2
+        uses: github/codeql-action/upload-sarif@v3
         with:
           sarif_file: 'trivy-${{ matrix.service }}.sarif'
 
@@ -191,8 +191,12 @@ jobs:
             if [ -f "$service/package.json" ]; then
               echo "=== License check for $service ==="
               cd "$service"
-              npm ci
-              license-checker --summary || true
+              if [ -f "package-lock.json" ]; then
+                npm ci --silent || npm install --silent
+              else
+                npm install --silent
+              fi
+              license-checker --summary || echo "License check completed with warnings for $service"
               cd ../..
             fi
           done
@@ -215,7 +219,7 @@ jobs:
           output_file_path: checkov-results.sarif
           
       - name: Upload Checkov scan results
-        uses: github/codeql-action/upload-sarif@v2
+        uses: github/codeql-action/upload-sarif@v3
         if: always()
         with:
           sarif_file: 'checkov-results.sarif'
