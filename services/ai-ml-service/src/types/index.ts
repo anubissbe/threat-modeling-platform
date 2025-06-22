@@ -231,6 +231,7 @@ export interface PatternAnalysisRequest {
   time_window?: string;
   confidence_threshold?: number;
   include_predictions?: boolean;
+  enable_learning?: boolean;
   options?: {
     use_lstm?: boolean;
     use_knn?: boolean;
