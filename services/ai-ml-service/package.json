@@ -20,7 +20,10 @@
     "train:mitigation": "ts-node src/scripts/train-models.ts mitigation-recommender",
     "train:pattern": "ts-node src/scripts/train-models.ts pattern-recognizer",
     "train:generate-data": "ts-node src/scripts/train-models.ts generate-data",
-    "train:evaluate": "ts-node src/scripts/train-models.ts evaluate"
+    "train:evaluate": "ts-node src/scripts/train-models.ts evaluate",
+    "test:integration": "jest --testNamePattern='integration|Integration'",
+    "test:e2e": "jest --testNamePattern='e2e|E2E'",
+    "test:performance": "jest --testNamePattern='performance|Performance'"
   },
   "dependencies": {
     "fastify": "^4.24.3",
