@@ -601,7 +601,7 @@ export class ModelMonitoring extends EventEmitter {
     logger.info({ modelId }, 'Drift detection initialized');
   }
 
-  getMetrics(): string {
-    return this.metricsCollector.getMetrics();
+  async getMetrics(): Promise<string> {
+    return await this.metricsCollector.getMetrics();
   }
 }

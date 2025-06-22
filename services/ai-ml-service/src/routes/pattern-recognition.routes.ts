@@ -27,49 +27,40 @@ export async function patternRecognitionRoutes(
     {
       preValidation: [authMiddleware],
       schema: {
-        description: 'Perform comprehensive pattern analysis on threat data',
-        tags: ['Pattern Recognition'],
         body: {
           type: 'object',
           required: ['data'],
           properties: {
             data: {
               type: 'object',
-              description: 'Input data for pattern analysis'
             },
             analysis_type: {
               type: 'string',
               enum: ['sequential', 'behavioral', 'temporal', 'statistical', 'all'],
               default: 'all',
-              description: 'Type of pattern analysis to perform'
             },
             confidence_threshold: {
               type: 'number',
               minimum: 0,
               maximum: 1,
               default: 0.6,
-              description: 'Minimum confidence threshold for pattern matches'
             },
             time_window: {
               type: 'string',
               default: '24h',
-              description: 'Time window for analysis (e.g., 1h, 24h, 7d)'
             },
             include_predictions: {
               type: 'boolean',
               default: true,
-              description: 'Include attack predictions in analysis'
             },
             enable_learning: {
               type: 'boolean',
               default: false,
-              description: 'Enable pattern learning and adaptation'
             }
           }
         },
         response: {
           200: {
-            description: 'Pattern analysis results',
             type: 'object',
             properties: {
               success: { type: 'boolean' },
@@ -114,29 +105,23 @@ export async function patternRecognitionRoutes(
     {
       preValidation: [authMiddleware],
       schema: {
-        description: 'Analyze behavioral patterns for insider threat detection',
-        tags: ['Behavioral Analysis'],
         body: {
           type: 'object',
           required: ['user_id', 'behavior_data'],
           properties: {
             user_id: {
               type: 'string',
-              description: 'Unique identifier for the user'
             },
             behavior_data: {
               type: 'object',
-              description: 'User behavioral data for analysis'
             },
             time_window: {
               type: 'string',
               default: '30d',
-              description: 'Analysis time window (e.g., 7d, 30d, 90d)'
             },
             baseline_update: {
               type: 'boolean',
               default: false,
-              description: 'Update behavioral baselines with new data'
             },
             context: {
               type: 'object',
@@ -145,13 +130,11 @@ export async function patternRecognitionRoutes(
                 user_lifecycle_events: { type: 'array' },
                 security_events: { type: 'array' }
               },
-              description: 'Contextual information for analysis'
             }
           }
         },
         response: {
           200: {
-            description: 'Behavioral analysis result',
             type: 'object',
             properties: {
               user_id: { type: 'string' },
@@ -178,8 +161,6 @@ export async function patternRecognitionRoutes(
     {
       preValidation: [authMiddleware],
       schema: {
-        description: 'Detect attack sequences and temporal patterns',
-        tags: ['Sequence Analysis'],
         body: {
           type: 'object',
           required: ['events'],
@@ -196,23 +177,19 @@ export async function patternRecognitionRoutes(
                   context: { type: 'object' }
                 }
               },
-              description: 'Sequence of events to analyze'
             },
             sequence_type: {
               type: 'string',
               enum: ['attack_chain', 'behavioral_sequence', 'temporal_pattern', 'all'],
               default: 'all',
-              description: 'Type of sequence analysis'
             },
             window_size: {
               type: 'number',
               default: 3600,
-              description: 'Time window size in seconds'
             },
             step_tolerance: {
               type: 'number',
               default: 0.8,
-              description: 'Tolerance for sequence step matching'
             }
           }
         }
@@ -227,33 +204,27 @@ export async function patternRecognitionRoutes(
     {
       preValidation: [authMiddleware],
       schema: {
-        description: 'Detect anomalous patterns in security data',
-        tags: ['Anomaly Detection'],
         body: {
           type: 'object',
           required: ['data'],
           properties: {
             data: {
               type: 'object',
-              description: 'Data to analyze for anomalies'
             },
             sensitivity: {
               type: 'number',
               minimum: 0.1,
               maximum: 1.0,
               default: 0.7,
-              description: 'Anomaly detection sensitivity'
             },
             detection_method: {
               type: 'string',
               enum: ['statistical', 'ml_based', 'hybrid'],
               default: 'hybrid',
-              description: 'Anomaly detection method'
             },
             baseline_period: {
               type: 'string',
               default: '30d',
-              description: 'Baseline period for normal behavior'
             }
           }
         }
@@ -268,21 +239,17 @@ export async function patternRecognitionRoutes(
     {
       preValidation: [authMiddleware],
       schema: {
-        description: 'Generate pattern visualization data',
-        tags: ['Visualization'],
         body: {
           type: 'object',
           required: ['pattern_id'],
           properties: {
             pattern_id: {
               type: 'string',
-              description: 'ID of the pattern to visualize'
             },
             visualization_type: {
               type: 'string',
               enum: ['timeline', 'network_graph', 'heatmap', 'flow_diagram', 'statistical_chart'],
               default: 'timeline',
-              description: 'Type of visualization to generate'
             },
             time_range: {
               type: 'object',
@@ -290,13 +257,11 @@ export async function patternRecognitionRoutes(
                 start: { type: 'string' },
                 end: { type: 'string' }
               },
-              description: 'Time range for visualization'
             },
             detail_level: {
               type: 'string',
               enum: ['summary', 'detailed', 'comprehensive'],
               default: 'detailed',
-              description: 'Level of detail in visualization'
             }
           }
         }
@@ -311,8 +276,6 @@ export async function patternRecognitionRoutes(
     {
       preValidation: [authMiddleware],
       schema: {
-        description: 'Start real-time pattern monitoring',
-        tags: ['Real-time Monitoring'],
         body: {
           type: 'object',
           required: ['patterns'],
@@ -320,7 +283,6 @@ export async function patternRecognitionRoutes(
             patterns: {
               type: 'array',
               items: { type: 'string' },
-              description: 'Pattern IDs to monitor'
             },
             monitoring_config: {
               type: 'object',
@@ -329,12 +291,10 @@ export async function patternRecognitionRoutes(
                 alert_threshold: { type: 'number', default: 0.8 },
                 notification_channels: { type: 'array', items: { type: 'string' } }
               },
-              description: 'Monitoring configuration'
             },
             data_sources: {
               type: 'array',
               items: { type: 'string' },
-              description: 'Data sources to monitor'
             }
           }
         }
@@ -349,8 +309,6 @@ export async function patternRecognitionRoutes(
     {
       preValidation: [authMiddleware],
       schema: {
-        description: 'Stop real-time pattern monitoring',
-        tags: ['Real-time Monitoring'],
         params: {
           type: 'object',
           properties: {
@@ -368,11 +326,8 @@ export async function patternRecognitionRoutes(
     {
       preValidation: [authMiddleware],
       schema: {
-        description: 'Get pattern recognition statistics and metrics',
-        tags: ['Statistics'],
         response: {
           200: {
-            description: 'Pattern recognition statistics',
             type: 'object',
             properties: {
               statistics: {
@@ -421,15 +376,12 @@ export async function patternRecognitionRoutes(
     {
       preValidation: [authMiddleware],
       schema: {
-        description: 'Search and discover threat patterns',
-        tags: ['Search'],
         body: {
           type: 'object',
           required: ['query'],
           properties: {
             query: {
               type: 'string',
-              description: 'Search query for patterns'
             },
             filters: {
               type: 'object',
@@ -440,19 +392,16 @@ export async function patternRecognitionRoutes(
                 time_range: { type: 'object' },
                 mitre_tactics: { type: 'array' }
               },
-              description: 'Search filters'
             },
             sort_by: {
               type: 'string',
               enum: ['relevance', 'confidence', 'last_seen', 'frequency'],
               default: 'relevance',
-              description: 'Sort results by'
             },
             limit: {
               type: 'number',
               default: 50,
               maximum: 500,
-              description: 'Maximum number of results'
             }
           }
         }
@@ -467,15 +416,12 @@ export async function patternRecognitionRoutes(
     {
       preValidation: [authMiddleware],
       schema: {
-        description: 'Provide feedback for pattern learning',
-        tags: ['Learning'],
         body: {
           type: 'object',
           required: ['pattern_id', 'feedback'],
           properties: {
             pattern_id: {
               type: 'string',
-              description: 'ID of the pattern to update'
             },
             feedback: {
               type: 'object',
@@ -486,12 +432,10 @@ export async function patternRecognitionRoutes(
                 suggested_improvements: { type: 'array' },
                 context_corrections: { type: 'object' }
               },
-              description: 'Learning feedback data'
             },
             evidence: {
               type: 'array',
               items: { type: 'object' },
-              description: 'Supporting evidence for feedback'
             }
           }
         }
@@ -506,8 +450,6 @@ export async function patternRecognitionRoutes(
     {
       preValidation: [authMiddleware],
       schema: {
-        description: 'Export pattern definitions',
-        tags: ['Export'],
         querystring: {
           type: 'object',
           properties: {
@@ -515,11 +457,9 @@ export async function patternRecognitionRoutes(
               type: 'string',
               enum: ['json', 'yaml', 'xml', 'stix'],
               default: 'json',
-              description: 'Export format'
             },
             pattern_ids: {
               type: 'string',
-              description: 'Comma-separated pattern IDs to export'
             }
           }
         }
@@ -534,8 +474,6 @@ export async function patternRecognitionRoutes(
     {
       preValidation: [authMiddleware],
       schema: {
-        description: 'Import pattern definitions',
-        tags: ['Import'],
         body: {
           type: 'object',
           required: ['patterns'],
@@ -543,19 +481,16 @@ export async function patternRecognitionRoutes(
             patterns: {
               type: 'array',
               items: { type: 'object' },
-              description: 'Pattern definitions to import'
             },
             format: {
               type: 'string',
               enum: ['json', 'yaml', 'stix'],
               default: 'json',
-              description: 'Import format'
             },
             merge_strategy: {
               type: 'string',
               enum: ['overwrite', 'merge', 'skip_existing'],
               default: 'merge',
-              description: 'Strategy for handling existing patterns'
             }
           }
         }
@@ -569,11 +504,8 @@ export async function patternRecognitionRoutes(
     '/patterns/health',
     {
       schema: {
-        description: 'Get pattern recognition service health',
-        tags: ['Health'],
         response: {
           200: {
-            description: 'Pattern recognition service health',
             type: 'object',
             properties: {
               status: { type: 'string' },

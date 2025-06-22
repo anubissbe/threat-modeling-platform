@@ -49,6 +49,13 @@ export interface PredictionOptions {
   topK?: number;
   includeConfidence?: boolean;
   includeExplanation?: boolean;
+  sequenceType?: string;
+  windowSize?: number;
+  stepTolerance?: number;
+  analysisType?: string;
+  timeWindow?: string;
+  includePredictions?: boolean;
+  enableLearning?: boolean;
 }
 
 export interface PredictionResponse {
@@ -281,7 +288,8 @@ export interface BehavioralAnalysisRequest {
 
 export interface PatternVisualizationRequest {
   pattern_id: string;
-  visualization_type: 'heatmap' | 'timeline' | 'network' | 'correlation';
+  visualization_type?: 'heatmap' | 'timeline' | 'network' | 'correlation';
+  detail_level?: 'summary' | 'detailed' | 'comprehensive';
   time_range?: {
     start: string;
     end: string;
@@ -290,10 +298,13 @@ export interface PatternVisualizationRequest {
 }
 
 export interface RealTimeMonitoringRequest {
-  monitor_id: string;
-  pattern_types: string[];
-  alert_threshold: number;
-  notification_channels: string[];
+  patterns: string[];
+  monitoring_config?: {
+    check_interval: number;
+    alert_threshold: number;
+    notification_channels: string[];
+  };
+  data_sources?: string[];
 }
 
 export interface BehavioralAnalysisResult {

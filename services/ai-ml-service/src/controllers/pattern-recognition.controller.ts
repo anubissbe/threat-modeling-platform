@@ -127,7 +127,7 @@ export class PatternRecognitionController {
       reply.code(500).send({
         success: false,
         error: 'Pattern analysis failed',
-        message: error.message,
+        message: (error as Error).message,
         request_id: requestId
       });
     }
@@ -184,7 +184,7 @@ export class PatternRecognitionController {
       reply.code(500).send({
         success: false,
         error: 'Behavioral analysis failed',
-        message: error.message,
+        message: (error as Error).message,
         request_id: requestId
       });
     }
@@ -208,7 +208,7 @@ export class PatternRecognitionController {
 
       // Convert events to pattern format and analyze
       const predictionRequest = {
-        data: { events, network: [], processes: [], user_activity: [] },
+        modelType: ModelType.PATTERN_RECOGNIZER,
         input: events,
         options: {
           sequenceType: sequence_type,
@@ -248,7 +248,7 @@ export class PatternRecognitionController {
       reply.code(500).send({
         success: false,
         error: 'Sequence detection failed',
-        message: error.message
+        message: (error as Error).message
       });
     }
   }
@@ -299,7 +299,7 @@ export class PatternRecognitionController {
       reply.code(500).send({
         success: false,
         error: 'Anomaly detection failed',
-        message: error.message
+        message: (error as Error).message
       });
     }
   }
@@ -323,8 +323,12 @@ export class PatternRecognitionController {
       const visualization = await this.visualizationEngine.generatePatternVisualization(
         pattern_id,
         visualization_type,
-        detail_level,
-        request.body.time_range
+        {
+          data_processing: {
+            detail_level,
+            time_range: request.body.time_range
+          }
+        } as any
       );
 
       const metadata = {
@@ -345,7 +349,7 @@ export class PatternRecognitionController {
       reply.code(500).send({
         success: false,
         error: 'Visualization generation failed',
-        message: error.message
+        message: (error as Error).message
       });
     }
   }
@@ -366,13 +370,27 @@ export class PatternRecognitionController {
         data_sources: data_sources?.length
       });
 
+      const defaultConfig = {
+        check_interval: 60,
+        alert_threshold: 0.8,
+        notification_channels: [],
+        auto_response_enabled: false,
+        escalation_rules: [],
+        data_retention: {
+          retention_period: 30,
+          archive_after: 90,
+          cleanup_frequency: 'daily'
+        },
+        performance_limits: {
+          max_concurrent_checks: 10,
+          max_memory_usage: 512,
+          timeout_threshold: 30
+        }
+      } as any;
+
       const monitoring_id = await this.monitoringService.startMonitoring({
         patterns,
-        config: monitoring_config || {
-          check_interval: 60,
-          alert_threshold: 0.8,
-          notification_channels: []
-        },
+        config: monitoring_config ? { ...defaultConfig, ...monitoring_config } : defaultConfig,
         data_sources: data_sources || []
       });
 
@@ -387,7 +405,7 @@ export class PatternRecognitionController {
       reply.code(500).send({
         success: false,
         error: 'Failed to start monitoring',
-        message: error.message
+        message: (error as Error).message
       });
     }
   }
@@ -416,7 +434,7 @@ export class PatternRecognitionController {
       reply.code(500).send({
         success: false,
         error: 'Failed to stop monitoring',
-        message: error.message
+        message: (error as Error).message
       });
     }
   }
@@ -450,7 +468,7 @@ export class PatternRecognitionController {
       reply.code(500).send({
         success: false,
         error: 'Failed to get statistics',
-        message: error.message
+        message: (error as Error).message
       });
     }
   }
@@ -486,7 +504,7 @@ export class PatternRecognitionController {
       reply.code(500).send({
         success: false,
         error: 'Pattern search failed',
-        message: error.message
+        message: (error as Error).message
       });
     }
   }
@@ -521,7 +539,7 @@ export class PatternRecognitionController {
       reply.code(500).send({
         success: false,
         error: 'Learning from feedback failed',
-        message: error.message
+        message: (error as Error).message
       });
     }
   }
@@ -551,7 +569,7 @@ export class PatternRecognitionController {
       reply.code(500).send({
         success: false,
         error: 'Pattern export failed',
-        message: error.message
+        message: (error as Error).message
       });
     }
   }
@@ -585,7 +603,7 @@ export class PatternRecognitionController {
       reply.code(500).send({
         success: false,
         error: 'Pattern import failed',
-        message: error.message
+        message: (error as Error).message
       });
     }
   }
@@ -629,7 +647,7 @@ export class PatternRecognitionController {
       logger.error('Health check failed:', error);
       reply.code(500).send({
         status: 'unhealthy',
-        error: error.message,
+        error: (error as Error).message,
         timestamp: new Date().toISOString()
       });
     }

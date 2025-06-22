@@ -23,8 +23,6 @@ export async function analysisRoutes(
     {
       preValidation: [authMiddleware],
       schema: {
-        description: 'Perform comprehensive AI-powered threat analysis',
-        tags: ['Analysis'],
         body: {
           type: 'object',
           required: ['projectId', 'components'],
@@ -100,8 +98,6 @@ export async function analysisRoutes(
     {
       preValidation: [authMiddleware],
       schema: {
-        description: 'Predict threats using AI classifier',
-        tags: ['Prediction'],
         body: {
           type: 'object',
           required: ['input'],
@@ -135,8 +131,6 @@ export async function analysisRoutes(
     {
       preValidation: [authMiddleware],
       schema: {
-        description: 'Predict vulnerabilities in components',
-        tags: ['Prediction'],
         body: {
           type: 'object',
           required: ['input'],
@@ -157,8 +151,6 @@ export async function analysisRoutes(
     {
       preValidation: [authMiddleware],
       schema: {
-        description: 'Get AI-powered mitigation recommendations',
-        tags: ['Mitigation'],
         body: {
           type: 'object',
           required: ['threats'],
@@ -189,8 +181,6 @@ export async function analysisRoutes(
     {
       preValidation: [authMiddleware],
       schema: {
-        description: 'Recognize threat patterns',
-        tags: ['Pattern Recognition'],
         body: {
           type: 'object',
           required: ['input'],
@@ -211,8 +201,6 @@ export async function analysisRoutes(
     {
       preValidation: [authMiddleware],
       schema: {
-        description: 'Query threat intelligence',
-        tags: ['Intelligence'],
         body: {
           type: 'object',
           required: ['query'],
@@ -231,8 +219,6 @@ export async function analysisRoutes(
     '/health',
     {
       schema: {
-        description: 'Get AI/ML service health status',
-        tags: ['Health'],
         response: {
           200: {
             description: 'Service health status',

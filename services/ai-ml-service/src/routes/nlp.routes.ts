@@ -22,8 +22,6 @@ export async function nlpRoutes(
     {
       preValidation: [authMiddleware],
       schema: {
-        description: 'Parse and analyze threat intelligence documents using NLP',
-        tags: ['NLP', 'Threat Intelligence'],
         body: {
           type: 'object',
           required: ['request_id', 'documents', 'parsing_options'],
@@ -76,7 +74,6 @@ export async function nlpRoutes(
         },
         response: {
           200: {
-            description: 'Successful threat intelligence parsing',
             type: 'object',
             properties: {
               request_id: { type: 'string' },
@@ -112,8 +109,6 @@ export async function nlpRoutes(
     {
       preValidation: [authMiddleware],
       schema: {
-        description: 'Extract security entities (IOCs, TTPs, actors) from text',
-        tags: ['NLP', 'Entity Extraction'],
         body: {
           type: 'object',
           required: ['request_id', 'text_content', 'extraction_options'],
@@ -151,7 +146,6 @@ export async function nlpRoutes(
         },
         response: {
           200: {
-            description: 'Successful entity extraction',
             type: 'object',
             properties: {
               request_id: { type: 'string' },
@@ -187,8 +181,6 @@ export async function nlpRoutes(
     {
       preValidation: [authMiddleware],
       schema: {
-        description: 'Analyze sentiment of security-related text',
-        tags: ['NLP', 'Sentiment Analysis'],
         body: {
           type: 'object',
           required: ['text'],
@@ -205,7 +197,6 @@ export async function nlpRoutes(
         },
         response: {
           200: {
-            description: 'Sentiment analysis result',
             type: 'object',
             properties: {
               sentiment: { type: 'string', enum: ['positive', 'neutral', 'negative'] },
@@ -243,8 +234,6 @@ export async function nlpRoutes(
     {
       preValidation: [authMiddleware],
       schema: {
-        description: 'Classify security-related text into categories',
-        tags: ['NLP', 'Text Classification'],
         body: {
           type: 'object',
           required: ['text'],
@@ -262,7 +251,6 @@ export async function nlpRoutes(
         },
         response: {
           200: {
-            description: 'Text classification result',
             type: 'object',
             properties: {
               primary_category: { type: 'string' },
@@ -306,8 +294,6 @@ export async function nlpRoutes(
     {
       preValidation: [authMiddleware],
       schema: {
-        description: 'Process multiple texts with multiple NLP operations',
-        tags: ['NLP', 'Batch Processing'],
         body: {
           type: 'object',
           required: ['texts', 'operations'],
@@ -448,11 +434,8 @@ export async function nlpRoutes(
     '/nlp/health',
     {
       schema: {
-        description: 'Get NLP services health status',
-        tags: ['NLP', 'Health'],
         response: {
           200: {
-            description: 'NLP services health status',
             type: 'object',
             properties: {
               status: { type: 'string' },

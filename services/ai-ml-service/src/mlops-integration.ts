@@ -163,7 +163,7 @@ export function convertToMLOpsTrainingConfig(existingConfig: any): any {
 
 // Monitoring integration for existing services
 export function setupMLOpsMonitoring(service: any): void {
-  if (!enhancedAIService.mlopsOrchestrator) {
+  if (!(enhancedAIService as any).mlopsOrchestrator) {
     return;
   }
 
