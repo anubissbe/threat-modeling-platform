@@ -6,6 +6,7 @@ interface User {
   email: string;
   name: string;
   role: string;
+  roles?: string[]; // Array of role names for RBAC
   organization?: string;
 }
 

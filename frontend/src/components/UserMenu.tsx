@@ -8,11 +8,13 @@ import {
 } from '@mui/material';
 import {
   AccountCircle,
+  Person,
   Settings,
   ExitToApp,
 } from '@mui/icons-material';
 import { useAppDispatch, useAppSelector } from '../store';
 import { logout } from '../features/auth/authSlice';
+import { useNavigate } from 'react-router-dom';
 
 interface UserMenuProps {
   anchorEl: null | HTMLElement;
@@ -22,7 +24,13 @@ interface UserMenuProps {
 
 export const UserMenu: React.FC<UserMenuProps> = ({ anchorEl, open, onClose }) => {
   const dispatch = useAppDispatch();
+  const navigate = useNavigate();
   const { user } = useAppSelector((state) => state.auth);
+
+  const handleProfile = () => {
+    navigate('/profile');
+    onClose();
+  };
 
   const handleLogout = () => {
     dispatch(logout());
@@ -76,6 +84,13 @@ export const UserMenu: React.FC<UserMenuProps> = ({ anchorEl, open, onClose }) =
       </MenuItem>
       
       <Divider />
+      
+      <MenuItem onClick={handleProfile}>
+        <ListItemIcon>
+          <Person fontSize="small" />
+        </ListItemIcon>
+        <ListItemText>Profile</ListItemText>
+      </MenuItem>
       
       <MenuItem>
         <ListItemIcon>

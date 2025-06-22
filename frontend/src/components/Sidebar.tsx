@@ -19,8 +19,11 @@ import {
   Help,
   Analytics,
   Group,
+  AdminPanelSettings,
+  History,
 } from '@mui/icons-material';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { useRoleCheck } from '../hooks/useRoleCheck';
 
 interface SidebarItem {
   text: string;
@@ -38,6 +41,8 @@ const sidebarItems: SidebarItem[] = [
 ];
 
 const bottomItems: SidebarItem[] = [
+  { text: 'Sessions', icon: <History />, path: '/sessions' },
+  { text: 'Admin Panel', icon: <AdminPanelSettings />, path: '/admin' },
   { text: 'Settings', icon: <Settings />, path: '/settings' },
   { text: 'Help', icon: <Help />, path: '/help' },
 ];
@@ -45,12 +50,21 @@ const bottomItems: SidebarItem[] = [
 export const Sidebar: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { isAdmin } = useRoleCheck();
 
   const handleNavigation = (path: string) => {
     navigate(path);
   };
 
   const isActive = (path: string) => location.pathname === path;
+
+  // Filter bottom items based on user roles
+  const filteredBottomItems = bottomItems.filter(item => {
+    if (item.path === '/admin') {
+      return isAdmin();
+    }
+    return true;
+  });
 
   return (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
@@ -91,7 +105,7 @@ export const Sidebar: React.FC = () => {
       <Divider />
       
       <List>
-        {bottomItems.map((item) => (
+        {filteredBottomItems.map((item) => (
           <ListItem key={item.text} disablePadding>
             <ListItemButton
               selected={isActive(item.path)}
