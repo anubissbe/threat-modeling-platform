@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 import { Command } from 'commander';
-import * as tf from '@tensorflow/tfjs-node';
+// import * as tf from '@tensorflow/tfjs-node'; // Disabled for now
 import { logger, mlLogger } from '../utils/logger';
 import { ThreatClassifierService } from '../services/threat-classifier.service';
 import { VulnerabilityPredictorService } from '../services/vulnerability-predictor.service';
@@ -335,7 +335,7 @@ class ModelTrainer {
    */
   async trainThreatClassifier(): Promise<void> {
     logger.info('Training Threat Classifier model...');
-    mlLogger.modelTrainingStarted(ModelType.THREAT_CLASSIFIER, { samples: 100 });
+    mlLogger.trainingStarted(ModelType.THREAT_CLASSIFIER, 100, { samples: 100 });
     
     try {
       const classifier = new ThreatClassifierService();
@@ -370,16 +370,12 @@ class ModelTrainer {
         categories: 16,
       }, null, 2));
 
-      mlLogger.modelTrainingCompleted(ModelType.THREAT_CLASSIFIER, {
-        duration: 1000,
-        accuracy: 0.94,
-        loss: 0.18,
-      });
+      mlLogger.trainingCompleted(ModelType.THREAT_CLASSIFIER, 0.94, 0.18, 1000);
       
       logger.info('✅ Threat Classifier training completed');
       
     } catch (error) {
-      mlLogger.modelTrainingFailed(ModelType.THREAT_CLASSIFIER, error as Error);
+      mlLogger.trainingFailed(ModelType.THREAT_CLASSIFIER, (error as Error).message);
       throw error;
     }
   }
@@ -389,7 +385,7 @@ class ModelTrainer {
    */
   async trainVulnerabilityPredictor(): Promise<void> {
     logger.info('Training Vulnerability Predictor model...');
-    mlLogger.modelTrainingStarted(ModelType.VULNERABILITY_PREDICTOR, { samples: 50 });
+    mlLogger.trainingStarted(ModelType.VULNERABILITY_PREDICTOR, 50, { samples: 50 });
     
     try {
       const predictor = new VulnerabilityPredictorService();
@@ -424,16 +420,12 @@ class ModelTrainer {
         models: ['neural-network', 'random-forest'],
       }, null, 2));
 
-      mlLogger.modelTrainingCompleted(ModelType.VULNERABILITY_PREDICTOR, {
-        duration: 1500,
-        accuracy: 0.89,
-        loss: 0.35,
-      });
+      mlLogger.trainingCompleted(ModelType.VULNERABILITY_PREDICTOR, 0.89, 0.35, 1500);
       
       logger.info('✅ Vulnerability Predictor training completed');
       
     } catch (error) {
-      mlLogger.modelTrainingFailed(ModelType.VULNERABILITY_PREDICTOR, error as Error);
+      mlLogger.trainingFailed(ModelType.VULNERABILITY_PREDICTOR, (error as Error).message);
       throw error;
     }
   }
@@ -443,7 +435,7 @@ class ModelTrainer {
    */
   async trainMitigationRecommender(): Promise<void> {
     logger.info('Training Mitigation Recommender model...');
-    mlLogger.modelTrainingStarted(ModelType.MITIGATION_RECOMMENDER, { samples: 200 });
+    mlLogger.trainingStarted(ModelType.MITIGATION_RECOMMENDER, 200, { samples: 200 });
     
     try {
       const recommender = new MitigationRecommenderService();
@@ -470,16 +462,12 @@ class ModelTrainer {
         mitigations: 50,
       }, null, 2));
 
-      mlLogger.modelTrainingCompleted(ModelType.MITIGATION_RECOMMENDER, {
-        duration: 1000,
-        accuracy: 0.92,
-        loss: 0.08,
-      });
+      mlLogger.trainingCompleted(ModelType.MITIGATION_RECOMMENDER, 0.92, 0.08, 1000);
       
       logger.info('✅ Mitigation Recommender training completed');
       
     } catch (error) {
-      mlLogger.modelTrainingFailed(ModelType.MITIGATION_RECOMMENDER, error as Error);
+      mlLogger.trainingFailed(ModelType.MITIGATION_RECOMMENDER, (error as Error).message);
       throw error;
     }
   }
@@ -489,7 +477,7 @@ class ModelTrainer {
    */
   async trainPatternRecognizer(): Promise<void> {
     logger.info('Training Pattern Recognizer model...');
-    mlLogger.modelTrainingStarted(ModelType.PATTERN_RECOGNIZER, { samples: 150 });
+    mlLogger.trainingStarted(ModelType.PATTERN_RECOGNIZER, 150, { samples: 150 });
     
     try {
       const recognizer = new PatternRecognizerService();
@@ -525,16 +513,12 @@ class ModelTrainer {
         patterns: 12,
       }, null, 2));
 
-      mlLogger.modelTrainingCompleted(ModelType.PATTERN_RECOGNIZER, {
-        duration: 1600,
-        accuracy: 0.91,
-        loss: 0.25,
-      });
+      mlLogger.trainingCompleted(ModelType.PATTERN_RECOGNIZER, 0.91, 0.25, 1600);
       
       logger.info('✅ Pattern Recognizer training completed');
       
     } catch (error) {
-      mlLogger.modelTrainingFailed(ModelType.PATTERN_RECOGNIZER, error as Error);
+      mlLogger.trainingFailed(ModelType.PATTERN_RECOGNIZER, (error as Error).message);
       throw error;
     }
   }
