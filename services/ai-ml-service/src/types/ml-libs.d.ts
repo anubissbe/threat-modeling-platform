@@ -43,8 +43,10 @@ declare namespace tf {
     compile(config: any): void;
     fit(x: any, y: any, config?: any): Promise<any>;
     fitDataset(dataset: any, config?: any): Promise<any>;
+    evaluateDataset(dataset: any): Promise<Tensor[]>;
     save(path: string): Promise<any>;
     summary(): void;
+    metricsNames: string[];
   }
 
   interface Tensor {
@@ -52,6 +54,7 @@ declare namespace tf {
     dispose(): void;
     size: number;
     dataSync(): any;
+    data(): Promise<any>;
   }
 
   interface Sequential extends LayersModel {
@@ -65,6 +68,13 @@ declare namespace tf {
   interface DataElement {
     xs: any;
     ys: any;
+  }
+
+  interface CustomCallbackArgs {
+    onEpochEnd?: (epoch: number, logs?: any) => Promise<void> | void;
+    onBatchEnd?: (batch: number, logs?: any) => Promise<void> | void;
+    onTrainBegin?: (logs?: any) => Promise<void> | void;
+    onTrainEnd?: (logs?: any) => Promise<void> | void;
   }
 
   function loadLayersModel(path: string): Promise<LayersModel>;
@@ -82,15 +92,24 @@ declare namespace tf {
   };
 
   const train: {
-    adam: (learningRate?: number) => Optimizer;
+    adam: (learningRate?: number, beta1?: number, beta2?: number, epsilon?: number) => Optimizer;
     sgd: (learningRate?: number) => Optimizer;
+    rmsprop: (learningRate?: number, decay?: number) => Optimizer;
   };
 
-  const data: {
-    array: (items: any[]) => any;
-    generator: (generator: () => any) => any;
-    zip: (datasets: any) => any;
-  };
+  namespace data {
+    interface Dataset<T> {
+      batch(batchSize: number): Dataset<T>;
+      repeat(count?: number): Dataset<T>;
+      take(count: number): Dataset<T>;
+      skip(count: number): Dataset<T>;
+      shuffle(bufferSize: number): Dataset<T>;
+    }
+
+    function array(items: any[]): Dataset<any>;
+    function generator(generator: () => any): Dataset<any>;
+    function zip(datasets: any): Dataset<any>;
+  }
 
   const losses: {
     binaryCrossentropy: string;

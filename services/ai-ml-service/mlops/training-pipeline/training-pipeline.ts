@@ -15,7 +15,7 @@ const logger = pino({ name: 'training-pipeline' });
 
 // Training configuration schema
 export const TrainingConfigSchema = z.object({
-  modelType: z.enum(['threat-classifier', 'vulnerability-predictor', 'mitigation-recommender', 'pattern-recognizer']),
+  modelType: z.enum(['threat-classifier', 'vulnerability-predictor', 'mitigation-recommender', 'pattern-recognizer', 'ensemble']),
   datasetConfig: z.object({
     trainPath: z.string(),
     validationPath: z.string(),
