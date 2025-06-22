@@ -223,6 +223,67 @@ export interface AnalysisRequest {
   options?: AnalysisOptions;
 }
 
+// Pattern Recognition Types
+export interface PatternAnalysisRequest {
+  data: any[];
+  patterns: string[];
+  analysis_type: 'sequential' | 'temporal' | 'structural' | 'behavioral';
+  time_window?: string;
+  confidence_threshold?: number;
+  options?: {
+    use_lstm?: boolean;
+    use_knn?: boolean;
+    use_statistical?: boolean;
+    ensemble_voting?: string;
+  };
+}
+
+export interface BehavioralAnalysisRequest {
+  user_id: string;
+  behavior_data: {
+    login_frequency: number;
+    off_hours_logins: number;
+    failed_login_attempts: number;
+    file_access_count: number;
+    sensitive_file_access: number;
+    email_volume: number;
+    external_email_ratio: number;
+    data_transfer_volume: number;
+    application_diversity: number;
+    vpn_usage: number;
+    weekend_activity: number;
+  };
+  time_window: string;
+  baseline_update: boolean;
+}
+
+export interface PatternVisualizationRequest {
+  pattern_id: string;
+  visualization_type: 'heatmap' | 'timeline' | 'network' | 'correlation';
+  time_range?: {
+    start: string;
+    end: string;
+  };
+  filters?: any;
+}
+
+export interface RealTimeMonitoringRequest {
+  monitor_id: string;
+  pattern_types: string[];
+  alert_threshold: number;
+  notification_channels: string[];
+}
+
+export interface BehavioralAnalysisResult {
+  user_id: string;
+  risk_score: number;
+  anomaly_indicators: string[];
+  behavioral_patterns: any[];
+  recommendations: string[];
+  confidence: number;
+  analysis_timestamp: string;
+}
+
 export interface ComponentAnalysis {
   id: string;
   type: string;
@@ -230,6 +291,7 @@ export interface ComponentAnalysis {
   dataFlow?: string[];
   technologies?: string[];
   interfaces?: string[];
+  indicators?: string[];
 }
 
 export interface AnalysisOptions {

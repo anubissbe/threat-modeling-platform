@@ -7,7 +7,7 @@ import { FastifyRequest, FastifyReply } from 'fastify';
 import { logger } from '../utils/logger';
 import { AdvancedPatternRecognitionService } from '../services/advanced-pattern-recognition.service';
 import { BehavioralPatternDetectorService } from '../services/behavioral-pattern-detector.service';
-import { PatternVisualizationEngine } from '../services/pattern-visualization.service';
+import { PatternVisualizationService } from '../services/pattern-visualization.service';
 import { RealTimeMonitoringService } from '../services/real-time-monitoring.service';
 import { CacheService } from '../services/cache.service';
 import {
@@ -22,14 +22,14 @@ import {
 export class PatternRecognitionController {
   private patternService: AdvancedPatternRecognitionService;
   private behavioralService: BehavioralPatternDetectorService;
-  private visualizationEngine: PatternVisualizationEngine;
+  private visualizationEngine: PatternVisualizationService;
   private monitoringService: RealTimeMonitoringService;
   private cacheService: CacheService;
 
   constructor(
     patternService: AdvancedPatternRecognitionService,
     behavioralService: BehavioralPatternDetectorService,
-    visualizationEngine: PatternVisualizationEngine,
+    visualizationEngine: PatternVisualizationService,
     monitoringService: RealTimeMonitoringService,
     cacheService: CacheService
   ) {

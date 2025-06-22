@@ -217,7 +217,7 @@ export class AdvancedPatternRecognitionService extends EventEmitter {
   private statisticalEngine: StatisticalPatternEngine;
   private learningEngine: PatternLearningEngine;
   private predictionEngine: AdvancedPredictionEngine;
-  private visualizationEngine: PatternVisualizationEngine;
+  private visualizationEngine: PatternVisualizationService;
 
   constructor() {
     super();
@@ -227,7 +227,7 @@ export class AdvancedPatternRecognitionService extends EventEmitter {
     this.statisticalEngine = new StatisticalPatternEngine();
     this.learningEngine = new PatternLearningEngine();
     this.predictionEngine = new AdvancedPredictionEngine();
-    this.visualizationEngine = new PatternVisualizationEngine();
+    this.visualizationEngine = new PatternVisualizationService();
   }
 
   /**
@@ -941,7 +941,7 @@ class AdvancedPredictionEngine {
   }
 }
 
-class PatternVisualizationEngine {
+class PatternVisualizationService {
   async initialize(): Promise<void> {
     logger.info('Pattern Visualization Engine initialized');
   }
