@@ -5,7 +5,7 @@
 
 import { EventEmitter } from 'events';
 import { logger, mlLogger } from '../utils/logger';
-import { ModelType, PredictionRequest, PredictionResponse, Evidence } from '../types';
+import { ModelType, PredictionRequest, PredictionResponse, Evidence, PatternMatch } from '../types';
 import { AdvancedPatternRecognitionService } from './advanced-pattern-recognition.service';
 import { TemporalPatternAnalyzerService } from './temporal-pattern-analyzer.service';
 import { BehavioralPatternDetectorService } from './behavioral-pattern-detector.service';
@@ -297,14 +297,7 @@ export interface LearningUpdate {
 }
 
 // Supporting interfaces for results
-export interface PatternMatch {
-  pattern_id: string;
-  pattern_name: string;
-  match_type: string;
-  confidence: number;
-  evidence: Evidence[];
-  timeline: any[];
-}
+// Using PatternMatch from types/index.ts
 
 export interface EmergingPattern {
   pattern_id: string;

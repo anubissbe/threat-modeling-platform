@@ -242,10 +242,20 @@ export interface PatternAnalysisRequest {
 
 export interface PatternMatch {
   pattern_id: string;
-  name: string;
-  type: string;
+  pattern_name: string;
+  name?: string;
+  match_type: 'complete' | 'partial' | 'predicted' | 'evolving';
+  type?: string;
   confidence: number;
+  completion_percentage?: number;
+  matched_sequence?: any[];
+  behavioral_analysis?: any;
+  temporal_analysis?: any;
+  risk_assessment?: any;
+  predictions?: any[];
+  evidence_chain?: Evidence[];
   evidence: Evidence[];
+  timeline?: any[];
   metadata: Record<string, any>;
   timestamp: Date;
 }

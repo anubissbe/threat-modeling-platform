@@ -6,7 +6,7 @@
 import { EventEmitter } from 'events';
 import * as tf from '@tensorflow/tfjs-node';
 import { logger, mlLogger } from '../utils/logger';
-import { ModelType, PredictionRequest, Evidence } from '../types';
+import { ModelType, PredictionRequest, Evidence, PatternMatch } from '../types';
 import { config } from '../config';
 
 // Advanced pattern recognition interfaces
@@ -122,20 +122,7 @@ export interface EnvironmentalFactor {
   normal_values: any[];
 }
 
-export interface PatternMatch {
-  pattern_id: string;
-  pattern_name: string;
-  match_type: 'complete' | 'partial' | 'predicted' | 'evolving';
-  confidence: number;
-  completion_percentage: number;
-  matched_sequence: SequenceMatch[];
-  behavioral_analysis: BehavioralAnalysis;
-  temporal_analysis: TemporalAnalysis;
-  risk_assessment: RiskAssessment;
-  predictions: AttackPrediction[];
-  evidence_chain: Evidence[];
-  timeline: TimelineEvent[];
-}
+// Using PatternMatch from types/index.ts
 
 export interface SequenceMatch {
   step: number;

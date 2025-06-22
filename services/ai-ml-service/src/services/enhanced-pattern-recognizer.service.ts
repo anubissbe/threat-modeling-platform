@@ -6,7 +6,7 @@
 import { EventEmitter } from 'events';
 import * as natural from 'natural';
 import { logger, mlLogger } from '../utils/logger';
-import { ModelType, PredictionRequest, PredictionResponse, Evidence } from '../types';
+import { ModelType, PredictionRequest, PredictionResponse, Evidence, PatternMatch } from '../types';
 import { config } from '../config';
 
 // Pattern recognition interfaces
@@ -41,16 +41,7 @@ export interface PatternIndicator {
   context?: Record<string, any>;
 }
 
-export interface PatternMatch {
-  pattern_id: string;
-  pattern_name: string;
-  confidence: number;
-  matched_stages: number[];
-  matched_indicators: PatternIndicator[];
-  timeline: PatternEvent[];
-  risk_score: number;
-  predicted_next_stages: AttackStage[];
-}
+// Using PatternMatch from types/index.ts
 
 export interface PatternEvent {
   timestamp: Date;
