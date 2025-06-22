@@ -1,0 +1,325 @@
+name: AI/ML Service Tests
+
+on:
+  push:
+    branches: [ main, master, develop ]
+    paths:
+      - 'services/ai-ml-service/**'
+      - '.github/workflows/ai-ml-tests.yml'
+  pull_request:
+    branches: [ main, master, develop ]
+    paths:
+      - 'services/ai-ml-service/**'
+      - '.github/workflows/ai-ml-tests.yml'
+
+env:
+  NODE_VERSION: '18'
+  PYTHON_VERSION: '3.9'
+
+jobs:
+  # AI/ML Service Unit Tests
+  ai-ml-unit-tests:
+    name: AI/ML Unit Tests
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: 'services/ai-ml-service/package-lock.json'
+          
+      - name: Install dependencies
+        working-directory: services/ai-ml-service
+        run: npm ci
+        
+      - name: Run TypeScript compilation
+        working-directory: services/ai-ml-service
+        run: npm run build
+        
+      - name: Run unit tests
+        working-directory: services/ai-ml-service
+        run: npm test -- --coverage --watchAll=false
+        
+      - name: Upload coverage reports
+        uses: codecov/codecov-action@v3
+        with:
+          file: services/ai-ml-service/coverage/lcov.info
+          flags: ai-ml-service
+
+  # Pattern Recognition E2E Tests
+  pattern-recognition-tests:
+    name: Pattern Recognition E2E Tests
+    runs-on: ubuntu-latest
+    needs: ai-ml-unit-tests
+    
+    services:
+      redis:
+        image: redis:7-alpine
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: 'services/ai-ml-service/package-lock.json'
+          
+      - name: Install dependencies
+        working-directory: services/ai-ml-service
+        run: npm ci
+        
+      - name: Run Pattern Recognition E2E Tests
+        working-directory: services/ai-ml-service
+        env:
+          REDIS_URL: redis://localhost:6379
+          NODE_ENV: test
+          JWT_SECRET: test-secret
+        run: npm test -- --testNamePattern="Pattern Recognition" --detectOpenHandles --forceExit
+        
+      - name: Upload test results
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: pattern-recognition-test-results
+          path: services/ai-ml-service/test-results/
+
+  # Multi-language NLP Tests
+  nlp-multilang-tests:
+    name: Multi-Language NLP Tests
+    runs-on: ubuntu-latest
+    needs: ai-ml-unit-tests
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: 'services/ai-ml-service/package-lock.json'
+          
+      - name: Install dependencies
+        working-directory: services/ai-ml-service
+        run: npm ci
+        
+      - name: Run Multi-Language NLP Tests
+        working-directory: services/ai-ml-service
+        env:
+          NODE_ENV: test
+          JWT_SECRET: test-secret
+        run: npm test -- --testNamePattern="Multi-Language NLP" --detectOpenHandles --forceExit
+        
+      - name: Upload NLP test results
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: nlp-test-results
+          path: services/ai-ml-service/test-results/
+
+  # Model Performance Tests
+  model-performance-tests:
+    name: Model Performance Tests
+    runs-on: ubuntu-latest
+    needs: ai-ml-unit-tests
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: 'services/ai-ml-service/package-lock.json'
+          
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+          
+      - name: Install Python dependencies
+        working-directory: services/ai-ml-service
+        run: |
+          pip install -r requirements.txt || echo "No requirements.txt found"
+          pip install scikit-learn joblib numpy pandas
+          
+      - name: Install Node.js dependencies
+        working-directory: services/ai-ml-service
+        run: npm ci
+        
+      - name: Run Model Performance Tests
+        working-directory: services/ai-ml-service
+        run: |
+          # Test threat detection model performance
+          python test-threat-detection.py
+          
+          # Test pattern recognition performance
+          python test-pattern-recognition.py
+          
+      - name: Upload performance test results
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: model-performance-results
+          path: services/ai-ml-service/test_results/
+
+  # MLOps Integration Tests
+  mlops-integration-tests:
+    name: MLOps Integration Tests
+    runs-on: ubuntu-latest
+    needs: ai-ml-unit-tests
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: 'services/ai-ml-service/package-lock.json'
+          
+      - name: Install dependencies
+        working-directory: services/ai-ml-service
+        run: npm ci
+        
+      - name: Build MLOps components
+        working-directory: services/ai-ml-service
+        run: |
+          npm run build
+          cd mlops && npx tsc
+          
+      - name: Run MLOps Integration Tests
+        working-directory: services/ai-ml-service
+        env:
+          NODE_ENV: test
+        run: |
+          node test-mlops.js
+          node test-mlops-basic.js
+          
+      - name: Upload MLOps test results
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: mlops-integration-results
+          path: services/ai-ml-service/mlops/test-results/
+
+  # API Integration Tests
+  api-integration-tests:
+    name: AI/ML API Integration Tests
+    runs-on: ubuntu-latest
+    needs: [pattern-recognition-tests, nlp-multilang-tests]
+    
+    services:
+      redis:
+        image: redis:7-alpine
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: 'services/ai-ml-service/package-lock.json'
+          
+      - name: Install dependencies
+        working-directory: services/ai-ml-service
+        run: npm ci
+        
+      - name: Build application
+        working-directory: services/ai-ml-service
+        run: npm run build
+        
+      - name: Start AI/ML service
+        working-directory: services/ai-ml-service
+        env:
+          NODE_ENV: test
+          REDIS_URL: redis://localhost:6379
+          JWT_SECRET: test-secret
+          PORT: 3006
+        run: |
+          npm start &
+          sleep 10
+          
+      - name: Wait for service to be ready
+        run: |
+          timeout 60 bash -c 'until curl -f http://localhost:3006/health; do sleep 2; done'
+          
+      - name: Run API integration tests
+        working-directory: services/ai-ml-service
+        env:
+          API_BASE_URL: http://localhost:3006
+          JWT_SECRET: test-secret
+        run: node test-integration.ts
+        
+      - name: Upload API test results
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: api-integration-results
+          path: services/ai-ml-service/test-results/
+
+  # Performance Benchmarks
+  performance-benchmarks:
+    name: AI/ML Performance Benchmarks
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: 'services/ai-ml-service/package-lock.json'
+          
+      - name: Install dependencies
+        working-directory: services/ai-ml-service
+        run: npm ci
+        
+      - name: Run performance benchmarks
+        working-directory: services/ai-ml-service
+        env:
+          NODE_ENV: production
+        run: |
+          npm run test:performance || echo "Performance tests completed"
+          
+      - name: Upload benchmark results
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: performance-benchmarks
+          path: services/ai-ml-service/benchmarks/

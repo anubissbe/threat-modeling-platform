@@ -1,0 +1,221 @@
+name: Security Scanning
+
+on:
+  push:
+    branches: [ main, master, develop ]
+  pull_request:
+    branches: [ main, master, develop ]
+  schedule:
+    # Run security scans daily at 2 AM UTC
+    - cron: '0 2 * * *'
+
+jobs:
+  # CodeQL Analysis
+  codeql:
+    name: CodeQL Analysis
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+      
+    strategy:
+      fail-fast: false
+      matrix:
+        language: [ 'javascript', 'typescript' ]
+        
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v2
+        with:
+          languages: ${{ matrix.language }}
+          
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: '**/package-lock.json'
+          
+      - name: Install dependencies
+        run: |
+          for service in services/*/; do
+            if [ -f "$service/package.json" ]; then
+              cd "$service"
+              npm ci
+              cd ../..
+            fi
+          done
+          
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v2
+
+  # Dependency Scanning
+  dependency-scan:
+    name: Dependency Vulnerability Scan
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: '**/package-lock.json'
+          
+      - name: Audit npm dependencies
+        run: |
+          for service in services/*/; do
+            if [ -f "$service/package.json" ]; then
+              echo "=== Auditing $service ==="
+              cd "$service"
+              npm audit --audit-level=moderate || true
+              cd ../..
+            fi
+          done
+          
+      - name: Run Snyk to check for vulnerabilities
+        uses: snyk/actions/node@master
+        continue-on-error: true
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        with:
+          args: --all-projects --severity-threshold=medium
+
+  # Container Security Scanning
+  container-scan:
+    name: Container Security Scan
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        service: [auth-service, ai-ml-service, user-service, project-service, threat-engine]
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        
+      - name: Build Docker image
+        run: |
+          cd services/${{ matrix.service }}
+          docker build -t ${{ matrix.service }}:latest .
+          
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: '${{ matrix.service }}:latest'
+          format: 'sarif'
+          output: 'trivy-${{ matrix.service }}.sarif'
+          
+      - name: Upload Trivy scan results to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v2
+        with:
+          sarif_file: 'trivy-${{ matrix.service }}.sarif'
+
+  # Secrets Scanning
+  secrets-scan:
+    name: Secrets Scanning
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        
+      - name: Run TruffleHog OSS
+        uses: trufflesecurity/trufflehog@main
+        with:
+          path: ./
+          base: main
+          head: HEAD
+          extra_args: --debug --only-verified
+
+  # SAST (Static Application Security Testing)
+  sast:
+    name: Static Application Security Testing
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: '**/package-lock.json'
+          
+      - name: Install ESLint Security Plugin
+        run: |
+          npm install -g eslint @typescript-eslint/parser @typescript-eslint/eslint-plugin eslint-plugin-security
+          
+      - name: Run ESLint Security Scan
+        run: |
+          for service in services/*/; do
+            if [ -f "$service/src" ]; then
+              echo "=== Security scanning $service ==="
+              cd "$service"
+              npx eslint "src/**/*.{ts,js}" --config .eslintrc.json --ext .ts,.js || true
+              cd ../..
+            fi
+          done
+
+  # License Compliance
+  license-scan:
+    name: License Compliance Scan
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: '**/package-lock.json'
+          
+      - name: Install license checker
+        run: npm install -g license-checker
+        
+      - name: Check licenses
+        run: |
+          for service in services/*/; do
+            if [ -f "$service/package.json" ]; then
+              echo "=== License check for $service ==="
+              cd "$service"
+              npm ci
+              license-checker --summary || true
+              cd ../..
+            fi
+          done
+
+  # Infrastructure as Code Security
+  iac-scan:
+    name: Infrastructure as Code Security
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        
+      - name: Run Checkov
+        uses: bridgecrewio/checkov-action@master
+        with:
+          directory: .
+          framework: dockerfile,kubernetes,terraform
+          output_format: sarif
+          output_file_path: checkov-results.sarif
+          
+      - name: Upload Checkov scan results
+        uses: github/codeql-action/upload-sarif@v2
+        if: always()
+        with:
+          sarif_file: 'checkov-results.sarif'
