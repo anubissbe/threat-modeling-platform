@@ -24,6 +24,7 @@ export const ModelMetadataSchema = z.object({
     f1Score: z.number().optional(),
     auc: z.number().optional(),
     loss: z.number().optional(),
+    valLoss: z.number().optional(),
     customMetrics: z.record(z.number()).optional()
   }),
   trainingInfo: z.object({

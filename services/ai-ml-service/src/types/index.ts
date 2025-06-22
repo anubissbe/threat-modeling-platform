@@ -230,12 +230,23 @@ export interface PatternAnalysisRequest {
   analysis_type: 'sequential' | 'temporal' | 'structural' | 'behavioral';
   time_window?: string;
   confidence_threshold?: number;
+  include_predictions?: boolean;
   options?: {
     use_lstm?: boolean;
     use_knn?: boolean;
     use_statistical?: boolean;
     ensemble_voting?: string;
   };
+}
+
+export interface PatternMatch {
+  pattern_id: string;
+  name: string;
+  type: string;
+  confidence: number;
+  evidence: Evidence[];
+  metadata: Record<string, any>;
+  timestamp: Date;
 }
 
 export interface BehavioralAnalysisRequest {
