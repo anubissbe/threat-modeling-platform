@@ -35,7 +35,12 @@ jobs:
           
       - name: Install dependencies
         working-directory: services/ai-ml-service
-        run: npm ci
+        run: |
+          if [ -f "package-lock.json" ]; then
+            npm ci
+          else
+            npm install
+          fi
         
       - name: Run TypeScript compilation
         working-directory: services/ai-ml-service
@@ -81,7 +86,12 @@ jobs:
           
       - name: Install dependencies
         working-directory: services/ai-ml-service
-        run: npm ci
+        run: |
+          if [ -f "package-lock.json" ]; then
+            npm ci
+          else
+            npm install
+          fi
         
       - name: Run Pattern Recognition E2E Tests
         working-directory: services/ai-ml-service
@@ -117,7 +127,12 @@ jobs:
           
       - name: Install dependencies
         working-directory: services/ai-ml-service
-        run: npm ci
+        run: |
+          if [ -f "package-lock.json" ]; then
+            npm ci
+          else
+            npm install
+          fi
         
       - name: Run Multi-Language NLP Tests
         working-directory: services/ai-ml-service
@@ -201,7 +216,12 @@ jobs:
           
       - name: Install dependencies
         working-directory: services/ai-ml-service
-        run: npm ci
+        run: |
+          if [ -f "package-lock.json" ]; then
+            npm ci
+          else
+            npm install
+          fi
         
       - name: Build MLOps components
         working-directory: services/ai-ml-service
@@ -254,7 +274,12 @@ jobs:
           
       - name: Install dependencies
         working-directory: services/ai-ml-service
-        run: npm ci
+        run: |
+          if [ -f "package-lock.json" ]; then
+            npm ci
+          else
+            npm install
+          fi
         
       - name: Build application
         working-directory: services/ai-ml-service
@@ -308,7 +333,12 @@ jobs:
           
       - name: Install dependencies
         working-directory: services/ai-ml-service
-        run: npm ci
+        run: |
+          if [ -f "package-lock.json" ]; then
+            npm ci
+          else
+            npm install
+          fi
         
       - name: Run performance benchmarks
         working-directory: services/ai-ml-service
