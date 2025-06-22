@@ -27,16 +27,22 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           
       - name: Install and lint services
+        timeout-minutes: 10
         run: |
-          # Function to install dependencies safely
+          # Function to install dependencies safely with timeout
           install_deps() {
             local service_dir=$1
             echo "Installing dependencies for $service_dir"
             cd "$service_dir"
+            
+            # Try npm ci first, then fallback to npm install with timeout
             if [ -f "package-lock.json" ]; then
-              npm ci
+              timeout 300 npm ci --no-audit --no-fund --prefer-offline || {
+                echo "npm ci failed or timed out, trying npm install"
+                timeout 300 npm install --no-audit --no-fund --prefer-offline
+              }
             else
-              npm install
+              timeout 300 npm install --no-audit --no-fund --prefer-offline
             fi
             cd - > /dev/null
           }
