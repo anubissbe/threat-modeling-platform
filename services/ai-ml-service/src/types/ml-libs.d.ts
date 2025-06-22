@@ -40,16 +40,68 @@ declare namespace tf {
     predict(input: any): any;
     dispose(): void;
     getWeights(): any[];
+    compile(config: any): void;
+    fit(x: any, y: any, config?: any): Promise<any>;
+    fitDataset(dataset: any, config?: any): Promise<any>;
+    save(path: string): Promise<any>;
+    summary(): void;
   }
 
   interface Tensor {
     array(): Promise<any>;
     dispose(): void;
     size: number;
+    dataSync(): any;
+  }
+
+  interface Sequential extends LayersModel {
+    add(layer: any): void;
+  }
+
+  interface Optimizer {
+    minimize(f: () => any): void;
+  }
+
+  interface DataElement {
+    xs: any;
+    ys: any;
   }
 
   function loadLayersModel(path: string): Promise<LayersModel>;
   function tensor(data: any): Tensor;
-  function sequential(): any;
-  const layers: any;
+  function tensor2d(data: any, shape?: number[]): Tensor;
+  function sequential(): Sequential;
+  
+  const layers: {
+    dense: (config: any) => any;
+    lstm: (config: any) => any;
+    embedding: (config: any) => any;
+    dropout: (config: any) => any;
+    bidirectional: (config: any) => any;
+    globalMaxPooling1d: (config: any) => any;
+  };
+
+  const train: {
+    adam: (learningRate?: number) => Optimizer;
+    sgd: (learningRate?: number) => Optimizer;
+  };
+
+  const data: {
+    array: (items: any[]) => any;
+    generator: (generator: () => any) => any;
+    zip: (datasets: any) => any;
+  };
+
+  const losses: {
+    binaryCrossentropy: string;
+    categoricalCrossentropy: string;
+    sparseCategoricalCrossentropy: string;
+    meanSquaredError: string;
+  };
+
+  const metrics: {
+    accuracy: string;
+    categoricalAccuracy: string;
+    binaryAccuracy: string;
+  };
 }
