@@ -1,6 +1,9 @@
 # Use Node.js 18 Alpine
 FROM node:18-alpine
 
+# Install curl for health checks
+RUN apk add --no-cache curl
+
 # Create app user for security
 RUN addgroup -g 1001 -S nodejs && adduser -S nodeuser -u 1001
 
