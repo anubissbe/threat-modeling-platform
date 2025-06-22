@@ -66,7 +66,7 @@ export class MLflow {
       });
       return response.data.experiment_id;
     } catch (error) {
-      if (error.response?.data?.error_code === 'RESOURCE_ALREADY_EXISTS') {
+      if ((error as any).response?.data?.error_code === 'RESOURCE_ALREADY_EXISTS') {
         // Get existing experiment
         const experiments = await this.listExperiments();
         const existing = experiments.find(exp => exp.name === name);

@@ -184,9 +184,10 @@ export async function createApp(): Promise<FastifyInstance> {
     const analysisController = new AnalysisController(aiOrchestrator);
 
     // Register routes
-    await fastify.register(analysisRoutes, {
+    await fastify.register(async (fastify) => {
+      await analysisRoutes(fastify, analysisController);
+    }, {
       prefix: '/api/ai',
-      controller: analysisController,
     });
 
     // Register NLP routes

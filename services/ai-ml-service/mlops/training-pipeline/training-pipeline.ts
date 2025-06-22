@@ -197,12 +197,12 @@ export abstract class BaseTrainer extends EventEmitter {
               if (!this.metrics.valMetrics[metricName]) {
                 this.metrics.valMetrics[metricName] = [];
               }
-              this.metrics.valMetrics[metricName].push(value);
+              this.metrics.valMetrics[metricName].push(value as number);
             } else if (key !== 'loss') {
               if (!this.metrics.trainMetrics[key]) {
                 this.metrics.trainMetrics[key] = [];
               }
-              this.metrics.trainMetrics[key].push(value);
+              this.metrics.trainMetrics[key].push(value as number);
             }
           }
 
@@ -465,7 +465,7 @@ export class TrainingPipeline {
         logger.error({ error, jobId }, 'Training failed');
         
         trainingJob.status = 'failed';
-        trainingJob.error = error.message;
+        trainingJob.error = (error as Error).message;
         trainingJob.endTime = new Date();
 
         if (this.mlflow && trainingJob.runId) {

@@ -185,8 +185,8 @@ export class MetricsCollector {
     this.diskUsage.set(disk);
   }
 
-  getMetrics(): string {
-    return this.register.metrics();
+  async getMetrics(): Promise<string> {
+    return await this.register.metrics();
   }
 
   getRegistry(): prom.Registry {

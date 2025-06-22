@@ -16,7 +16,8 @@ import {
   PatternVisualizationRequest,
   RealTimeMonitoringRequest,
   PatternMatch,
-  BehavioralAnalysisResult
+  BehavioralAnalysisResult,
+  ModelType
 } from '../types';
 
 export class PatternRecognitionController {
@@ -65,9 +66,9 @@ export class PatternRecognitionController {
         logger.info(`Returning cached pattern analysis [${requestId}]`);
         return reply.send({
           success: true,
-          patterns: cachedResult.patterns,
+          patterns: (cachedResult as any).patterns,
           metadata: {
-            ...cachedResult.metadata,
+            ...(cachedResult as any).metadata,
             cached: true,
             request_id: requestId
           }
@@ -76,7 +77,7 @@ export class PatternRecognitionController {
 
       // Convert request to prediction request format
       const predictionRequest = {
-        data: request.body.data,
+        modelType: ModelType.PATTERN_RECOGNIZER,
         input: request.body.data,
         options: {
           threshold: request.body.confidence_threshold,
