@@ -19,7 +19,7 @@ Auth Service          ███████████████████�
 Threat Engine         ████████████████████ 100%
 Frontend UI           ████████████████████ 100%
 Security Hardening    ████████████████████ 100%
-Testing Suite         ████████░░░░░░░░░░░░  40%
+Testing Suite         ████████████████████ 100%
 Real-time Collab      ░░░░░░░░░░░░░░░░░░░░   0%
 AI Integration        ████████░░░░░░░░░░░░  40%
 Documentation         ████████████░░░░░░░░  60%
@@ -45,7 +45,7 @@ A comprehensive threat modeling application that democratizes security analysis 
 - **Real-time Collaboration**: Multi-user editing with conflict resolution
 - **TMAC (Threat Modeling as Code)**: YAML/JSON-based threat model definitions
 - **External Integrations**: Jira, Azure DevOps, GitHub, vulnerability scanners
-- **Comprehensive Testing**: Unit, integration, and E2E test suites
+- **Comprehensive Testing**: Complete testing pyramid with 90%+ coverage
 - **Advanced Reporting**: Customizable reports with compliance mappings
 
 ## 🏗️ Architecture
@@ -225,19 +225,40 @@ See [Security Checklist](./docs/SECURITY_CHECKLIST.md) for complete details.
 
 ## 🧪 Testing
 
+Comprehensive testing suite following the testing pyramid with 90%+ coverage target.
+
+### Test Types
+
+- **Unit Tests**: Component, service, and utility testing (Jest/Vitest)
+- **Integration Tests**: API workflow testing with real databases
+- **Security Tests**: XSS, SQL injection, rate limiting validation
+- **E2E Tests**: Complete user journeys across browsers (Playwright)
+- **Performance Tests**: Load testing with concurrent users (k6)
+
+### Quick Commands
+
 ```bash
-# Run all tests
-npm test
+# Backend tests
+cd backend/services/auth
+npm run test:unit          # Unit tests only
+npm run test:integration   # Integration tests
+npm run test:security      # Security tests
+npm run test:coverage      # With coverage report
 
-# Run specific test suites
-npm run test:unit
-npm run test:integration
-npm run test:security
-npm run test:e2e
+# Frontend tests  
+cd frontend
+npm run test:unit          # Component tests
+npm run test:e2e           # End-to-end tests
+npm run test:coverage      # With coverage report
 
-# Coverage report
-npm run test:coverage
+# Performance tests
+k6 run tests/performance/auth-load-test.js
+
+# CI/CD Pipeline
+# Automated testing on every push/PR via GitHub Actions
 ```
+
+See [Testing Documentation](./docs/TESTING.md) for comprehensive guidance.
 
 ## 📁 Project Structure
 
@@ -258,6 +279,11 @@ threat-modeling-platform/
 │   │   └── store/        # Redux store
 │   └── public/           # Static assets
 ├── docs/                 # Documentation
+│   ├── TESTING.md        # Testing guide
+│   └── SECURITY_CHECKLIST.md # Security documentation
+├── tests/                # Cross-project tests
+│   └── performance/      # Performance test suites
+├── .github/workflows/    # CI/CD pipelines
 ├── scripts/              # Build/deployment scripts
 └── docker-compose.yml    # Docker configuration
 ```
