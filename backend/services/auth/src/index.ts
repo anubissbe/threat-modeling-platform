@@ -1,49 +1,24 @@
 import express from 'express';
-import helmet from 'helmet';
-import cors from 'cors';
 import dotenv from 'dotenv';
 import { createAuthRouter } from './routes/auth';
 import { createHealthRouter } from './routes/health';
 import { errorHandler, notFoundHandler } from './middleware/error-handler';
 import { logger } from './utils/logger';
-import { rateLimiter } from './middleware/rate-limiter';
+import { applySecurityMiddleware } from './middleware/security.middleware';
+import { auditService, AuditEventType } from './services/audit.service';
 
 dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 3001;
+const PORT = process.env['PORT'] || 3001;
 
-// Security middleware
-app.use(helmet({
-  contentSecurityPolicy: {
-    directives: {
-      defaultSrc: ["'self'"],
-      styleSrc: ["'self'", "'unsafe-inline'"],
-      scriptSrc: ["'self'"],
-      imgSrc: ["'self'", "data:", "https:"],
-    },
-  },
-  hsts: {
-    maxAge: 31536000,
-    includeSubDomains: true,
-    preload: true
-  }
-}));
+// Apply comprehensive security middleware
+applySecurityMiddleware(app);
 
-app.use(cors({
-  origin: process.env.ALLOWED_ORIGINS?.split(',') || ['http://localhost:3006'],
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
-}));
-
-// Rate limiting
-app.use(rateLimiter);
-
-// Body parsing
+// Body parsing with security considerations
 app.use(express.json({ 
   limit: '10mb',
-  verify: (req, res, buf) => {
+  verify: (_req, _res, buf) => {
     try {
       JSON.parse(buf.toString());
     } catch (e) {
@@ -52,15 +27,6 @@ app.use(express.json({
   }
 }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
-
-// Request logging
-app.use((req, res, next) => {
-  logger.info(`${req.method} ${req.url}`, {
-    ip: req.ip,
-    userAgent: req.get('User-Agent')
-  });
-  next();
-});
 
 // Routes
 app.use('/health', createHealthRouter());
@@ -73,20 +39,50 @@ app.use(notFoundHandler);
 app.use(errorHandler);
 
 // Graceful shutdown
-process.on('SIGTERM', () => {
-  logger.info('SIGTERM received, shutting down gracefully');
+const gracefulShutdown = async (signal: string) => {
+  logger.info(`${signal} received, shutting down gracefully`);
+  
+  // Flush audit logs
+  await auditService.shutdown();
+  
+  // Log system shutdown
+  await auditService.logEvent({
+    eventType: AuditEventType.SYSTEM_STOP,
+    action: `System shutdown via ${signal}`,
+    result: 'SUCCESS',
+  });
+  
   process.exit(0);
-});
+};
 
-process.on('SIGINT', () => {
-  logger.info('SIGINT received, shutting down gracefully');
-  process.exit(0);
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+
+// Unhandled rejection handling
+process.on('unhandledRejection', (reason, promise) => {
+  logger.error('Unhandled Rejection at:', promise, 'reason:', reason);
+  auditService.logSecurityAlert({
+    alertType: 'UNHANDLED_REJECTION',
+    severity: 'HIGH',
+    details: { reason: reason?.toString() },
+  });
 });
 
 // Start server
-app.listen(PORT, () => {
+app.listen(PORT, async () => {
   logger.info(`Auth service listening on port ${PORT}`);
-  logger.info(`Environment: ${process.env.NODE_ENV || 'development'}`);
+  logger.info(`Environment: ${process.env['NODE_ENV'] || 'development'}`);
+  
+  // Log system start
+  await auditService.logEvent({
+    eventType: AuditEventType.SYSTEM_START,
+    action: 'Auth service started',
+    result: 'SUCCESS',
+    metadata: {
+      port: PORT,
+      environment: process.env['NODE_ENV'] || 'development',
+    },
+  });
 });
 
 export default app;

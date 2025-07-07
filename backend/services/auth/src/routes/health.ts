@@ -6,24 +6,24 @@ export function createHealthRouter(): Router {
   const router = Router();
 
   // Basic health check
-  router.get('/', (req: Request, res: Response) => {
+  router.get('/', (_req: Request, res: Response) => {
     res.json({
       status: 'healthy',
       service: 'auth-service',
       timestamp: new Date().toISOString(),
       uptime: process.uptime(),
-      version: process.env.npm_package_version || '0.1.0'
+      version: process.env['npm_package_version'] || '0.1.0'
     });
   });
 
   // Detailed health check with dependencies
-  router.get('/detailed', async (req: Request, res: Response) => {
+  router.get('/detailed', async (_req: Request, res: Response) => {
     const health = {
       status: 'healthy',
       service: 'auth-service',
       timestamp: new Date().toISOString(),
       uptime: process.uptime(),
-      version: process.env.npm_package_version || '0.1.0',
+      version: process.env['npm_package_version'] || '0.1.0',
       checks: {
         database: 'unknown',
         memory: 'unknown'
@@ -66,7 +66,7 @@ export function createHealthRouter(): Router {
   });
 
   // Readiness check (for Kubernetes)
-  router.get('/ready', async (req: Request, res: Response) => {
+  router.get('/ready', async (_req: Request, res: Response) => {
     try {
       // Check if service can handle requests
       const client = await pool.connect();
@@ -88,7 +88,7 @@ export function createHealthRouter(): Router {
   });
 
   // Liveness check (for Kubernetes)
-  router.get('/live', (req: Request, res: Response) => {
+  router.get('/live', (_req: Request, res: Response) => {
     res.json({
       status: 'alive',
       timestamp: new Date().toISOString()

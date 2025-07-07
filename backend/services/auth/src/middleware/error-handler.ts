@@ -10,12 +10,12 @@ export function errorHandler(
   err: ApiError,
   req: Request,
   res: Response,
-  next: NextFunction
+  _next: NextFunction
 ): void {
   let { statusCode = 500, message } = err;
 
   // Don't expose internal errors in production
-  if (process.env.NODE_ENV === 'production' && !err.isOperational) {
+  if (process.env['NODE_ENV'] === 'production' && !err.isOperational) {
     statusCode = 500;
     message = 'Internal server error';
   }
@@ -39,7 +39,7 @@ export function errorHandler(
   };
 
   // Include stack trace in development
-  if (process.env.NODE_ENV === 'development') {
+  if (process.env['NODE_ENV'] === 'development') {
     response.stack = err.stack;
   }
 

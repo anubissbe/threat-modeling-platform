@@ -2,10 +2,10 @@ import jwt from 'jsonwebtoken';
 import { JWTPayload, User } from '../types/auth';
 import { logger } from './logger';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'your-super-secret-jwt-key';
-const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '15m';
-const REFRESH_TOKEN_SECRET = process.env.REFRESH_TOKEN_SECRET || 'your-super-secret-refresh-key';
-const REFRESH_TOKEN_EXPIRES_IN = process.env.REFRESH_TOKEN_EXPIRES_IN || '7d';
+const JWT_SECRET = process.env['JWT_SECRET'] || 'your-super-secret-jwt-key';
+const JWT_EXPIRES_IN = process.env['JWT_EXPIRES_IN'] || '15m';
+const REFRESH_TOKEN_SECRET = process.env['REFRESH_TOKEN_SECRET'] || 'your-super-secret-refresh-key';
+const REFRESH_TOKEN_EXPIRES_IN = process.env['REFRESH_TOKEN_EXPIRES_IN'] || '7d';
 
 export function generateAccessToken(user: User): string {
   const payload: Omit<JWTPayload, 'iat' | 'exp'> = {
@@ -17,13 +17,13 @@ export function generateAccessToken(user: User): string {
 
   return jwt.sign(payload, JWT_SECRET, {
     expiresIn: JWT_EXPIRES_IN,
-  });
+  } as any);
 }
 
 export function generateRefreshToken(userId: string): string {
   return jwt.sign({ userId }, REFRESH_TOKEN_SECRET, {
     expiresIn: REFRESH_TOKEN_EXPIRES_IN,
-  });
+  } as any);
 }
 
 export function verifyAccessToken(token: string): JWTPayload | null {
