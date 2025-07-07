@@ -15,7 +15,8 @@ export function createAuthRouter(): Router {
 
   // Login endpoint
   router.post('/login', 
-    authRateLimiter,
+    // Skip rate limiting in development
+    process.env['NODE_ENV'] === 'development' ? (req: any, res: any, next: any) => next() : authRateLimiter,
     validateRequest(loginSchema),
     asyncHandler(async (req: Request, res: Response) => {
       const { email, password } = req.body;
@@ -40,7 +41,8 @@ export function createAuthRouter(): Router {
 
   // Register endpoint
   router.post('/register',
-    registerRateLimiter,
+    // Skip rate limiting in development
+    process.env['NODE_ENV'] === 'development' ? (req: any, res: any, next: any) => next() : registerRateLimiter,
     validateRequest(registerSchema),
     asyncHandler(async (req: Request, res: Response) => {
       const { email, password, firstName, lastName, organization } = req.body;

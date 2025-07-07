@@ -15,16 +15,9 @@ const PORT = process.env['PORT'] || 3001;
 // Apply comprehensive security middleware
 applySecurityMiddleware(app);
 
-// Body parsing with security considerations
+// Body parsing
 app.use(express.json({ 
-  limit: '10mb',
-  verify: (_req, _res, buf) => {
-    try {
-      JSON.parse(buf.toString());
-    } catch (e) {
-      throw new Error('Invalid JSON');
-    }
-  }
+  limit: '10mb'
 }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 

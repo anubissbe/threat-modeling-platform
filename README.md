@@ -99,18 +99,44 @@ A comprehensive threat modeling application that democratizes security analysis 
 git clone https://github.com/anubissbe/threat-modeling-platform.git
 cd threat-modeling-platform
 
-# 2. Configure environment
-cp .env.example .env
-cp .env.security.example .env.security
-# Edit both .env files with your credentials
+# 2. Start database services
+docker run -d --name threatmodel-postgres \
+  --network threatmodel-network \
+  -p 5432:5432 \
+  -e POSTGRES_USER=threatmodel \
+  -e POSTGRES_PASSWORD=threatmodel123 \
+  -e POSTGRES_DB=threatmodel_db \
+  postgres:15
 
-# 3. Start all services
-docker-compose up -d
+docker run -d --name threatmodel-redis \
+  --network threatmodel-network \
+  -p 6379:6379 \
+  redis:7-alpine
 
-# 4. Access the application
-# Frontend: http://localhost:3000
+# 3. Start auth service
+docker run -d --name threatmodel-auth \
+  --network threatmodel-network \
+  -p 3001:3001 \
+  -e NODE_ENV=development \
+  -e CORS_ORIGIN=http://localhost:3006,http://localhost:3000 \
+  -e DB_HOST=threatmodel-postgres \
+  -e DB_NAME=threatmodel_db \
+  -e DB_USER=threatmodel \
+  -e DB_PASSWORD=threatmodel123 \
+  -e REDIS_HOST=threatmodel-redis \
+  -e JWT_SECRET=test-jwt-secret \
+  -e JWT_REFRESH_SECRET=test-refresh-secret \
+  -e SESSION_SECRET=test-session-secret \
+  -e MASTER_ENCRYPTION_KEY=test-32char-encryption-key-12345678901234567890 \
+  anubissbe/threat-modeling-auth:latest
+
+# 4. Start frontend
+cd frontend && npm install && npm run dev
+
+# 5. Access the application
+# Frontend: http://localhost:3006
 # API: http://localhost:3001
-# Swagger Docs: http://localhost:3001/api-docs
+# Default Login: admin@threatmodel.com / Admin123!
 ```
 
 ### 🛠️ Local Development

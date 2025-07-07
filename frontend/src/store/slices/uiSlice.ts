@@ -84,4 +84,8 @@ export const {
   clearLoading,
 } = uiSlice.actions;
 
+// Helper action creator for showing notifications
+export const showNotification = (notification: Omit<Notification, 'id'>) => 
+  addNotification(notification);
+
 export default uiSlice.reducer;

@@ -330,9 +330,11 @@ export const applySecurityMiddleware = (app: any) => {
   app.use(securityHeadersMiddleware);
   app.use(corsMiddleware);
   
-  // Rate limiting
-  app.use('/api/', rateLimitMiddleware);
-  app.use('/api/auth/', authRateLimitMiddleware);
+  // Rate limiting (disabled in development)
+  if (process.env['NODE_ENV'] !== 'development') {
+    app.use('/api/', rateLimitMiddleware);
+    app.use('/api/auth/', authRateLimitMiddleware);
+  }
   
   // Input validation and sanitization
   app.use(sanitizationMiddleware);
@@ -345,6 +347,6 @@ export const applySecurityMiddleware = (app: any) => {
   // Disable X-Powered-By header
   app.disable('x-powered-by');
   
-  // Trust proxy (for accurate IP addresses behind reverse proxy)
-  app.set('trust proxy', true);
+  // Disable trust proxy to avoid rate limiting issues
+  app.set('trust proxy', false);
 };
