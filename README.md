@@ -10,20 +10,29 @@
 
 > 🚀 Enterprise-grade threat modeling platform supporting multiple methodologies (STRIDE, PASTA, LINDDUN, VAST, DREAD) with AI-powered threat suggestions, visual DFD editor, and comprehensive security features.
 
-## 📊 Project Status
+## 📊 Project Status (as of 2025-07-08)
 
 ```
 Architecture Design    ████████████████████ 100%
-Core Backend          ████████████████████ 100%
+Database Schema       ████████████████████ 100%
 Auth Service          ████████████████████ 100%
-Threat Engine         ████████████████████ 100%
+AI Service            ████████████████████ 100%
+API Gateway           ████████████████████ 100%
+Core Service          ░░░░░░░░░░░░░░░░░░░░   0%
+Diagram Service       ░░░░░░░░░░░░░░░░░░░░   0%
+Report Service        ░░░░░░░░░░░░░░░░░░░░   0%
 Frontend UI           ████████████████████ 100%
-Security Hardening    ████████████████████ 100%
-Testing Suite         ████████████████████ 100%
-Real-time Collab      ░░░░░░░░░░░░░░░░░░░░   0%
-AI Integration        ████████░░░░░░░░░░░░  40%
-Documentation         ████████████░░░░░░░░  60%
+Infrastructure        ████░░░░░░░░░░░░░░░░  20%
+Testing Suite         ████████████░░░░░░░░  60%
+Documentation         ████████░░░░░░░░░░░░  40%
 ```
+
+### 🚨 Current Status
+- **3 of 16 services running**: Only PostgreSQL, Redis, and Auth Service are operational
+- **API Gateway**: Just implemented but not yet deployed
+- **Core Backend Services**: Directory structure exists but implementation missing
+- **Frontend**: Fully implemented but not containerized
+- **Infrastructure Services**: Not running (Elasticsearch, MinIO, RabbitMQ, monitoring stack)
 
 ## 🎯 Overview
 
@@ -34,323 +43,189 @@ A comprehensive threat modeling application that democratizes security analysis 
 #### ✅ Implemented
 - **Multi-Methodology Support**: STRIDE, PASTA, LINDDUN, VAST, DREAD, and Trike
 - **Visual DFD Editor**: Drag-and-drop interface with trust boundary visualization
-- **Core Threat Engine**: Automated threat identification based on selected methodology
-- **Authentication & Authorization**: JWT-based auth with RBAC, SSO support (SAML/OIDC ready)
-- **Enterprise Security**: Comprehensive security hardening with encryption, audit logging, and compliance features
-- **Project Management**: Complete CRUD operations for projects and threat models
-- **Real-time Updates**: WebSocket-based architecture for collaborative features (infrastructure ready)
+- **AI-Powered Threat Suggestions**: ML-based threat prediction with MITRE ATT&CK integration
+- **Authentication & Authorization**: JWT-based auth with RBAC (currently has token refresh issues)
+- **API Gateway**: Request routing and service orchestration
+- **Frontend Application**: Complete React UI with Material-UI components
+- **Database Schema**: PostgreSQL with pgvector for AI embeddings
 
-#### 🚧 In Progress
-- **AI-Powered Suggestions**: ML-based threat prediction and mitigation recommendations
-- **Real-time Collaboration**: Multi-user editing with conflict resolution
-- **TMAC (Threat Modeling as Code)**: YAML/JSON-based threat model definitions
-- **External Integrations**: Jira, Azure DevOps, GitHub, vulnerability scanners
-- **Comprehensive Testing**: Complete testing pyramid with 90%+ coverage
-- **Advanced Reporting**: Customizable reports with compliance mappings
+#### ❌ Not Yet Implemented
+- **Core Service**: Project and threat model management APIs
+- **Diagram Service**: Backend for DFD editor
+- **Report Service**: Report generation functionality
+- **Real-time Collaboration**: WebSocket-based multi-user editing
+- **TMAC (Threat Modeling as Code)**: YAML/JSON-based definitions
+- **External Integrations**: Jira, Azure DevOps, GitHub
+- **Infrastructure Services**: Elasticsearch, MinIO, RabbitMQ
 
 ## 🏗️ Architecture
 
-### System Overview
+The platform follows a microservices architecture with the following components:
+
 ```
-┌─────────────────────────────────────────────────────────────────────────┐
-│                           Frontend (React + TypeScript)                  │
-│  ┌─────────────┐  ┌──────────────┐  ┌─────────────┐  ┌──────────────┐ │
-│  │ DFD Editor  │  │ Threat Panel │  │  Projects   │  │   Reports    │ │
-│  └─────────────┘  └──────────────┘  └─────────────┘  └──────────────┘ │
-└────────────────────────────────┬────────────────────────────────────────┘
-                                 │ HTTPS
-┌────────────────────────────────┴────────────────────────────────────────┐
-│                         API Gateway (Express)                            │
-│  ┌──────────────────────────────────────────────────────────────────┐  │
-│  │ Security Middleware: Auth, Rate Limit, Encryption, Audit, CORS   │  │
-│  └──────────────────────────────────────────────────────────────────┘  │
-└────────────────────────────────┬────────────────────────────────────────┘
+┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
+│   Frontend      │────▶│   API Gateway   │────▶│  Auth Service   │
+│  (React/TS)     │     │   (Port 3000)   │     │  (Port 3001)    │
+└─────────────────┘     └────────┬────────┘     └─────────────────┘
                                  │
-┌────────────────────────────────┴────────────────────────────────────────┐
-│                          Microservices Layer                            │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐  ┌────────────┐ │
-│  │Auth Service  │  │Threat Engine │  │Project Mgmt  │  │AI Service  │ │
-│  │JWT/SSO/RBAC  │  │Methodologies │  │CRUD/Sharing  │  │ML Models   │ │
-│  └──────────────┘  └──────────────┘  └──────────────┘  └────────────┘ │
-└────────────────────────────────┬────────────────────────────────────────┘
-                                 │
-┌────────────────────────────────┴────────────────────────────────────────┐
-│                           Data Layer                                     │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐  ┌────────────┐ │
-│  │ PostgreSQL   │  │    Redis     │  │Elasticsearch │  │   MinIO    │ │
-│  │(Primary DB)  │  │(Cache/Queue) │  │(Search/Logs) │  │(File Store)│ │
-│  └──────────────┘  └──────────────┘  └──────────────┘  └────────────┘ │
-└─────────────────────────────────────────────────────────────────────────┘
+                    ┌────────────┴────────────┐
+                    ▼                         ▼
+           ┌─────────────────┐       ┌─────────────────┐
+           │  Core Service   │       │   AI Service    │
+           │  (Port 3002)    │       │  (Port 3003)    │
+           └─────────────────┘       └─────────────────┘
+                    │
+      ┌─────────────┴─────────────┬─────────────────┐
+      ▼                           ▼                 ▼
+┌─────────────────┐     ┌─────────────────┐ ┌─────────────────┐
+│ Diagram Service │     │ Report Service  │ │ Infrastructure  │
+│  (Port 3004)    │     │  (Port 3005)    │ │   Services      │
+└─────────────────┘     └─────────────────┘ └─────────────────┘
 ```
 
 ## 🚀 Quick Start
 
 ### Prerequisites
-- Node.js 20+ 
-- Docker & Docker Compose
-- PostgreSQL 15+
-- Redis 7+
+- Docker and Docker Compose
+- Node.js 20+
 - Git
 
-### 🐳 Docker Deployment (Recommended)
+### Installation
 
+1. **Clone the repository**
 ```bash
-# 1. Clone the repository
 git clone https://github.com/anubissbe/threat-modeling-platform.git
 cd threat-modeling-platform
-
-# 2. Start database services
-docker run -d --name threatmodel-postgres \
-  --network threatmodel-network \
-  -p 5432:5432 \
-  -e POSTGRES_USER=threatmodel \
-  -e POSTGRES_PASSWORD=threatmodel123 \
-  -e POSTGRES_DB=threatmodel_db \
-  postgres:15
-
-docker run -d --name threatmodel-redis \
-  --network threatmodel-network \
-  -p 6379:6379 \
-  redis:7-alpine
-
-# 3. Start auth service
-docker run -d --name threatmodel-auth \
-  --network threatmodel-network \
-  -p 3001:3001 \
-  -e NODE_ENV=development \
-  -e CORS_ORIGIN=http://localhost:3006,http://localhost:3000 \
-  -e DB_HOST=threatmodel-postgres \
-  -e DB_NAME=threatmodel_db \
-  -e DB_USER=threatmodel \
-  -e DB_PASSWORD=threatmodel123 \
-  -e REDIS_HOST=threatmodel-redis \
-  -e JWT_SECRET=test-jwt-secret \
-  -e JWT_REFRESH_SECRET=test-refresh-secret \
-  -e SESSION_SECRET=test-session-secret \
-  -e MASTER_ENCRYPTION_KEY=test-32char-encryption-key-12345678901234567890 \
-  anubissbe/threat-modeling-auth:latest
-
-# 4. Start frontend
-cd frontend && npm install && npm run dev
-
-# 5. Access the application
-# Frontend: http://localhost:3006
-# API: http://localhost:3001
-# Default Login: admin@threatmodel.com / Admin123!
 ```
 
-### 🛠️ Local Development
-
+2. **Set up environment variables**
 ```bash
-# 1. Install dependencies
-npm install
-
-# 2. Set up databases
-docker-compose up -d postgres redis
-
-# 3. Run migrations
-npm run migrate
-
-# 4. Start development servers
-npm run dev
-
-# Frontend: http://localhost:5173
-# Backend: http://localhost:3001
+cp .env.example .env
+cp .env.security.example .env.security
+# Edit .env files with your configuration
 ```
 
-## ⚙️ Configuration
-
-### Security Configuration (Required for Production)
-
-Create `.env.security` file:
-
-```env
-# Critical Security Settings
-MASTER_ENCRYPTION_KEY=<32+ character random key>
-SESSION_SECRET=<secure random secret>
-JWT_SECRET=<secure random secret>
-JWT_REFRESH_SECRET=<different secure secret>
-
-# Enable Security Features
-MFA_ENABLED=true
-SECURITY_MONITORING_ENABLED=true
-DETAILED_AUDIT_LOGGING=true
-GDPR_COMPLIANCE_ENABLED=true
-
-# See .env.security.example for complete list
-```
-
-## 🔒 Security Features
-
-### Implemented Security Controls
-
-#### 1. **Authentication & Authorization**
-- JWT-based authentication with refresh tokens
-- Role-Based Access Control (RBAC)
-- Multi-Factor Authentication (backend ready)
-- SSO support (SAML 2.0, OIDC)
-- Strong password policies
-- Session management
-
-#### 2. **Data Protection**
-- AES-256-GCM encryption for sensitive data
-- Field-level encryption with decorators
-- Data classification system (PUBLIC to TOP_SECRET)
-- Encrypted storage and transmission
-- Secure key management
-
-#### 3. **Security Monitoring**
-- Real-time threat detection
-- Brute force protection
-- Injection attempt detection
-- Anomaly detection
-- Automated IP blocking
-- Security event dashboard
-
-#### 4. **Audit & Compliance**
-- Comprehensive audit logging
-- GDPR compliance features
-- Data retention policies
-- Consent management
-- Right to erasure support
-
-#### 5. **Input Security**
-- SQL injection prevention
-- XSS protection
-- NoSQL injection prevention
-- File upload validation
-- Request size limiting
-
-See [Security Checklist](./docs/SECURITY_CHECKLIST.md) for complete details.
-
-## 🧪 Testing
-
-Comprehensive testing suite following the testing pyramid with 90%+ coverage target.
-
-### Test Types
-
-- **Unit Tests**: Component, service, and utility testing (Jest/Vitest)
-- **Integration Tests**: API workflow testing with real databases
-- **Security Tests**: XSS, SQL injection, rate limiting validation
-- **E2E Tests**: Complete user journeys across browsers (Playwright)
-- **Performance Tests**: Load testing with concurrent users (k6)
-
-### Quick Commands
-
+3. **Start infrastructure services**
 ```bash
-# Backend tests
-cd backend/services/auth
-npm run test:unit          # Unit tests only
-npm run test:integration   # Integration tests
-npm run test:security      # Security tests
-npm run test:coverage      # With coverage report
+# Currently only starts PostgreSQL, Redis, and Auth Service
+docker-compose up -d postgres redis auth-service
+```
 
-# Frontend tests  
+4. **Run the frontend** (backend services need implementation)
+```bash
 cd frontend
-npm run test:unit          # Component tests
-npm run test:e2e           # End-to-end tests
-npm run test:coverage      # With coverage report
-
-# Performance tests
-k6 run tests/performance/auth-load-test.js
-
-# CI/CD Pipeline
-# Automated testing on every push/PR via GitHub Actions
+npm install
+npm run dev
 ```
 
-See [Testing Documentation](./docs/TESTING.md) for comprehensive guidance.
+5. **Access the application**
+- Frontend: http://localhost:5173
+- API Gateway: http://localhost:3000 (when implemented)
+- Auth Service: http://localhost:3001
+
+## 🛠️ Development
+
+### Current Working Services
+
+| Service | Port | Status | Health |
+|---------|------|--------|---------|
+| PostgreSQL | 5432 | ✅ Running | Healthy |
+| Redis | 6379 | ✅ Running | Healthy |
+| Auth Service | 3001 | ⚠️ Running | Unhealthy (JWT issues) |
+| API Gateway | 3000 | ✅ Implemented | Not deployed |
+| Frontend | 5173 | ✅ Implemented | Dev mode only |
+
+### Services Needing Implementation
+
+| Service | Port | Purpose | Status |
+|---------|------|---------|--------|
+| Core Service | 3002 | Projects, threat models, threats APIs | ❌ Not implemented |
+| Diagram Service | 3004 | DFD editor backend | ❌ Not implemented |
+| Report Service | 3005 | Report generation | ❌ Not implemented |
+| Integration Service | - | External tool integration | ❌ Not implemented |
+| Notification Service | - | Alerts and notifications | ❌ Not implemented |
+
+### Infrastructure Services Not Running
+
+| Service | Port | Purpose |
+|---------|------|---------|
+| Elasticsearch | 9200 | Search functionality |
+| MinIO | 9000/9001 | Object storage |
+| RabbitMQ | 5672/15672 | Message queue |
+| Prometheus | 9090 | Metrics collection |
+| Grafana | 3030 | Monitoring dashboards |
 
 ## 📁 Project Structure
 
 ```
 threat-modeling-platform/
 ├── backend/
+│   ├── gateway/            # ✅ API Gateway (just created)
 │   ├── services/
-│   │   ├── auth/          # Authentication service
-│   │   ├── threat-engine/ # Core threat modeling engine
-│   │   ├── projects/      # Project management
-│   │   └── ai/           # AI/ML service
-│   └── shared/           # Shared utilities
-├── frontend/
-│   ├── src/
-│   │   ├── components/   # React components
-│   │   ├── pages/        # Page components
-│   │   ├── services/     # API services
-│   │   └── store/        # Redux store
-│   └── public/           # Static assets
-├── docs/                 # Documentation
-│   ├── TESTING.md        # Testing guide
-│   └── SECURITY_CHECKLIST.md # Security documentation
-├── tests/                # Cross-project tests
-│   └── performance/      # Performance test suites
-├── .github/workflows/    # CI/CD pipelines
-├── scripts/              # Build/deployment scripts
-└── docker-compose.yml    # Docker configuration
+│   │   ├── ai/            # ✅ AI-powered threat suggestions
+│   │   ├── auth/          # ✅ Authentication service
+│   │   ├── core/          # ❌ Core business logic (empty)
+│   │   ├── diagram/       # ❌ DFD editor backend (empty)
+│   │   ├── integration/   # ❌ External integrations (empty)
+│   │   ├── notification/  # ❌ Notification service (empty)
+│   │   ├── reporting/     # ❌ Report generation (empty)
+│   │   └── threat-engine/ # ⚠️ Threat modeling engine (partial)
+│   └── shared/            # Shared utilities
+├── frontend/              # ✅ React application
+├── docs/                  # Documentation
+├── tests/                 # Test suites
+└── docker-compose.yml     # Docker configuration
 ```
 
-## 🔧 Technology Stack
+## 🧪 Testing
 
-### Backend
-- **Node.js + TypeScript**: Core runtime
-- **Express.js**: Web framework
-- **PostgreSQL**: Primary database
-- **Redis**: Caching and queues
-- **JWT**: Authentication
-- **Passport.js**: Auth strategies
-- **Winston**: Logging
+```bash
+# Frontend tests
+cd frontend
+npm test
+npm run test:coverage
 
-### Frontend
-- **React 18**: UI framework
-- **TypeScript**: Type safety
-- **Material-UI**: Component library
-- **Redux Toolkit**: State management
-- **React Flow**: DFD editor
-- **Vite**: Build tool
+# Backend tests (when services are implemented)
+cd backend/services/<service-name>
+npm test
+```
 
-### Infrastructure
-- **Docker**: Containerization
-- **Kubernetes**: Orchestration (production)
-- **Prometheus/Grafana**: Monitoring
-- **Elasticsearch**: Search and logs
-- **MinIO**: Object storage
+## 🔒 Security
+
+The platform implements enterprise-grade security:
+- JWT authentication with refresh tokens (has issues)
+- Role-based access control (RBAC)
+- Data encryption at rest and in transit
+- Comprehensive audit logging
+- Input validation and sanitization
+- Rate limiting and DDoS protection
+
+## 📚 Documentation
+
+- [Architecture Overview](./docs/architecture/system-architecture.md)
+- [API Documentation](./docs/api/)
+- [Security Checklist](./docs/SECURITY_CHECKLIST.md)
+- [Development Guide](./docs/DEVELOPMENT.md)
+- [Deployment Guide](./docs/DEPLOYMENT.md)
 
 ## 🤝 Contributing
 
-We welcome contributions! Please see our [Contributing Guidelines](CONTRIBUTING.md) for details.
+This project is currently under active development. Key areas needing work:
 
-### Development Setup
+1. **Backend Service Implementation**
+   - Core Service (projects, threat models)
+   - Diagram Service (DFD editor backend)
+   - Report Service (report generation)
 
-1. Fork the repository
-2. Create a feature branch: `git checkout -b feature/amazing-feature`
-3. Make your changes and add tests
-4. Ensure all tests pass: `npm test`
-5. Submit a pull request
+2. **Infrastructure Setup**
+   - Fix Auth Service JWT refresh issues
+   - Start Elasticsearch, MinIO, RabbitMQ
+   - Configure monitoring stack
 
-### Code Standards
-- TypeScript strict mode
-- ESLint + Prettier formatting
-- 90%+ test coverage for new code
-- Security-first development
-
-## 📋 Roadmap
-
-### Current Sprint (January 2025)
-- [x] Security hardening implementation
-- [ ] Complete testing suite
-- [ ] Real-time collaboration features
-- [ ] Enhanced AI threat suggestions
-
-### Q1 2025
-- [ ] TMAC (Threat Modeling as Code)
-- [ ] External tool integrations
-- [ ] Advanced reporting engine
-- [ ] Performance optimization
-
-### Q2 2025
-- [ ] Mobile application
-- [ ] Advanced ML models
-- [ ] Compliance automation
-- [ ] Enterprise features
+3. **Testing & Documentation**
+   - Implement missing tests
+   - Complete API documentation
+   - Add deployment guides
 
 ## 📄 License
 
@@ -358,22 +233,10 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 🙏 Acknowledgments
 
-- OWASP Threat Modeling community
-- STRIDE methodology creators at Microsoft
-- Open source security tools community
-- All contributors and testers
-
-## 📞 Support
-
-- 📧 **Email**: support@threatmodeling.com
-- 🐛 **Issues**: [GitHub Issues](https://github.com/anubissbe/threat-modeling-platform/issues)
-- 💬 **Discussions**: [GitHub Discussions](https://github.com/anubissbe/threat-modeling-platform/discussions)
-- 📚 **Documentation**: [Project Wiki](https://github.com/anubissbe/threat-modeling-platform/wiki)
+- OWASP for threat modeling methodologies
+- MITRE for ATT&CK framework
+- The open-source security community
 
 ---
 
-<div align="center">
-  <strong>Built with ❤️ for the security community</strong>
-  <br>
-  <em>Making threat modeling accessible to everyone</em>
-</div>
+**Note**: This project is under active development. Many features are not yet implemented. See [PROJECT_STATE.md](PROJECT_STATE.md) for detailed status.
