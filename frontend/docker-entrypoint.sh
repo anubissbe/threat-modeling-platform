@@ -11,9 +11,11 @@ echo "Environment: $ENVIRONMENT"
 # Nginx config is already configured with hardcoded API Gateway URL for simplicity
 
 # Create runtime config file for the frontend
+# For browser access, use localhost instead of container name
+BROWSER_API_URL="http://localhost:3000"
 cat > /usr/share/nginx/html/config.js << EOF
 window.APP_CONFIG = {
-  API_BASE_URL: '$API_GATEWAY_URL',
+  API_BASE_URL: '$BROWSER_API_URL',
   ENVIRONMENT: '$ENVIRONMENT',
   VERSION: '1.0.0'
 };
