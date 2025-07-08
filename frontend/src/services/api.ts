@@ -3,8 +3,18 @@ import { store } from '@/store';
 import { refreshTokens, clearAuth } from '@/store/slices/authSlice';
 import { addNotification } from '@/store/slices/uiSlice';
 
-// API base configuration
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
+// API base configuration with runtime config fallback
+const getApiBaseUrl = (): string => {
+  // Check runtime config injected by Docker
+  if (typeof window !== 'undefined' && window.APP_CONFIG?.API_BASE_URL) {
+    return window.APP_CONFIG.API_BASE_URL;
+  }
+  
+  // Fallback to build-time environment variable
+  return import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
+};
+
+const API_BASE_URL = getApiBaseUrl();
 
 // Create axios instance
 const apiClient = axios.create({
