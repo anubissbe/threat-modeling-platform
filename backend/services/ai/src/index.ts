@@ -14,7 +14,7 @@ dotenv.config();
 
 // Application configuration
 const config = {
-  port: parseInt(process.env.PORT || '8002'),
+  port: parseInt(process.env.PORT || '3003'),
   host: process.env.HOST || '0.0.0.0',
   nodeEnv: process.env.NODE_ENV || 'development',
   corsOrigins: process.env.CORS_ORIGINS?.split(',') || ['http://localhost:3000', 'http://localhost:5173'],

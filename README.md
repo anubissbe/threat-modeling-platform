@@ -20,21 +20,22 @@ API Gateway           ███████████████████�
 Core Service          ████████████████████ 100% ✅ OPERATIONAL
 Diagram Service       ████████████████████ 100% ✅ OPERATIONAL
 AI Service            ████████████████░░░░  90% (implemented, not deployed)
-Report Service        ░░░░░░░░░░░░░░░░░░░░   0%
+Report Service        ████████████████████ 100% ✅ OPERATIONAL
 Frontend UI           ████████████████████ 100%
 Infrastructure        ██████████░░░░░░░░░░  50%
 Testing Suite         ████████████░░░░░░░░  60%
 Documentation         ████████░░░░░░░░░░░░  40%
 ```
 
-### ✅ Current Status - VISUAL THREAT MODELING READY
-- **7 of 16 services running**: PostgreSQL, Redis, RabbitMQ, Auth Service, Core Service, Diagram Service, API Gateway
+### ✅ Current Status - THREAT MODELING WITH REPORTS READY
+- **9 of 16 services running**: PostgreSQL, Redis, RabbitMQ, MinIO, Auth Service, Core Service, Diagram Service, Report Service, API Gateway
 - **Core Backend**: All essential services fully operational and healthy
 - **Visual Diagrams**: Diagram Service with DFD editor, canvas rendering, export capabilities
+- **Report Generation**: Report Service with HTML, JSON, PDF generation and CRUD management
 - **Database**: Initialized with complete schema (21 tables) and connected to services  
 - **API Integration**: Gateway successfully routing requests between all services
 - **Frontend**: Fully implemented but not containerized
-- **Platform Ready**: Full threat modeling workflows now supported
+- **Platform Ready**: Full threat modeling workflows with comprehensive reporting now supported
 
 ## 🎯 Overview
 
@@ -52,13 +53,10 @@ A comprehensive threat modeling application that democratizes security analysis 
 - **Database Schema**: PostgreSQL with pgvector for AI embeddings
 
 #### ❌ Not Yet Implemented
-- **Core Service**: Project and threat model management APIs
-- **Diagram Service**: Backend for DFD editor
-- **Report Service**: Report generation functionality
 - **Real-time Collaboration**: WebSocket-based multi-user editing
 - **TMAC (Threat Modeling as Code)**: YAML/JSON-based definitions
 - **External Integrations**: Jira, Azure DevOps, GitHub
-- **Infrastructure Services**: Elasticsearch, MinIO, RabbitMQ
+- **Infrastructure Services**: Elasticsearch (search functionality)
 
 ## 🏗️ Architecture
 

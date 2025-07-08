@@ -137,18 +137,23 @@ services:
     ports:
       - "3002:3002"
 
-  # AI Service (Python)
+  # AI Service (Node.js)
   ai-service:
     build:
       context: ./backend/services/ai
       dockerfile: Dockerfile
     container_name: threatmodel-ai
     environment:
-      ENVIRONMENT: development
+      NODE_ENV: development
       PORT: 3003
-      DATABASE_URL: postgresql://threatmodel:${DB_PASSWORD:-threatmodel123}@postgres:5432/threatmodel_db
-      REDIS_URL: redis://:${REDIS_PASSWORD:-redis123}@redis:6379
-      RABBITMQ_URL: amqp://${RABBITMQ_USER:-threatmodel}:${RABBITMQ_PASSWORD:-rabbitmq123}@rabbitmq:5672
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: threatmodel_db
+      DB_USER: threatmodel
+      DB_PASSWORD: ${DB_PASSWORD:-threatmodel123}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-redis123}
       OPENAI_API_KEY: ${OPENAI_API_KEY}
     depends_on:
       postgres:
@@ -159,10 +164,6 @@ services:
         condition: service_healthy
     ports:
       - "3003:3003"
-    volumes:
-      - ./backend/services/ai:/app
-      - ai_models:/app/models
-    command: python -m uvicorn main:app --host 0.0.0.0 --port 3003 --reload
 
   # Diagram Service
   diagram-service:

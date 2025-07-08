@@ -1,32 +1,44 @@
-FROM python:3.11-slim
+# Use Node.js 20 Alpine for smaller image size
+FROM node:20-alpine
 
-# Install system dependencies
-RUN apt-get update && apt-get install -y \
-    gcc \
-    g++ \
-    && rm -rf /var/lib/apt/lists/*
-
+# Set working directory
 WORKDIR /app
 
-# Copy requirements first for better caching
-COPY requirements.txt .
+# Copy package files
+COPY package*.json ./
 
-# Install Python dependencies
-RUN pip install --no-cache-dir -r requirements.txt
+# Install dependencies
+RUN npm install && npm cache clean --force
+
+# Copy TypeScript configuration
+COPY tsconfig.json ./
 
 # Copy source code
-COPY . .
+COPY src/ ./src/
 
-# Create non-root user
-RUN useradd -m -u 1001 python && \
-    chown -R python:python /app
+# Build the application
+RUN npm run build
 
-USER python
+# Remove dev dependencies to reduce image size
+RUN npm prune --omit=dev
 
+# Create non-root user for security
+RUN addgroup -g 1001 -S nodejs && \
+    adduser -S aiuser -u 1001
+
+# Create logs directory and set permissions
+RUN mkdir -p /app/logs && \
+    chown -R aiuser:nodejs /app
+
+# Switch to non-root user
+USER aiuser
+
+# Expose port
 EXPOSE 3003
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-  CMD python -c "import requests; exit(0 if requests.get('http://localhost:3003/health').status_code == 200 else 1)"
+    CMD node -e "require('http').get('http://localhost:3003/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })"
 
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "3003"]
+# Start the application
+CMD ["npm", "start"]
