@@ -1,0 +1,79 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+rule_files:
+  # - "first_rules.yml"
+  # - "second_rules.yml"
+
+scrape_configs:
+  # Prometheus itself
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  # Threat Modeling Platform Services
+  - job_name: 'threatmodel-auth'
+    static_configs:
+      - targets: ['auth-service:3001']
+    metrics_path: /metrics
+    scrape_interval: 30s
+
+  - job_name: 'threatmodel-core'
+    static_configs:
+      - targets: ['core-service:3002']
+    metrics_path: /metrics
+    scrape_interval: 30s
+
+  - job_name: 'threatmodel-ai'
+    static_configs:
+      - targets: ['ai-service:3003']
+    metrics_path: /metrics
+    scrape_interval: 30s
+
+  - job_name: 'threatmodel-diagram'
+    static_configs:
+      - targets: ['diagram-service:3004']
+    metrics_path: /metrics
+    scrape_interval: 30s
+
+  - job_name: 'threatmodel-report'
+    static_configs:
+      - targets: ['report-service:3005']
+    metrics_path: /metrics
+    scrape_interval: 30s
+
+  - job_name: 'threatmodel-gateway'
+    static_configs:
+      - targets: ['api-gateway:3000']
+    metrics_path: /metrics
+    scrape_interval: 30s
+
+  # Infrastructure Services
+  - job_name: 'postgres'
+    static_configs:
+      - targets: ['postgres:5432']
+    scrape_interval: 30s
+
+  - job_name: 'redis'
+    static_configs:
+      - targets: ['redis:6379']
+    scrape_interval: 30s
+
+  - job_name: 'elasticsearch'
+    static_configs:
+      - targets: ['elasticsearch:9200']
+    metrics_path: /_prometheus/metrics
+    scrape_interval: 30s
+
+  - job_name: 'rabbitmq'
+    static_configs:
+      - targets: ['rabbitmq:15692']
+    metrics_path: /metrics
+    scrape_interval: 30s
+
+  - job_name: 'minio'
+    static_configs:
+      - targets: ['minio:9000']
+    metrics_path: /minio/v2/metrics/cluster
+    scrape_interval: 30s
