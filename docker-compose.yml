@@ -110,10 +110,6 @@ services:
         condition: service_healthy
     ports:
       - "3001:3001"
-    volumes:
-      - ./backend/services/auth:/app
-      - /app/node_modules
-    command: npm run dev
 
   # Core Service
   core-service:
@@ -124,7 +120,11 @@ services:
     environment:
       NODE_ENV: development
       PORT: 3002
-      DATABASE_URL: postgresql://threatmodel:${DB_PASSWORD:-threatmodel123}@postgres:5432/threatmodel_db
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: threatmodel_db
+      DB_USER: threatmodel
+      DB_PASSWORD: ${DB_PASSWORD:-threatmodel123}
       REDIS_URL: redis://:${REDIS_PASSWORD:-redis123}@redis:6379
       RABBITMQ_URL: amqp://${RABBITMQ_USER:-threatmodel}:${RABBITMQ_PASSWORD:-rabbitmq123}@rabbitmq:5672
     depends_on:
@@ -136,10 +136,6 @@ services:
         condition: service_healthy
     ports:
       - "3002:3002"
-    volumes:
-      - ./backend/services/core:/app
-      - /app/node_modules
-    command: npm run dev
 
   # AI Service (Python)
   ai-service:
@@ -242,15 +238,8 @@ services:
     depends_on:
       - auth-service
       - core-service
-      - ai-service
-      - diagram-service
-      - report-service
     ports:
       - "3000:3000"
-    volumes:
-      - ./backend/gateway:/app
-      - /app/node_modules
-    command: npm run dev
 
   # Frontend (React)
   frontend:

@@ -42,7 +42,7 @@ app.use(morgan('combined', {
 }));
 
 // Health check
-app.get('/health', (req, res) => {
+app.get('/health', (_req, res) => {
   res.json({ 
     status: 'healthy', 
     service: 'api-gateway',
@@ -93,10 +93,10 @@ const services = {
 Object.entries(services).forEach(([path, config]) => {
   app.use(path, createProxyMiddleware({
     ...config,
-    onProxyReq: (proxyReq, req) => {
+    onProxyReq: (_proxyReq, req) => {
       logger.info(`Proxying ${req.method} ${req.originalUrl} to ${config.target}`);
     },
-    onError: (err, req, res) => {
+    onError: (err, _req, res) => {
       logger.error(`Proxy error: ${err.message}`);
       res.status(502).json({ 
         error: 'Bad Gateway', 
@@ -107,12 +107,12 @@ Object.entries(services).forEach(([path, config]) => {
 });
 
 // 404 handler
-app.use((req, res) => {
+app.use((_req, res) => {
   res.status(404).json({ error: 'Route not found' });
 });
 
 // Error handler
-app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
+app.use((err: any, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
   logger.error('Unhandled error:', err);
   res.status(500).json({ 
     error: 'Internal Server Error',
