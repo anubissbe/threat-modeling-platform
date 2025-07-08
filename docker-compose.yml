@@ -213,6 +213,40 @@ services:
     ports:
       - "3005:3005"
 
+  # Integration Service
+  integration-service:
+    build:
+      context: ./backend/services/integration
+      dockerfile: Dockerfile
+    container_name: threatmodel-integration
+    environment:
+      NODE_ENV: development
+      PORT: 3008
+      DATABASE_URL: postgresql://threatmodel:${DB_PASSWORD:-threatmodel123}@postgres:5432/threatmodel_db
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: threatmodel_db
+      DB_USER: threatmodel
+      DB_PASSWORD: ${DB_PASSWORD:-threatmodel123}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-redis123}
+      JWT_SECRET: ${JWT_SECRET:-your-jwt-secret-here}
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY:-0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef}
+      ALLOWED_ORIGINS: http://localhost:3000,http://localhost:3006
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    ports:
+      - "3008:3008"
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3008/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
   # API Gateway
   api-gateway:
     build:
@@ -228,11 +262,13 @@ services:
       AI_SERVICE_URL: http://ai-service:3003
       DIAGRAM_SERVICE_URL: http://diagram-service:3004
       REPORT_SERVICE_URL: http://report-service:3005
+      INTEGRATION_SERVICE_URL: http://integration-service:3008
     depends_on:
       - auth-service
       - core-service
       - diagram-service
       - report-service
+      - integration-service
     ports:
       - "3000:3000"
 

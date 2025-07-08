@@ -86,6 +86,16 @@ const services = {
     target: process.env.REPORT_SERVICE_URL || 'http://report-service:3005',
     changeOrigin: true,
     pathRewrite: { '^/api/reports': '/api/reports' }
+  },
+  '/api/integrations': {
+    target: process.env.INTEGRATION_SERVICE_URL || 'http://integration-service:3008',
+    changeOrigin: true,
+    pathRewrite: { '^/api/integrations': '/api/integrations' }
+  },
+  '/webhooks': {
+    target: process.env.INTEGRATION_SERVICE_URL || 'http://integration-service:3008',
+    changeOrigin: true,
+    pathRewrite: { '^/webhooks': '/webhooks' }
   }
 };
 
