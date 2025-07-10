@@ -3,8 +3,13 @@ global:
   evaluation_interval: 15s
 
 rule_files:
-  # - "first_rules.yml"
-  # - "second_rules.yml"
+  - "/etc/prometheus/alert-rules.yml"
+
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+          - alertmanager:9093
 
 scrape_configs:
   # Prometheus itself
@@ -13,41 +18,36 @@ scrape_configs:
       - targets: ['localhost:9090']
 
   # Threat Modeling Platform Services
-  - job_name: 'threatmodel-auth'
-    static_configs:
-      - targets: ['auth-service:3001']
-    metrics_path: /metrics
-    scrape_interval: 30s
-
   - job_name: 'threatmodel-core'
     static_configs:
       - targets: ['core-service:3002']
     metrics_path: /metrics
     scrape_interval: 30s
 
-  - job_name: 'threatmodel-ai'
+  - job_name: 'threatmodel-notification'
     static_configs:
-      - targets: ['ai-service:3003']
+      - targets: ['notification-service:3009']
     metrics_path: /metrics
     scrape_interval: 30s
 
-  - job_name: 'threatmodel-diagram'
+  - job_name: 'threatmodel-integration'
     static_configs:
-      - targets: ['diagram-service:3004']
+      - targets: ['integration-service:3008']
     metrics_path: /metrics
     scrape_interval: 30s
 
-  - job_name: 'threatmodel-report'
+  - job_name: 'threatmodel-tmac'
     static_configs:
-      - targets: ['report-service:3005']
+      - targets: ['tmac-service:3010']
     metrics_path: /metrics
     scrape_interval: 30s
 
-  - job_name: 'threatmodel-gateway'
+  # Application health endpoints
+  - job_name: 'threatmodel-health'
     static_configs:
-      - targets: ['api-gateway:3000']
-    metrics_path: /metrics
-    scrape_interval: 30s
+      - targets: ['auth-service:3001', 'ai-service:3003', 'diagram-service:3004', 'report-service:3005', 'api-gateway:3000']
+    metrics_path: /health
+    scrape_interval: 60s
 
   # Infrastructure Services
   - job_name: 'postgres'

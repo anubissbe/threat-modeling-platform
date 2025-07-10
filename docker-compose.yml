@@ -391,12 +391,32 @@ services:
     container_name: threatmodel-prometheus
     volumes:
       - ./infrastructure/prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./infrastructure/alerting/alert-rules.yml:/etc/prometheus/alert-rules.yml
       - prometheus_data:/prometheus
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
       - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--web.enable-lifecycle'
+      - '--web.enable-admin-api'
     ports:
       - "9090:9090"
+    depends_on:
+      - alertmanager
+
+  # Alertmanager
+  alertmanager:
+    image: prom/alertmanager:latest
+    container_name: threatmodel-alertmanager
+    volumes:
+      - ./infrastructure/alerting/alertmanager.yml:/etc/alertmanager/alertmanager.yml
+      - alertmanager_data:/alertmanager
+    command:
+      - '--config.file=/etc/alertmanager/alertmanager.yml'
+      - '--storage.path=/alertmanager'
+    ports:
+      - "9093:9093"
 
   # Notification Service
   notification:
@@ -457,6 +477,7 @@ volumes:
   ai_models:
   grafana_data:
   prometheus_data:
+  alertmanager_data:
 
 networks:
   default:

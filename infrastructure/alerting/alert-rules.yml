@@ -1,0 +1,172 @@
+groups:
+- name: threat-modeling-platform.rules
+  rules:
+  
+  # Service Health Alerts
+  - alert: ServiceDown
+    expr: core_service_up == 0
+    for: 1m
+    labels:
+      severity: critical
+      service: core-service
+    annotations:
+      summary: "Core service is down"
+      description: "Core service has been down for more than 1 minute."
+
+  - alert: NotificationServiceDown
+    expr: notification_service_info == 0
+    for: 1m
+    labels:
+      severity: critical
+      service: notification-service
+    annotations:
+      summary: "Notification service is down"
+      description: "Notification service has been down for more than 1 minute."
+
+  # Performance Alerts
+  - alert: HighResponseTime
+    expr: http_request_duration_ms > 2000
+    for: 5m
+    labels:
+      severity: warning
+      service: "{{ $labels.service }}"
+    annotations:
+      summary: "High response time detected"
+      description: "Service {{ $labels.service }} has response time above 2000ms for more than 5 minutes."
+
+  - alert: CriticalResponseTime
+    expr: http_request_duration_ms > 5000
+    for: 2m
+    labels:
+      severity: critical
+      service: "{{ $labels.service }}"
+    annotations:
+      summary: "Critical response time detected"
+      description: "Service {{ $labels.service }} has response time above 5000ms for more than 2 minutes."
+
+  # Resource Usage Alerts
+  - alert: HighMemoryUsage
+    expr: notification_service_memory_usage_bytes{type="heapUsed"} > 500000000
+    for: 10m
+    labels:
+      severity: warning
+      service: notification-service
+    annotations:
+      summary: "High memory usage detected"
+      description: "Notification service memory usage is above 500MB for more than 10 minutes."
+
+  - alert: CriticalMemoryUsage
+    expr: notification_service_memory_usage_bytes{type="heapUsed"} > 1000000000
+    for: 5m
+    labels:
+      severity: critical
+      service: notification-service
+    annotations:
+      summary: "Critical memory usage detected"
+      description: "Notification service memory usage is above 1GB for more than 5 minutes."
+
+  # Database Alerts
+  - alert: HighDatabaseConnections
+    expr: active_connections > 50
+    for: 5m
+    labels:
+      severity: warning
+      service: database
+    annotations:
+      summary: "High database connection count"
+      description: "Database has more than 50 active connections for more than 5 minutes."
+
+  - alert: CriticalDatabaseConnections
+    expr: active_connections > 90
+    for: 2m
+    labels:
+      severity: critical
+      service: database
+    annotations:
+      summary: "Critical database connection count"
+      description: "Database has more than 90 active connections for more than 2 minutes."
+
+  # Security Alerts
+  - alert: HighVulnerabilityCount
+    expr: vulnerabilities_total > 50
+    for: 0m
+    labels:
+      severity: warning
+      service: security
+    annotations:
+      summary: "High number of vulnerabilities detected"
+      description: "Total vulnerability count has exceeded 50."
+
+  - alert: CriticalVulnerabilityCount
+    expr: vulnerabilities_total > 100
+    for: 0m
+    labels:
+      severity: critical
+      service: security
+    annotations:
+      summary: "Critical number of vulnerabilities detected"
+      description: "Total vulnerability count has exceeded 100. Immediate attention required."
+
+  - alert: HighThreatCount
+    expr: threats_total > 20
+    for: 0m
+    labels:
+      severity: warning
+      service: security
+    annotations:
+      summary: "High number of threats detected"
+      description: "Total threat count has exceeded 20."
+
+  # Business Logic Alerts
+  - alert: HighErrorRate
+    expr: rate(http_requests_total{status=~"5.."}[5m]) > 0.1
+    for: 5m
+    labels:
+      severity: warning
+      service: "{{ $labels.service }}"
+    annotations:
+      summary: "High error rate detected"
+      description: "Service {{ $labels.service }} has error rate above 10% for more than 5 minutes."
+
+  - alert: CriticalErrorRate
+    expr: rate(http_requests_total{status=~"5.."}[5m]) > 0.5
+    for: 2m
+    labels:
+      severity: critical
+      service: "{{ $labels.service }}"
+    annotations:
+      summary: "Critical error rate detected"
+      description: "Service {{ $labels.service }} has error rate above 50% for more than 2 minutes."
+
+  # Infrastructure Alerts
+  - alert: PrometheusTargetDown
+    expr: up == 0
+    for: 1m
+    labels:
+      severity: warning
+      service: monitoring
+    annotations:
+      summary: "Prometheus target is down"
+      description: "Prometheus target {{ $labels.instance }} has been down for more than 1 minute."
+
+  # Report Generation Alerts
+  - alert: HighReportGenerationTime
+    expr: reports_generated_total > 100
+    for: 1h
+    labels:
+      severity: warning
+      service: reporting
+    annotations:
+      summary: "High report generation volume"
+      description: "More than 100 reports generated in the last hour."
+
+  # Notification System Alerts
+  - alert: NotificationProviderDown
+    expr: notification_provider_status == 0
+    for: 5m
+    labels:
+      severity: warning
+      service: notification
+    annotations:
+      summary: "Notification provider unavailable"
+      description: "Notification provider {{ $labels.provider }} has been unavailable for more than 5 minutes."
