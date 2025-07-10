@@ -7,7 +7,9 @@ import { createThreatModelRouter } from './routes/threat-models';
 import { createMethodologyRouter } from './routes/methodologies';
 import { createThreatRouter } from './routes/threats';
 import { createVulnerabilityRouter } from './routes/vulnerabilities';
+import { createActivityRouter } from './routes/activity';
 import { createHealthRouter } from './routes/health';
+import { createMetricsRouter, trackMetrics } from './routes/metrics';
 import { errorHandler, notFoundHandler } from './middleware/error-handler';
 import { authenticateToken } from './middleware/auth';
 import { logger } from './utils/logger';
@@ -52,6 +54,9 @@ app.use(cors({
 // Rate limiting
 app.use(rateLimiter);
 
+// Metrics tracking
+app.use(trackMetrics);
+
 // Body parsing
 app.use(express.json({ 
   limit: '10mb',
@@ -74,8 +79,9 @@ app.use((req, res, next) => {
   next();
 });
 
-// Routes
+// Public routes
 app.use('/health', createHealthRouter());
+app.use('/metrics', createMetricsRouter());
 
 // Protected routes
 app.use('/api/projects', authenticateToken, createProjectRouter());
@@ -83,6 +89,7 @@ app.use('/api/threat-models', authenticateToken, createThreatModelRouter());
 app.use('/api/methodologies', authenticateToken, createMethodologyRouter());
 app.use('/api/threats', authenticateToken, createThreatRouter());
 app.use('/api/vulnerabilities', authenticateToken, createVulnerabilityRouter());
+app.use('/api/activity', authenticateToken, createActivityRouter());
 
 // 404 handler
 app.use(notFoundHandler);
