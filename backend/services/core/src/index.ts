@@ -6,6 +6,7 @@ import { createProjectRouter } from './routes/projects';
 import { createThreatModelRouter } from './routes/threat-models';
 import { createMethodologyRouter } from './routes/methodologies';
 import { createThreatRouter } from './routes/threats';
+import { createVulnerabilityRouter } from './routes/vulnerabilities';
 import { createHealthRouter } from './routes/health';
 import { errorHandler, notFoundHandler } from './middleware/error-handler';
 import { authenticateToken } from './middleware/auth';
@@ -81,6 +82,7 @@ app.use('/api/projects', authenticateToken, createProjectRouter());
 app.use('/api/threat-models', authenticateToken, createThreatModelRouter());
 app.use('/api/methodologies', authenticateToken, createMethodologyRouter());
 app.use('/api/threats', authenticateToken, createThreatRouter());
+app.use('/api/vulnerabilities', authenticateToken, createVulnerabilityRouter());
 
 // 404 handler
 app.use(notFoundHandler);
