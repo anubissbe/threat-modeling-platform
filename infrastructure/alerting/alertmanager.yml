@@ -24,32 +24,26 @@ receivers:
     send_resolved: true
     http_config:
       bearer_token: 'your-webhook-token'
-    title: 'Threat Modeling Platform Alert'
-    text: |
-      {{ range .Alerts }}
-        Alert: {{ .Annotations.summary }}
-        Description: {{ .Annotations.description }}
-        Labels: {{ range .Labels.SortedPairs }}{{ .Name }}={{ .Value }} {{ end }}
-      {{ end }}
 
 - name: 'critical-alerts'
   email_configs:
   - to: 'security-team@company.com'
-    subject: 'CRITICAL: Threat Modeling Platform Alert'
-    body: |
-      Critical alert triggered in Threat Modeling Platform:
-      
+    from: 'alerts@threatmodel.company.com'
+    html: |
+      <h3>Critical alert triggered in Threat Modeling Platform:</h3>
       {{ range .Alerts }}
-      Alert: {{ .Annotations.summary }}
-      Description: {{ .Annotations.description }}
-      Severity: {{ .Labels.severity }}
-      Service: {{ .Labels.service }}
-      Time: {{ .StartsAt }}
+      <p><strong>Alert:</strong> {{ .Annotations.summary }}<br>
+      <strong>Description:</strong> {{ .Annotations.description }}<br>
+      <strong>Severity:</strong> {{ .Labels.severity }}<br>
+      <strong>Service:</strong> {{ .Labels.service }}<br>
+      <strong>Time:</strong> {{ .StartsAt }}</p>
       {{ end }}
   
   slack_configs:
   - api_url: 'https://hooks.slack.com/services/YOUR/SLACK/WEBHOOK'
     channel: '#security-alerts'
+    username: 'AlertManager'
+    icon_emoji: ':rotating_light:'
     title: 'CRITICAL: Threat Modeling Platform'
     text: |
       {{ range .Alerts }}
@@ -70,16 +64,15 @@ receivers:
 - name: 'warning-alerts'
   email_configs:
   - to: 'devops-team@company.com'
-    subject: 'WARNING: Threat Modeling Platform Alert'
-    body: |
-      Warning alert triggered in Threat Modeling Platform:
-      
+    from: 'alerts@threatmodel.company.com'
+    html: |
+      <h3>Warning alert triggered in Threat Modeling Platform:</h3>
       {{ range .Alerts }}
-      Alert: {{ .Annotations.summary }}
-      Description: {{ .Annotations.description }}
-      Severity: {{ .Labels.severity }}
-      Service: {{ .Labels.service }}
-      Time: {{ .StartsAt }}
+      <p><strong>Alert:</strong> {{ .Annotations.summary }}<br>
+      <strong>Description:</strong> {{ .Annotations.description }}<br>
+      <strong>Severity:</strong> {{ .Labels.severity }}<br>
+      <strong>Service:</strong> {{ .Labels.service }}<br>
+      <strong>Time:</strong> {{ .StartsAt }}</p>
       {{ end }}
 
 inhibit_rules:
