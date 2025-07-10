@@ -317,6 +317,73 @@ services:
       timeout: 10s
       retries: 3
 
+  # Security Tools Service
+  security-tools-service:
+    build:
+      context: ./backend/services/security-tools
+      dockerfile: Dockerfile
+    container_name: threatmodel-security-tools
+    environment:
+      NODE_ENV: development
+      PORT: 3011
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: threatmodel_db
+      DB_USER: threatmodel
+      DB_PASSWORD: ${DB_PASSWORD:-threatmodel123}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-redis123}
+      JWT_SECRET: ${JWT_SECRET:-your-jwt-secret-here}
+      VAULT_ADDR: ${VAULT_ADDR:-http://vault:8200}
+      VAULT_TOKEN: ${VAULT_TOKEN}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    ports:
+      - "3011:3011"
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3011/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Collaboration Service
+  collaboration-service:
+    build:
+      context: ./backend/services/collaboration
+      dockerfile: Dockerfile
+    container_name: threatmodel-collaboration
+    environment:
+      NODE_ENV: development
+      PORT: 3012
+      WEBSOCKET_PORT: 8000
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: threatmodel_db
+      DB_USER: threatmodel
+      DB_PASSWORD: ${DB_PASSWORD:-threatmodel123}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-redis123}
+      JWT_SECRET: ${JWT_SECRET:-your-jwt-secret-here}
+      FRONTEND_URL: http://localhost:3006
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    ports:
+      - "3012:3012"
+      - "8000:8000"
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3012/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
   # API Gateway
   api-gateway:
     build:
@@ -335,6 +402,8 @@ services:
       INTEGRATION_SERVICE_URL: http://integration-service:3008
       NOTIFICATION_SERVICE_URL: http://notification-service:3009
       TMAC_SERVICE_URL: http://tmac-service:3010
+      SECURITY_TOOLS_SERVICE_URL: http://security-tools-service:3011
+      COLLABORATION_SERVICE_URL: http://collaboration-service:3012
     depends_on:
       - auth-service
       - core-service
@@ -342,6 +411,8 @@ services:
       - report-service
       - integration-service
       - notification-service
+      - security-tools-service
+      - collaboration-service
     ports:
       - "3000:3000"
 

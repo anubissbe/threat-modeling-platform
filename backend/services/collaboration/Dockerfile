@@ -40,21 +40,18 @@ RUN npm install --omit=dev && \
 # Copy built application
 COPY --from=builder /app/dist ./dist
 
-# Copy additional files
-COPY --from=builder /app/src/config/schema.sql ./src/config/
-
 # Create logs directory
 RUN mkdir -p logs && chown nodejs:nodejs logs
 
 # Switch to non-root user
 USER nodejs
 
-# Expose port
-EXPOSE 3011
+# Expose ports (HTTP API and WebSocket)
+EXPOSE 3012 8000
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-  CMD node -e "require('http').get('http://localhost:3011/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1); })"
+  CMD node -e "require('http').get('http://localhost:3012/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1); })"
 
 # Use tini as entrypoint for proper signal handling
 ENTRYPOINT ["/sbin/tini", "--"]
