@@ -33,7 +33,7 @@ export class SecurityToolsService extends EventEmitter {
       this.integrations.set(integration.id, integration);
 
       // Initialize adapter for vulnerability scanners
-      if (integration.type === 'vulnerability_scanner') {
+      if (integration.type === 'vulnerability-scanner') {
         await this.scannerService.initializeAdapter(integration);
       }
 
@@ -86,7 +86,7 @@ export class SecurityToolsService extends EventEmitter {
     }
 
     // Disconnect adapter if it's a vulnerability scanner
-    if (integration.type === 'vulnerability_scanner') {
+    if (integration.type === 'vulnerability-scanner') {
       await this.scannerService.disconnectAdapter(id);
     }
 
@@ -104,7 +104,7 @@ export class SecurityToolsService extends EventEmitter {
     }
 
     try {
-      if (integration.type === 'vulnerability_scanner') {
+      if (integration.type === 'vulnerability-scanner') {
         // Test connection by trying to get scan status (dummy test)
         try {
           await this.scannerService.getScanStatus(id, 'test');
@@ -132,8 +132,8 @@ export class SecurityToolsService extends EventEmitter {
       throw new Error(`Integration ${integrationId} not found`);
     }
 
-    if (integration.type !== 'vulnerability_scanner') {
-      throw new Error('Integration type must be vulnerability_scanner');
+    if (integration.type !== 'vulnerability-scanner') {
+      throw new Error('Integration type must be vulnerability-scanner');
     }
 
     try {
@@ -162,8 +162,8 @@ export class SecurityToolsService extends EventEmitter {
       throw new Error(`Integration ${integrationId} not found`);
     }
 
-    if (integration.type !== 'vulnerability_scanner') {
-      throw new Error('Integration type must be vulnerability_scanner');
+    if (integration.type !== 'vulnerability-scanner') {
+      throw new Error('Integration type must be vulnerability-scanner');
     }
 
     try {
@@ -190,8 +190,8 @@ export class SecurityToolsService extends EventEmitter {
       throw new Error(`Integration ${integrationId} not found`);
     }
 
-    if (integration.type !== 'vulnerability_scanner') {
-      throw new Error('Integration type must be vulnerability_scanner');
+    if (integration.type !== 'vulnerability-scanner') {
+      throw new Error('Integration type must be vulnerability-scanner');
     }
 
     try {
@@ -216,8 +216,8 @@ export class SecurityToolsService extends EventEmitter {
       throw new Error(`Integration ${integrationId} not found`);
     }
 
-    if (integration.type !== 'vulnerability_scanner') {
-      throw new Error('Integration type must be vulnerability_scanner');
+    if (integration.type !== 'vulnerability-scanner') {
+      throw new Error('Integration type must be vulnerability-scanner');
     }
 
     return await this.scannerService.getScanStatus(integrationId, scanId);
@@ -234,8 +234,8 @@ export class SecurityToolsService extends EventEmitter {
       throw new Error(`Integration ${integrationId} not found`);
     }
 
-    if (integration.type !== 'vulnerability_scanner') {
-      throw new Error('Integration type must be vulnerability_scanner');
+    if (integration.type !== 'vulnerability-scanner') {
+      throw new Error('Integration type must be vulnerability-scanner');
     }
 
     return await this.scannerService.exportScanResults(integrationId, scanId, format);
@@ -248,8 +248,8 @@ export class SecurityToolsService extends EventEmitter {
       throw new Error(`Integration ${integrationId} not found`);
     }
 
-    if (integration.type !== 'vulnerability_scanner') {
-      throw new Error('Integration type must be vulnerability_scanner');
+    if (integration.type !== 'vulnerability-scanner') {
+      throw new Error('Integration type must be vulnerability-scanner');
     }
 
     return await this.scannerService.getAvailablePolicies(integrationId);

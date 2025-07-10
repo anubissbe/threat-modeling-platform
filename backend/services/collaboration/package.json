@@ -2,10 +2,10 @@
   "name": "collaboration-service",
   "version": "1.0.0",
   "description": "Real-time collaboration service for threat modeling platform",
-  "main": "dist/index.js",
+  "main": "dist/index-simple.js",
   "scripts": {
-    "build": "tsc",
-    "start": "node dist/index.js",
+    "build": "tsc src/index-simple.ts --outDir dist --target ES2020 --module commonjs --esModuleInterop --skipLibCheck",
+    "start": "node dist/index-simple.js",
     "dev": "ts-node-dev --respawn --transpile-only src/index.ts",
     "test": "jest",
     "test:watch": "jest --watch",

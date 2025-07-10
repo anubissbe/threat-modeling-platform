@@ -18,6 +18,42 @@ export type IntegrationStatus = 'connected' | 'disconnected' | 'error' | 'config
 export type SyncDirection = 'inbound' | 'outbound' | 'bidirectional';
 export type SeverityLevel = 'critical' | 'high' | 'medium' | 'low' | 'info';
 
+// Scan result types
+export interface ScanResult {
+  scanId: string;
+  status: 'completed' | 'failed' | 'running' | 'cancelled';
+  vulnerabilities: Vulnerability[];
+  startTime: Date;
+  endTime?: Date;
+  statistics: ScanStatistics;
+}
+
+export interface ScanStatistics {
+  totalVulnerabilities: number;
+  criticalCount: number;
+  highCount: number;
+  mediumCount: number;
+  lowCount: number;
+  infoCount: number;
+}
+
+// Assessment and compliance types
+export type AssessmentType = 'vulnerability' | 'compliance' | 'configuration' | 'penetration-test' | 'code-analysis';
+export type ComplianceFramework = 'pci-dss' | 'soc2' | 'iso27001' | 'nist' | 'cis' | 'gdpr' | 'hipaa' | 'custom';
+
+// Scan status for collaboration
+export interface ScanStatus {
+  id: string;
+  integrationId: string;
+  policy?: ScanPolicy;
+  status: 'created' | 'running' | 'completed' | 'failed' | 'cancelled' | 'paused' | 'stopping' | 'unknown';
+  progress: number;
+  createdAt: Date;
+  startedAt?: Date;
+  completedAt?: Date;
+  errorMessage?: string;
+}
+
 // Base Integration Configuration
 export interface SecurityToolIntegration {
   id: string;
