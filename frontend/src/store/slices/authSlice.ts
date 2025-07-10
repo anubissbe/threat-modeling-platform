@@ -167,8 +167,7 @@ export const logout = createAsyncThunk(
 export const initializeAuth = createAsyncThunk(
   'auth/initialize',
   async (_, { rejectWithValue }) => {
-    // Since we've disabled token refresh, just check if there are tokens
-    // and mark as not authenticated to redirect to login
+    // Check for stored tokens
     const accessToken = localStorage.getItem('accessToken');
     const refreshToken = localStorage.getItem('refreshToken');
     
@@ -179,22 +178,79 @@ export const initializeAuth = createAsyncThunk(
     // Set token in axios before making requests
     setAuthToken(accessToken);
     
-    // If tokens exist, try to get profile once
+    // Check if access token is expired
     try {
+      const tokenPayload = JSON.parse(atob(accessToken.split('.')[1]));
+      const currentTime = Date.now() / 1000;
+      
+      // If token is expired or expires within 5 minutes, refresh it
+      if (tokenPayload.exp <= currentTime + 300) {
+        console.log('Access token expired or expiring soon, refreshing...');
+        
+        try {
+          const refreshResponse = await authApi.refreshToken(refreshToken);
+          const newTokens = refreshResponse.data;
+          
+          // Update tokens in localStorage
+          localStorage.setItem('accessToken', newTokens.accessToken);
+          localStorage.setItem('refreshToken', newTokens.refreshToken);
+          
+          // Set new token in axios
+          setAuthToken(newTokens.accessToken);
+          
+          // Get user profile with new token
+          const profileResponse = await authApi.getProfile();
+          return {
+            user: profileResponse.data,
+            tokens: newTokens,
+          };
+        } catch (refreshError: any) {
+          console.error('Token refresh failed:', refreshError);
+          // Clear tokens and reject
+          localStorage.removeItem('accessToken');
+          localStorage.removeItem('refreshToken');
+          return rejectWithValue('Token refresh failed');
+        }
+      }
+      
+      // Token is still valid, get profile
       const response = await authApi.getProfile();
       return {
         user: response.data,
         tokens: {
           accessToken,
           refreshToken,
-          expiresIn: 900,
+          expiresIn: tokenPayload.exp - currentTime,
         },
       };
     } catch (error: any) {
-      // Clear tokens and reject
-      localStorage.removeItem('accessToken');
-      localStorage.removeItem('refreshToken');
-      return rejectWithValue('Authentication session expired');
+      console.error('Error during authentication initialization:', error);
+      
+      // Try refreshing token if profile request failed
+      try {
+        const refreshResponse = await authApi.refreshToken(refreshToken);
+        const newTokens = refreshResponse.data;
+        
+        // Update tokens in localStorage
+        localStorage.setItem('accessToken', newTokens.accessToken);
+        localStorage.setItem('refreshToken', newTokens.refreshToken);
+        
+        // Set new token in axios
+        setAuthToken(newTokens.accessToken);
+        
+        // Get user profile with new token
+        const profileResponse = await authApi.getProfile();
+        return {
+          user: profileResponse.data,
+          tokens: newTokens,
+        };
+      } catch (refreshError: any) {
+        console.error('Token refresh failed during recovery:', refreshError);
+        // Clear tokens and reject
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('refreshToken');
+        return rejectWithValue('Authentication session expired');
+      }
     }
   }
 );

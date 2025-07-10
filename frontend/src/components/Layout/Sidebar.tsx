@@ -22,6 +22,7 @@ import {
   Settings,
   Help,
   BugReport,
+  Code,
 } from '@mui/icons-material';
 import { useAppSelector } from '@/store';
 
@@ -64,6 +65,12 @@ const navigationItems: NavigationItem[] = [
     text: 'Vulnerabilities',
     path: '/vulnerabilities',
     icon: <BugReport />,
+    badge: 'New',
+  },
+  {
+    text: 'TMAC Editor',
+    path: '/tmac',
+    icon: <Code />,
     badge: 'New',
   },
 ];

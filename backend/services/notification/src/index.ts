@@ -7,6 +7,7 @@ import dotenv from 'dotenv';
 import { logger, httpLogStream } from './utils/logger';
 import { database } from './config/database';
 import { redis } from './config/redis';
+import { connectWithRetry } from './utils/database-retry';
 import eventHandler from './services/event-handler.service';
 import queueWorker from './services/queue-worker.service';
 
@@ -22,6 +23,45 @@ import { rateLimitMiddleware } from './middleware/rate-limiter';
 
 // Load environment variables
 dotenv.config();
+
+// Validate required environment variables with fallbacks
+const validateEnvironment = () => {
+  const warnings: string[] = [];
+  
+  // Required variables
+  const required = ['JWT_SECRET', 'DB_HOST', 'DB_NAME', 'DB_USER', 'DB_PASSWORD'];
+  required.forEach(key => {
+    if (!process.env[key]) {
+      logger.error(`Missing required environment variable: ${key}`);
+      process.exit(1);
+    }
+  });
+  
+  // Optional notification provider variables with warnings
+  const optional = {
+    SMTP_FROM: 'Email notifications will not work without SMTP_FROM',
+    SLACK_BOT_TOKEN: 'Slack notifications will not work without SLACK_BOT_TOKEN',
+    SLACK_SIGNING_SECRET: 'Slack webhook verification will not work without SLACK_SIGNING_SECRET',
+    TWILIO_AUTH_TOKEN: 'SMS notifications will not work without TWILIO_AUTH_TOKEN',
+    TEAMS_WEBHOOK_URL: 'Microsoft Teams notifications will not work without TEAMS_WEBHOOK_URL',
+    WEBHOOK_SECRET: 'Webhook HMAC verification will not work without WEBHOOK_SECRET'
+  };
+  
+  Object.entries(optional).forEach(([key, message]) => {
+    if (!process.env[key]) {
+      warnings.push(`${key}: ${message}`);
+    }
+  });
+  
+  if (warnings.length > 0) {
+    logger.warn('Missing optional environment variables:', warnings);
+  }
+  
+  logger.info('Environment validation completed');
+};
+
+// Validate environment on startup
+validateEnvironment();
 
 // Create Express app
 const app = express();
@@ -211,8 +251,8 @@ const startServer = async () => {
     // Wait for database and Redis connections
     logger.info('Waiting for database and Redis connections...');
     
-    // Connect to database and Redis
-    await database.connect();
+    // Connect to database with retry logic
+    await connectWithRetry();
     await redis.connect();
     
     // Test connections

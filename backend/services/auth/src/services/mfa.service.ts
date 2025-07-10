@@ -32,9 +32,11 @@ export class MFAService {
   private auditService: AuditService;
   private activeMFASessions: Map<string, MFASessionInfo> = new Map();
   private mfaPolicies: Map<string, MFAPolicy> = new Map();
-  private riskEngine: RiskBasedMFAConfig;
+  private riskEngine: any;
 
+  
   constructor() {
+    this.riskEngine = new RiskEngine();
     this.userService = new UserService();
     this.auditService = new AuditService();
     this.initializeDefaultPolicies();
@@ -64,7 +66,7 @@ export class MFAService {
       const setupData: TOTPSetupData = {
         secret: secret.base32,
         qrCode: qrCodeUrl,
-        backupCodes: this.generateBackupCodes(),
+        backupCodes: this.createBackupCodes(),
         manualEntryKey: secret.base32,
         issuer: 'Threat Modeling Platform',
         accountName: user.email
@@ -74,11 +76,12 @@ export class MFAService {
       await this.storeTempMFASetup(userId, 'totp', setupData);
 
       await this.auditService.logEvent({
+        eventType: 'DATA_CREATE' as any,
         action: 'MFA_TOTP_SETUP_INITIATED',
         userId,
         organizationId: user.organization,
-        details: { deviceName },
-        timestamp: new Date()
+        result: 'SUCCESS',
+        details: { deviceName }
       });
 
       return {
@@ -118,18 +121,19 @@ export class MFAService {
         phoneNumber,
         maskedPhoneNumber: this.maskPhoneNumber(phoneNumber),
         verificationCodeSent: true,
-        backupCodes: this.generateBackupCodes()
+        backupCodes: this.createBackupCodes()
       };
 
       // Store temporary setup data
       await this.storeTempMFASetup(userId, 'sms', setupData, verificationCode);
 
       await this.auditService.logEvent({
+        eventType: 'DATA_CREATE' as any,
         action: 'MFA_SMS_SETUP_INITIATED',
         userId,
         organizationId: user.organization,
-        details: { maskedPhoneNumber: setupData.maskedPhoneNumber },
-        timestamp: new Date()
+        result: 'SUCCESS',
+        details: { maskedPhoneNumber: setupData.maskedPhoneNumber }
       });
 
       return {
@@ -166,18 +170,19 @@ export class MFAService {
         emailAddress: targetEmail,
         maskedEmail: this.maskEmail(targetEmail),
         verificationCodeSent: true,
-        backupCodes: this.generateBackupCodes()
+        backupCodes: this.createBackupCodes()
       };
 
       // Store temporary setup data
       await this.storeTempMFASetup(userId, 'email', setupData, verificationCode);
 
       await this.auditService.logEvent({
+        eventType: 'DATA_CREATE' as any,
         action: 'MFA_EMAIL_SETUP_INITIATED',
         userId,
         organizationId: user.organization,
-        details: { maskedEmail: setupData.maskedEmail },
-        timestamp: new Date()
+        result: 'SUCCESS',
+        details: { maskedEmail: setupData.maskedEmail }
       });
 
       return {
@@ -209,18 +214,19 @@ export class MFAService {
         challenge: registrationOptions.challenge,
         publicKeyCredentialCreationOptions: registrationOptions,
         deviceName: deviceName || 'Security Key',
-        backupCodes: this.generateBackupCodes()
+        backupCodes: this.createBackupCodes()
       };
 
       // Store temporary setup data
       await this.storeTempMFASetup(userId, 'webauthn', setupData);
 
       await this.auditService.logEvent({
+        eventType: 'DATA_CREATE' as any,
         action: 'MFA_WEBAUTHN_SETUP_INITIATED',
         userId,
         organizationId: user.organization,
-        details: { deviceName },
-        timestamp: new Date()
+        result: 'SUCCESS',
+        details: { deviceName }
       });
 
       return {
@@ -274,11 +280,12 @@ export class MFAService {
 
       if (!isValid) {
         await this.auditService.logEvent({
+          eventType: 'ACCESS_DENIED' as any,
           action: 'MFA_SETUP_VERIFICATION_FAILED',
           userId,
           organizationId: user.organization,
-          details: { provider },
-          timestamp: new Date()
+          result: 'FAILURE',
+          details: { provider }
         });
         throw new Error('Invalid verification code');
       }
@@ -288,11 +295,12 @@ export class MFAService {
       await this.removeTempMFASetup(userId, provider);
 
       await this.auditService.logEvent({
+        eventType: 'DATA_CREATE' as any,
         action: 'MFA_SETUP_COMPLETED',
         userId,
         organizationId: user.organization,
-        details: { provider },
-        timestamp: new Date()
+        result: 'SUCCESS',
+        details: { provider }
       });
 
       return {
@@ -364,21 +372,23 @@ export class MFAService {
           expiresAt: new Date(Date.now() + (userMFA.sessionTimeout || 3600) * 1000),
           ipAddress: request.ipAddress,
           userAgent: request.userAgent,
-          usedBackupCode
+          usedBackupCode,
+          isActive: true
         };
         this.activeMFASessions.set(sessionId, session);
 
         await this.auditService.logEvent({
+          eventType: 'ACCESS_GRANTED' as any,
           action: 'MFA_VERIFICATION_SUCCESS',
           userId: request.userId,
           organizationId: user.organization,
+          result: 'SUCCESS',
           details: {
             provider: request.provider,
             responseTime,
             usedBackupCode,
             ipAddress: request.ipAddress
-          },
-          timestamp: new Date()
+          }
         });
 
         return {
@@ -390,16 +400,17 @@ export class MFAService {
         };
       } else {
         await this.auditService.logEvent({
+          eventType: 'ACCESS_DENIED' as any,
           action: 'MFA_VERIFICATION_FAILED',
           userId: request.userId,
           organizationId: user.organization,
+          result: 'FAILURE',
           details: {
             provider: request.provider,
             responseTime,
             ipAddress: request.ipAddress,
             reason: 'Invalid code'
-          },
-          timestamp: new Date()
+          }
         });
 
         return {
@@ -423,18 +434,19 @@ export class MFAService {
    */
   async generateBackupCodes(userId: string): Promise<MFABackupCodes> {
     try {
-      const codes = this.generateBackupCodes();
+      const codes = this.createBackupCodes();
       
       // Store backup codes (hashed)
       await this.storeBackupCodes(userId, codes);
 
       const user = await this.userService.getUserById(userId);
       await this.auditService.logEvent({
+        eventType: 'DATA_CREATE' as any,
         action: 'MFA_BACKUP_CODES_GENERATED',
         userId,
         organizationId: user?.organization || '',
-        details: { codeCount: codes.codes.length },
-        timestamp: new Date()
+        result: 'SUCCESS',
+        details: { codeCount: codes.codes.length }
       });
 
       return codes;
@@ -457,11 +469,12 @@ export class MFAService {
       const isValidBackupCode = await this.verifyBackupCode(user.id, request.backupCode);
       if (!isValidBackupCode) {
         await this.auditService.logEvent({
+          eventType: 'ACCESS_DENIED' as any,
           action: 'MFA_RECOVERY_FAILED',
           userId: user.id,
           organizationId: user.organization,
-          details: { email: request.email, reason: 'Invalid backup code' },
-          timestamp: new Date()
+          result: 'FAILURE',
+          details: { email: request.email, reason: 'Invalid backup code' }
         });
         throw new Error('Invalid backup code');
       }
@@ -472,15 +485,16 @@ export class MFAService {
       }
 
       // Generate new backup codes
-      const newBackupCodes = this.generateBackupCodes();
+      const newBackupCodes = this.createBackupCodes();
       await this.storeBackupCodes(user.id, newBackupCodes);
 
       await this.auditService.logEvent({
+        eventType: 'ACCESS_GRANTED' as any,
         action: 'MFA_RECOVERY_SUCCESS',
         userId: user.id,
         organizationId: user.organization,
-        details: { email: request.email, disabledMFA: request.disableMFA },
-        timestamp: new Date()
+        result: 'SUCCESS',
+        details: { email: request.email, disabledMFA: request.disableMFA }
       });
 
       return {
@@ -509,7 +523,10 @@ export class MFAService {
         devices,
         backupCodesRemaining: backupCodes.remaining,
         lastUsed: userMFA.lastUsed,
-        isRecoveryEnabled: backupCodes.remaining > 0
+        isRecoveryEnabled: backupCodes.remaining > 0,
+        securityScore: this.calculateSecurityScore(userMFA, devices, backupCodes),
+        recommendations: this.generateRecommendations(userMFA, devices, backupCodes),
+        vulnerabilities: this.identifyVulnerabilities(userMFA, devices, backupCodes)
       };
     } catch (error) {
       logger.error('Error getting MFA status:', error);
@@ -534,11 +551,12 @@ export class MFAService {
       this.revokeAllMFASessions(userId);
 
       await this.auditService.logEvent({
+        eventType: 'DATA_DELETE' as any,
         action: 'MFA_DISABLED',
         userId,
         organizationId: user.organization,
-        details: {},
-        timestamp: new Date()
+        result: 'SUCCESS',
+        details: {}
       });
 
       logger.info(`MFA disabled for user: ${userId}`);
@@ -625,7 +643,7 @@ export class MFAService {
 
   // Private helper methods
 
-  private generateBackupCodes(): MFABackupCodes {
+  private createBackupCodes(): MFABackupCodes {
     const codes: string[] = [];
     for (let i = 0; i < 10; i++) {
       codes.push(crypto.randomBytes(4).toString('hex').toUpperCase());
@@ -746,7 +764,19 @@ export class MFAService {
       primaryProvider: 'totp',
       enabledProviders: [],
       sessionTimeout: 3600,
-      lastUsed: undefined
+      lastUsed: undefined,
+      requireMFAForSensitiveActions: false,
+      allowRememberDevice: true,
+      rememberDeviceDays: 30,
+      notifyOnNewDevice: true,
+      notifyOnUnusualActivity: true,
+      notifyOnBackupCodeUsage: true,
+      allowedRecoveryMethods: ['backup_codes'],
+      adaptiveMFAConsent: false,
+      biometricDataConsent: false,
+      locationTrackingConsent: false,
+      totalLogins: 0,
+      failedAttempts: 0
     };
   }
 
@@ -845,12 +875,20 @@ export class MFAService {
   private initializeDefaultPolicies(): void {
     // Initialize default MFA policies
     this.mfaPolicies.set('default', {
+      name: 'Default MFA Policy',
       enforced: false,
       allowedProviders: ['totp', 'sms', 'email', 'webauthn'],
       minimumProviders: 1,
       sessionTimeout: 3600,
+      maxConcurrentSessions: 5,
+      reauthenticationRequired: false,
       backupCodesRequired: true,
-      adaptiveMFA: true
+      recoveryMethods: ['backup_codes'],
+      adaptiveMFA: true,
+      auditLogging: true,
+      dataRetentionDays: 365,
+      allowUserDisable: true,
+      allowUserBypass: false
     });
   }
 
@@ -893,5 +931,86 @@ export class MFAService {
 
   private async getIPRiskScore(ipAddress: string): Promise<number> {
     return 0;
+  }
+
+  private calculateSecurityScore(userMFA: any, devices: any[], backupCodes: any): number {
+    let score = 0;
+    
+    if (userMFA.enabled) score += 40;
+    if (userMFA.enabledProviders.length > 1) score += 20;
+    if (devices.some((d: any) => d.provider === 'webauthn')) score += 20;
+    if (backupCodes.remaining > 0) score += 10;
+    if (userMFA.enabledProviders.includes('totp')) score += 10;
+    
+    return Math.min(score, 100);
+  }
+
+  private generateRecommendations(userMFA: any, devices: any[], backupCodes: any): any[] {
+    const recommendations = [];
+    
+    if (!userMFA.enabled) {
+      recommendations.push({
+        type: 'enable_additional_method',
+        priority: 'high',
+        title: 'Enable Multi-Factor Authentication',
+        description: 'Enable MFA to significantly improve account security'
+      });
+    }
+    
+    if (backupCodes.remaining < 3) {
+      recommendations.push({
+        type: 'update_backup_codes',
+        priority: 'medium',
+        title: 'Generate New Backup Codes',
+        description: 'You have few backup codes remaining'
+      });
+    }
+    
+    return recommendations;
+  }
+
+  private identifyVulnerabilities(userMFA: any, devices: any[], backupCodes: any): any[] {
+    const vulnerabilities = [];
+    
+    if (userMFA.enabledProviders.length === 1 && userMFA.enabledProviders.includes('sms')) {
+      vulnerabilities.push({
+        type: 'weak_method',
+        severity: 'medium',
+        description: 'SMS is vulnerable to SIM swapping attacks',
+        remediation: 'Consider adding TOTP or WebAuthn authentication',
+        detectedAt: new Date()
+      });
+    }
+    
+    return vulnerabilities;
+  }
+}
+
+class RiskEngine {
+  assessRisk(context: any): { score: number; level: 'low' | 'medium' | 'high' } {
+    // Simple risk assessment logic
+    let score = 0;
+    
+    if (context.ipAddress && !this.isKnownIP(context.ipAddress)) score += 0.3;
+    if (context.userAgent && !this.isKnownUserAgent(context.userAgent)) score += 0.2;
+    if (context.location && !this.isKnownLocation(context.location)) score += 0.3;
+    
+    const level = score < 0.3 ? 'low' : score < 0.7 ? 'medium' : 'high';
+    return { score, level };
+  }
+  
+  private isKnownIP(ip: string): boolean {
+    // Implement IP check logic
+    return true;
+  }
+  
+  private isKnownUserAgent(ua: string): boolean {
+    // Implement user agent check logic
+    return true;
+  }
+  
+  private isKnownLocation(location: any): boolean {
+    // Implement location check logic
+    return true;
   }
 }

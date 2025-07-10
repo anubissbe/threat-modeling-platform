@@ -1,0 +1,37 @@
+{
+  "name": "@threatmodeling/tmac-cli",
+  "version": "1.0.0",
+  "description": "CLI tool for Threat Modeling as Code (TMAC)",
+  "main": "dist/index.js",
+  "bin": {
+    "tmac": "./dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "ts-node src/index.ts",
+    "test": "jest",
+    "link": "npm link"
+  },
+  "keywords": [
+    "threat-modeling",
+    "security",
+    "cli",
+    "tmac"
+  ],
+  "author": "Threat Modeling Platform Team",
+  "license": "MIT",
+  "dependencies": {
+    "@threatmodeling/tmac-core": "file:../tmac-core",
+    "chalk": "^4.1.2",
+    "commander": "^11.0.0",
+    "ora": "^5.4.1",
+    "table": "^6.8.1",
+    "inquirer": "^8.2.5"
+  },
+  "devDependencies": {
+    "@types/inquirer": "^9.0.3",
+    "@types/node": "^20.0.0",
+    "ts-node": "^10.9.1",
+    "typescript": "^5.0.0"
+  }
+}

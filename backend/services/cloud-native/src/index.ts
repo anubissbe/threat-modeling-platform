@@ -4,9 +4,6 @@ import cors from 'cors';
 import compression from 'compression';
 import dotenv from 'dotenv';
 import { CloudNativeService } from './services/cloud-native.service';
-import { KubernetesService } from './services/kubernetes.service';
-import { DockerService } from './services/docker.service';
-import { ServiceMeshService } from './services/service-mesh.service';
 import { CloudNativeController } from './controllers/cloud-native.controller';
 import { createCloudNativeRoutes } from './routes/cloud-native.routes';
 import { logger } from './utils/logger';
@@ -371,17 +368,11 @@ const defaultConfig: CloudNativeConfig = {
 
 // Initialize services
 const config = defaultConfig; // In production, load from config file or environment
-const kubernetesService = new KubernetesService(config.kubernetes);
-const dockerService = new DockerService(config.docker);
-const serviceMeshService = new ServiceMeshService(config.serviceMesh);
 const cloudNativeService = new CloudNativeService(config);
 
 // Initialize controller
 const controller = new CloudNativeController(
-  cloudNativeService,
-  kubernetesService,
-  dockerService,
-  serviceMeshService
+  cloudNativeService
 );
 
 // Create Express app
@@ -395,7 +386,7 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Health check endpoint
-app.get('/health', (req, res) => {
+app.get('/health', (_, res) => {
   res.json({
     status: 'healthy',
     service: 'cloud-native',
@@ -407,7 +398,7 @@ app.get('/health', (req, res) => {
 app.use('/api/v1/cloud-native', createCloudNativeRoutes(controller));
 
 // Error handling middleware
-app.use((err: Error, req: express.Request, res: express.Response, next: express.NextFunction) => {
+app.use((err: Error, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
   logger.error('Unhandled error', err);
   
   res.status(500).json({
@@ -418,7 +409,7 @@ app.use((err: Error, req: express.Request, res: express.Response, next: express.
 });
 
 // Start server
-const PORT = process.env.PORT || 3015;
+const PORT = parseInt(process.env.PORT || '3015', 10);
 const HOST = process.env.HOST || '0.0.0.0';
 
 app.listen(PORT, HOST, () => {

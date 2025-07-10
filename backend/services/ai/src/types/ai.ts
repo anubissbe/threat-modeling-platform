@@ -81,8 +81,19 @@ export interface ContextualThreatData {
   trust_boundaries: TrustBoundary[];
   assets: Asset[];
   existing_controls: SecurityControl[];
-  compliance_requirements: string[];
+  compliance_requirements?: string[];
   business_context: BusinessContext;
+  deployment_environment?: string[];
+  external_dependencies?: ExternalDependency[];
+}
+
+export interface ExternalDependency {
+  id: string;
+  name: string;
+  type: 'saas' | 'infrastructure' | 'library' | 'service';
+  criticality: 'low' | 'medium' | 'high' | 'critical';
+  vendor?: string;
+  version?: string;
 }
 
 export interface SystemComponent {
@@ -100,11 +111,12 @@ export interface DataFlow {
   id: string;
   source: string;
   destination: string;
-  data_types: string[];
-  sensitivity: 'public' | 'internal' | 'confidential' | 'secret';
-  encryption: boolean;
-  authentication_required: boolean;
-  protocols: string[];
+  data_types?: string[];
+  data_classification?: string;
+  sensitivity?: 'public' | 'internal' | 'confidential' | 'secret';
+  encryption?: boolean;
+  authentication_required?: boolean;
+  protocols?: string[];
 }
 
 export interface TrustBoundary {
@@ -160,7 +172,7 @@ export interface AIModelConfig {
 export interface ThreatPrediction {
   threat_type: string;
   probability: number; // 0-1 scale
-  time_horizon: '1_month' | '3_months' | '6_months' | '1_year';
+  time_horizon: '1_month' | '3_months' | '6_months' | '1_year' | '2_years' | '3_years';
   contributing_factors: string[];
   recommended_preparations: string[];
   early_warning_indicators: string[];
@@ -173,6 +185,12 @@ export interface AIAnalysisRequest {
   analysis_depth: 'basic' | 'standard' | 'comprehensive';
   focus_areas?: string[];
   exclude_categories?: string[];
+  user_preferences?: {
+    include_mitigations?: boolean;
+    include_references?: boolean;
+    confidence_threshold?: number;
+    analysis_focus?: string[];
+  };
 }
 
 export interface AIAnalysisResponse {
@@ -247,6 +265,8 @@ export interface ProcessingMetadata {
   analysis_timestamp: Date;
   version: string;
   limitations: string[];
+  accuracy_score?: number;
+  confidence_level?: number;
 }
 
 // Threat Intelligence Integration Types
@@ -449,53 +469,6 @@ export interface RealTimeIntelligence {
   }[];
 }
 
-export interface ContextualThreatData {
-  system_components: SystemComponent[];
-  data_flows: DataFlow[];
-  trust_boundaries: TrustBoundary[];
-  assets: Asset[];
-  existing_controls: SecurityControl[];
-  compliance_requirements: string[];
-  business_context: BusinessContext;
-  external_dependencies?: ExternalDependency[];
-}
-
-export interface ExternalDependency {
-  id: string;
-  name: string;
-  type: 'library' | 'service' | 'api' | 'database' | 'infrastructure';
-  version: string;
-  vendor: string;
-  criticality: 'low' | 'medium' | 'high' | 'critical';
-  last_security_review: Date;
-  known_vulnerabilities: string[];
-  update_frequency: string;
-  license_type: string;
-  compliance_status: 'compliant' | 'non_compliant' | 'under_review';
-}
-
-export interface DataFlow {
-  id: string;
-  source: string;
-  destination: string;
-  data_types: string[];
-  sensitivity: 'public' | 'internal' | 'confidential' | 'secret';
-  encryption: boolean;
-  authentication_required: boolean;
-  protocols: string[];
-  data_classification: 'user_input' | 'system_generated' | 'external_feed' | 'processed_data';
-}
-
-export interface ProcessingMetadata {
-  processing_time_ms: number;
-  models_used: string[];
-  data_sources_consulted: string[];
-  analysis_timestamp: Date;
-  version: string;
-  limitations: string[];
-  accuracy_score?: number;
-  confidence_level?: number;
-}
 
 export interface PredictiveAnalyticsResult {
   short_term_predictions: {

@@ -33,6 +33,15 @@ export enum AuditEventType {
   SYSTEM_STOP = 'SYSTEM_STOP',
   CONFIGURATION_CHANGE = 'CONFIGURATION_CHANGE',
   
+  // SSO events
+  SSO_LOGIN_SUCCESS = 'SSO_LOGIN_SUCCESS',
+  SSO_LOGIN_FAILURE = 'SSO_LOGIN_FAILURE',
+  SSO_LOGOUT = 'SSO_LOGOUT',
+  SSO_PROVIDER_CONFIGURED = 'SSO_PROVIDER_CONFIGURED',
+  SSO_PROVIDER_UPDATED = 'SSO_PROVIDER_UPDATED',
+  SSO_PROVIDER_DELETED = 'SSO_PROVIDER_DELETED',
+  SSO_SESSION_TERMINATED = 'SSO_SESSION_TERMINATED',
+  
   // Threat model events
   THREAT_MODEL_CREATE = 'THREAT_MODEL_CREATE',
   THREAT_MODEL_UPDATE = 'THREAT_MODEL_UPDATE',
@@ -80,6 +89,7 @@ export class AuditService {
     userId?: string;
     username?: string;
     userRole?: string;
+    organizationId?: string;
     ipAddress?: string;
     userAgent?: string;
     resourceType?: string;
@@ -200,6 +210,13 @@ export class AuditService {
       [AuditEventType.SYSTEM_START]: 1,
       [AuditEventType.SYSTEM_STOP]: 1,
       [AuditEventType.CONFIGURATION_CHANGE]: 5,
+      [AuditEventType.SSO_LOGIN_SUCCESS]: 1,
+      [AuditEventType.SSO_LOGIN_FAILURE]: 4,
+      [AuditEventType.SSO_LOGOUT]: 1,
+      [AuditEventType.SSO_PROVIDER_CONFIGURED]: 3,
+      [AuditEventType.SSO_PROVIDER_UPDATED]: 3,
+      [AuditEventType.SSO_PROVIDER_DELETED]: 5,
+      [AuditEventType.SSO_SESSION_TERMINATED]: 2,
       [AuditEventType.THREAT_MODEL_CREATE]: 2,
       [AuditEventType.THREAT_MODEL_UPDATE]: 2,
       [AuditEventType.THREAT_MODEL_DELETE]: 4,

@@ -19,6 +19,7 @@ import { Vulnerabilities } from '@/pages/Vulnerabilities';
 import { Reports } from '@/pages/Reports';
 import { ProjectEdit } from '@/pages/ProjectEdit';
 import { Login } from '@/pages/Login';
+import { TMACPage } from '@/pages/TMAC';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -60,6 +61,8 @@ function App(): JSX.Element {
                         <Route path="/risk-assessment" element={<RiskAssessment />} />
                         <Route path="/vulnerabilities" element={<Vulnerabilities />} />
                         <Route path="/projects/:projectId/reports" element={<Reports />} />
+                        <Route path="/tmac" element={<TMACPage />} />
+                        <Route path="/tmac/:threatModelId" element={<TMACPage />} />
                       </Routes>
                     </Layout>
                   </ProtectedRoute>

@@ -1,16 +1,10 @@
-import { Request, Response } from 'express';
+import { Response } from 'express';
 import { z } from 'zod';
 import { CloudNativeService } from '../services/cloud-native.service';
-import { KubernetesService } from '../services/kubernetes.service';
-import { DockerService } from '../services/docker.service';
-import { ServiceMeshService } from '../services/service-mesh.service';
 import { logger } from '../utils/logger';
 import {
   CloudNativeRequest,
-  CloudNativeResponse,
-  DeployRequest,
-  ScaleRequest,
-  RolloutRequest
+  CloudNativeResponse
 } from '../types/cloud-native';
 
 // Validation schemas
@@ -55,10 +49,7 @@ const rolloutRequestSchema = z.object({
 
 export class CloudNativeController {
   constructor(
-    private cloudNativeService: CloudNativeService,
-    private kubernetesService: KubernetesService,
-    private dockerService: DockerService,
-    private serviceMeshService: ServiceMeshService
+    private cloudNativeService: CloudNativeService
   ) {}
 
   /**

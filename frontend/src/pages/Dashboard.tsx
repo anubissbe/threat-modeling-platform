@@ -41,62 +41,57 @@ const mockStats = {
   resolvedThreats: 24,
 };
 
-const mockRecentActivity = [
-  {
-    id: 1,
-    type: 'threat_model_created',
-    title: 'New threat model created',
-    description: 'Payment Gateway Security Model',
-    timestamp: '2 hours ago',
-    icon: <Security />,
-    color: 'primary',
-  },
-  {
-    id: 2,
-    type: 'vulnerability_found',
-    title: 'Critical vulnerability identified',
-    description: 'SQL Injection in user authentication',
-    timestamp: '4 hours ago',
-    icon: <BugReport />,
-    color: 'error',
-  },
-  {
-    id: 3,
-    type: 'threat_resolved',
-    title: 'Threat resolved',
-    description: 'XSS vulnerability in dashboard',
-    timestamp: '1 day ago',
-    icon: <CheckCircle />,
-    color: 'success',
-  },
-];
-
-const mockProjects = [
-  {
-    id: 1,
-    name: 'E-commerce Platform',
-    threatModels: 3,
-    riskLevel: 'High',
-    progress: 75,
-    lastUpdated: '2 days ago',
-  },
-  {
-    id: 2,
-    name: 'Payment Gateway',
-    threatModels: 2,
-    riskLevel: 'Medium',
-    progress: 60,
-    lastUpdated: '1 week ago',
-  },
-  {
-    id: 3,
-    name: 'Mobile Application',
-    threatModels: 1,
-    riskLevel: 'Low',
-    progress: 30,
-    lastUpdated: '3 days ago',
-  },
-];
+  // Fetch recent activity from API
+  const { data: recentActivity = [] } = useQuery({
+    queryKey: ['recentActivity'],
+    queryFn: async () => {
+      try {
+        const response = await fetch('http://localhost:3000/api/activity/recent');
+        const data = await response.json();
+        return (data.data || []).map((activity: any) => ({
+          ...activity,
+          icon: activity.type === 'threat_model_created' ? <Security /> :
+                activity.type === 'vulnerability_found' ? <BugReport /> :
+                activity.type === 'threat_resolved' ? <CheckCircle /> : <Security />,
+          color: activity.type === 'threat_model_created' ? 'primary' :
+                 activity.type === 'vulnerability_found' ? 'error' :
+                 activity.type === 'threat_resolved' ? 'success' : 'default',
+        }));
+      } catch (error) {
+        console.error('Failed to fetch recent activity:', error);
+        // Fallback to mock data if API fails
+        return [
+          {
+            id: 1,
+            type: 'threat_model_created',
+            title: 'New threat model created',
+            description: 'Payment Gateway Security Model',
+            timestamp: '2 hours ago',
+            icon: <Security />,
+            color: 'primary',
+          },
+          {
+            id: 2,
+            type: 'vulnerability_found',
+            title: 'Critical vulnerability identified',
+            description: 'SQL Injection in user authentication',
+            timestamp: '4 hours ago',
+            icon: <BugReport />,
+            color: 'error',
+          },
+          {
+            id: 3,
+            type: 'threat_resolved',
+            title: 'Threat resolved',
+            description: 'XSS vulnerability in dashboard',
+            timestamp: '1 day ago',
+            icon: <CheckCircle />,
+            color: 'success',
+          },
+        ];
+      }
+    },
+  });
 
 export const Dashboard: React.FC = () => {
   const { user } = useAppSelector((state) => state.auth);
@@ -321,7 +316,7 @@ export const Dashboard: React.FC = () => {
               </Box>
               
               <List disablePadding>
-                {mockRecentActivity.map((activity, index) => (
+                {recentActivity.map((activity: any, index: number) => (
                   <React.Fragment key={activity.id}>
                     <ListItem disablePadding sx={{ py: 1 }}>
                       <ListItemAvatar>
@@ -349,7 +344,7 @@ export const Dashboard: React.FC = () => {
                         }
                       />
                     </ListItem>
-                    {index < mockRecentActivity.length - 1 && <Divider />}
+                    {index < recentActivity.length - 1 && <Divider />}
                   </React.Fragment>
                 ))}
               </List>

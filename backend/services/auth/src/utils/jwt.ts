@@ -1,4 +1,5 @@
 import jwt from 'jsonwebtoken';
+import crypto from 'crypto';
 import { JWTPayload, User } from '../types/auth';
 import { logger } from './logger';
 
@@ -21,7 +22,10 @@ export function generateAccessToken(user: User): string {
 }
 
 export function generateRefreshToken(userId: string): string {
-  return jwt.sign({ userId }, REFRESH_TOKEN_SECRET, {
+  // Add a unique JWT ID (jti) to prevent duplicate token issues
+  const jti = crypto.randomBytes(16).toString('hex');
+  
+  return jwt.sign({ userId, jti }, REFRESH_TOKEN_SECRET, {
     expiresIn: REFRESH_TOKEN_EXPIRES_IN,
   } as any);
 }
@@ -35,9 +39,9 @@ export function verifyAccessToken(token: string): JWTPayload | null {
   }
 }
 
-export function verifyRefreshToken(token: string): { userId: string } | null {
+export function verifyRefreshToken(token: string): { userId: string; jti?: string } | null {
   try {
-    return jwt.verify(token, REFRESH_TOKEN_SECRET) as { userId: string };
+    return jwt.verify(token, REFRESH_TOKEN_SECRET) as { userId: string; jti?: string };
   } catch (error) {
     logger.warn('Invalid refresh token:', error);
     return null;

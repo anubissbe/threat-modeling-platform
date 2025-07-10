@@ -137,6 +137,49 @@ export class UserService {
     }
   }
 
+  async updateUser(userId: string, updates: Partial<{
+    firstName: string;
+    lastName: string;
+    organization: string;
+    lastLogin: Date;
+  }>): Promise<void> {
+    try {
+      const updateFields: string[] = [];
+      const values: any[] = [];
+      let paramIndex = 1;
+
+      if (updates.firstName !== undefined) {
+        updateFields.push(`first_name = $${paramIndex++}`);
+        values.push(updates.firstName);
+      }
+      if (updates.lastName !== undefined) {
+        updateFields.push(`last_name = $${paramIndex++}`);
+        values.push(updates.lastName);
+      }
+      if (updates.organization !== undefined) {
+        updateFields.push(`organization = $${paramIndex++}`);
+        values.push(updates.organization);
+      }
+      if (updates.lastLogin !== undefined) {
+        updateFields.push(`last_login = $${paramIndex++}`);
+        values.push(updates.lastLogin);
+      }
+
+      if (updateFields.length === 0) return;
+
+      updateFields.push(`updated_at = NOW()`);
+      values.push(userId);
+
+      const query = `UPDATE users SET ${updateFields.join(', ')} WHERE id = $${paramIndex}`;
+      await pool.query(query, values);
+      
+      logger.info(`User updated: ${userId}`);
+    } catch (error) {
+      logger.error('Error updating user:', error);
+      throw error;
+    }
+  }
+
   private mapRowToUser(row: any): User {
     return {
       id: row.id,

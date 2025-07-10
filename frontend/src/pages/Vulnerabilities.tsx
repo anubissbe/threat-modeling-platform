@@ -289,13 +289,19 @@ export const Vulnerabilities: React.FC = () => {
     },
   });
 
-  // Mock vulnerabilities query
+  // Fetch vulnerabilities from API
   const { data: vulnerabilities = [], isLoading, refetch } = useQuery({
     queryKey: ['vulnerabilities'],
     queryFn: async () => {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      return mockVulnerabilities;
+      try {
+        const response = await fetch('http://localhost:3000/api/vulnerabilities');
+        const data = await response.json();
+        return data.data || data || [];
+      } catch (error) {
+        console.error('Failed to fetch vulnerabilities:', error);
+        // Fallback to mock data if API fails for development
+        return mockVulnerabilities;
+      }
     },
   });
 

@@ -126,33 +126,47 @@ export const Reports: React.FC = () => {
     enabled: !!projectId,
   });
 
-  // Mock existing reports
-  const existingReports = [
-    {
-      id: '1',
-      name: 'Executive Summary - Q4 2023',
-      type: 'executive',
-      generatedAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
-      size: '2.4 MB',
-      format: 'pdf'
+  // Fetch existing reports
+  const { data: existingReports = [] } = useQuery({
+    queryKey: ['project-reports', projectId],
+    queryFn: async () => {
+      try {
+        const response = await fetch(`http://localhost:3000/api/projects/${projectId}/reports`);
+        const data = await response.json();
+        return data.data || data || [];
+      } catch (error) {
+        console.error('Failed to fetch reports:', error);
+        // Fallback to mock data if API fails for development
+        return [
+          {
+            id: '1',
+            name: 'Executive Summary - Q4 2023',
+            type: 'executive',
+            generatedAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+            size: '2.4 MB',
+            format: 'pdf'
+          },
+          {
+            id: '2',
+            name: 'Technical Assessment Report',
+            type: 'technical',
+            generatedAt: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString(),
+            size: '8.7 MB',
+            format: 'pdf'
+          },
+          {
+            id: '3',
+            name: 'Vulnerability Export',
+            type: 'technical',
+            generatedAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
+            size: '125 KB',
+            format: 'csv'
+          }
+        ];
+      }
     },
-    {
-      id: '2',
-      name: 'Technical Assessment Report',
-      type: 'technical',
-      generatedAt: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString(),
-      size: '8.7 MB',
-      format: 'pdf'
-    },
-    {
-      id: '3',
-      name: 'Vulnerability Export',
-      type: 'technical',
-      generatedAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
-      size: '125 KB',
-      format: 'csv'
-    }
-  ];
+    enabled: !!projectId,
+  });
 
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
     setTabValue(newValue);

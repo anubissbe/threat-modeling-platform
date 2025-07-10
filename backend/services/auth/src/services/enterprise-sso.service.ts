@@ -77,15 +77,16 @@ export class EnterpriseSSOService {
 
       // Audit log
       await this.auditService.logEvent({
+        eventType: 'SSO_PROVIDER_CONFIGURED' as any,
         action: 'SSO_PROVIDER_CONFIGURED',
         userId: providerConfig.configuredBy || 'system',
         organizationId,
+        result: 'SUCCESS',
         details: {
           provider: providerConfig.provider,
           providerId,
           entityId: providerConfig.saml?.entityId || providerConfig.oidc?.clientId
-        },
-        timestamp: new Date()
+        }
       });
 
       logger.info(`SSO provider configured: ${providerId} for organization: ${organizationId}`);
@@ -126,10 +127,7 @@ export class EnterpriseSSOService {
             firstName: mappedUser.firstName,
             lastName: mappedUser.lastName,
             organization: provider.organizationId,
-            password: '', // SSO users don't need passwords
-            role: mappedUser.role || UserRole.VIEWER,
-            ssoProvider: provider.provider,
-            ssoSubject: ssoProfile.nameID || ssoProfile.subject
+            password: '' // SSO users don't need passwords
           });
           
           logger.info(`Auto-provisioned SSO user: ${user.email}`);
@@ -165,7 +163,8 @@ export class EnterpriseSSOService {
         loginTime: new Date(),
         lastActivity: new Date(),
         ssoAttributes: ssoProfile.attributes || {},
-        groups: ssoProfile.groups || []
+        groups: ssoProfile.groups || [],
+        isActive: true
       };
       this.activeSessions.set(sessionId, sessionInfo);
 
@@ -189,16 +188,17 @@ export class EnterpriseSSOService {
 
       // Audit log
       await this.auditService.logEvent({
+        eventType: 'SSO_LOGIN_SUCCESS' as any,
         action: 'SSO_LOGIN_SUCCESS',
         userId: user.id,
         organizationId: user.organization,
+        result: 'SUCCESS',
         details: {
           provider: provider.provider,
           providerId,
           sessionId,
           loginTime
-        },
-        timestamp: new Date()
+        }
       });
 
       logger.info(`SSO authentication successful for user: ${user.email} via provider: ${providerId}`);
@@ -223,15 +223,16 @@ export class EnterpriseSSOService {
       this.ssoMetrics.providerMetrics.set(providerId, providerMetrics);
 
       await this.auditService.logEvent({
+        eventType: 'SSO_LOGIN_FAILURE' as any,
         action: 'SSO_LOGIN_FAILED',
         userId: 'unknown',
         organizationId: '',
+        result: 'FAILURE',
         details: {
           providerId,
           sessionId,
           error: error instanceof Error ? error.message : 'Unknown error'
-        },
-        timestamp: new Date()
+        }
       });
 
       logger.error(`SSO authentication failed for provider: ${providerId}`, error);
@@ -271,15 +272,16 @@ export class EnterpriseSSOService {
 
       // Audit log
       await this.auditService.logEvent({
+        eventType: 'SSO_LOGOUT' as any,
         action: 'SSO_LOGOUT',
         userId: session.userId,
         organizationId: provider.organizationId,
+        result: 'SUCCESS',
         details: {
           provider: provider.provider,
           providerId: session.providerId,
           sessionId
-        },
-        timestamp: new Date()
+        }
       });
 
       logger.info(`Single logout initiated for session: ${sessionId}`);
@@ -364,11 +366,12 @@ export class EnterpriseSSOService {
         this.activeSessions.delete(sessionId);
         
         await this.auditService.logEvent({
+          eventType: 'SSO_SESSION_TERMINATED' as any,
           action: 'SSO_SESSION_TERMINATED',
           userId: session.userId,
           organizationId: '',
-          details: { sessionId },
-          timestamp: new Date()
+          result: 'SUCCESS',
+          details: { sessionId }
         });
       }
       return true;
@@ -501,7 +504,7 @@ export class EnterpriseSSOService {
         signatureAlgorithm: samlConfig.signatureAlgorithm || 'sha256',
         wantAssertionsSigned: samlConfig.wantAssertionsSigned !== false,
         wantAuthnResponseSigned: samlConfig.wantAuthnResponseSigned !== false
-      } as SamlConfig,
+      } as any,
       async (profile: any, done: any) => {
         try {
           const ssoProfile: SSOUserProfile = {
@@ -517,6 +520,10 @@ export class EnterpriseSSOService {
         } catch (error) {
           done(error, null);
         }
+      },
+      async (profile: any, done: any) => {
+        // SLO callback - Single Logout
+        done(null, profile);
       }
     );
 

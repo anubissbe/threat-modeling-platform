@@ -202,7 +202,7 @@ export const projectsApi = {
     apiClient.delete(`/api/projects/${id}`),
 };
 
-// Threat Models API (placeholder for future implementation)
+// Threat Models API
 export const threatModelsApi = {
   getThreatModels: (projectId?: string): Promise<ApiResponse<any[]>> =>
     apiClient.get('/api/threat-models', { params: { projectId } }),
@@ -218,6 +218,45 @@ export const threatModelsApi = {
 
   deleteThreatModel: (id: string): Promise<ApiResponse<void>> =>
     apiClient.delete(`/api/threat-models/${id}`),
+
+  analyzeThreatModel: (id: string): Promise<ApiResponse<any>> =>
+    apiClient.post(`/api/threat-models/${id}/analyze`),
+};
+
+// Vulnerabilities API
+export const vulnerabilitiesApi = {
+  getVulnerabilities: (projectId?: string): Promise<ApiResponse<any[]>> =>
+    apiClient.get('/api/vulnerabilities', { params: { projectId } }),
+
+  getVulnerability: (id: string): Promise<ApiResponse<any>> =>
+    apiClient.get(`/api/vulnerabilities/${id}`),
+
+  updateVulnerability: (id: string, data: any): Promise<ApiResponse<any>> =>
+    apiClient.put(`/api/vulnerabilities/${id}`, data),
+
+  deleteVulnerability: (id: string): Promise<ApiResponse<void>> =>
+    apiClient.delete(`/api/vulnerabilities/${id}`),
+};
+
+// Reports API
+export const reportsApi = {
+  getReports: (projectId: string): Promise<ApiResponse<any[]>> =>
+    apiClient.get(`/api/projects/${projectId}/reports`),
+
+  generateReport: (projectId: string, templateId: string, data: any): Promise<ApiResponse<any>> =>
+    apiClient.post(`/api/projects/${projectId}/reports`, { templateId, ...data }),
+
+  downloadReport: (projectId: string, reportId: string): Promise<Blob> =>
+    apiClient.get(`/api/projects/${projectId}/reports/${reportId}/download`, { responseType: 'blob' }),
+};
+
+// Activity API
+export const activityApi = {
+  getRecentActivity: (limit?: number): Promise<ApiResponse<any[]>> =>
+    apiClient.get('/api/activity/recent', { params: { limit } }),
+
+  getActivityByProject: (projectId: string): Promise<ApiResponse<any[]>> =>
+    apiClient.get(`/api/activity/project/${projectId}`),
 };
 
 // Export axios instance for direct use if needed

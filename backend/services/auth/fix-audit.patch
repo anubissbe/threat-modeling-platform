@@ -1,0 +1,10 @@
+--- a/src/services/audit.service.ts
++++ b/src/services/audit.service.ts
+@@ -80,6 +80,7 @@ export class AuditService {
+     userId?: string;
+     username?: string;
+     userRole?: string;
++    organizationId?: string;
+     ipAddress?: string;
+     userAgent?: string;
+     resourceType?: string;

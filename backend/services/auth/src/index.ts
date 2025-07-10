@@ -2,6 +2,8 @@ import express from 'express';
 import dotenv from 'dotenv';
 import { createAuthRouter } from './routes/auth';
 import { createHealthRouter } from './routes/health';
+import { createEnterpriseSSORouter } from './routes/enterprise-sso';
+import { createSSOManagementRouter } from './routes/sso-management';
 import { errorHandler, notFoundHandler } from './middleware/error-handler';
 import { logger } from './utils/logger';
 import { applySecurityMiddleware } from './middleware/security.middleware';
@@ -24,6 +26,8 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 // Routes
 app.use('/health', createHealthRouter());
 app.use('/api/auth', createAuthRouter());
+app.use('/api/auth/sso', createEnterpriseSSORouter());
+app.use('/api/auth/sso', createSSOManagementRouter());
 
 // 404 handler
 app.use(notFoundHandler);

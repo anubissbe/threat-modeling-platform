@@ -1,4 +1,4 @@
-import { Request, Response } from 'express';
+import { Request } from 'express';
 
 // Core Cloud-Native Types
 export interface CloudNativeConfig {

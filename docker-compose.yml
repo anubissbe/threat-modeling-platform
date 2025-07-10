@@ -101,8 +101,10 @@ services:
       PORT: 3001
       DATABASE_URL: postgresql://threatmodel:${DB_PASSWORD:-threatmodel123}@postgres:5432/threatmodel_db
       REDIS_URL: redis://:${REDIS_PASSWORD:-redis123}@redis:6379
-      JWT_SECRET: ${JWT_SECRET:-your-jwt-secret-here}
-      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:-your-refresh-secret-here}
+      JWT_SECRET: ${JWT_SECRET:-your-super-secret-jwt-key}
+      JWT_EXPIRES_IN: 15m
+      REFRESH_TOKEN_SECRET: ${REFRESH_TOKEN_SECRET:-your-super-secret-refresh-key}
+      REFRESH_TOKEN_EXPIRES_IN: 7d
     depends_on:
       postgres:
         condition: service_healthy
@@ -297,6 +299,24 @@ services:
       timeout: 10s
       retries: 3
 
+  # TMAC Service
+  tmac-service:
+    build:
+      context: ./backend/services/tmac
+      dockerfile: Dockerfile.standalone
+    container_name: threatmodel-tmac
+    environment:
+      NODE_ENV: development
+      PORT: 3010
+      LOG_LEVEL: info
+    ports:
+      - "3010:3010"
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3010/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
   # API Gateway
   api-gateway:
     build:
@@ -314,6 +334,7 @@ services:
       REPORT_SERVICE_URL: http://report-service:3005
       INTEGRATION_SERVICE_URL: http://integration-service:3008
       NOTIFICATION_SERVICE_URL: http://notification-service:3009
+      TMAC_SERVICE_URL: http://tmac-service:3010
     depends_on:
       - auth-service
       - core-service

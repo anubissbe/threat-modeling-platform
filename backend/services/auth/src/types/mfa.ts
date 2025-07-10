@@ -47,7 +47,7 @@ export interface EmailSetupData {
 // WebAuthn (FIDO2) Setup Data
 export interface WebAuthnSetupData {
   challenge: string;
-  publicKeyCredentialCreationOptions: PublicKeyCredentialCreationOptions;
+  publicKeyCredentialCreationOptions: any;
   deviceName: string;
   backupCodes: MFABackupCodes;
   timeout?: number;
@@ -93,7 +93,7 @@ export interface MFAVerificationRequest {
   challenge?: string;
   
   // Additional verification data
-  webauthnResponse?: AuthenticatorAssertionResponse;
+  webauthnResponse?: any;
   biometricData?: BiometricVerificationData;
   deviceFingerprint?: string;
   

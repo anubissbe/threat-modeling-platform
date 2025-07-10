@@ -5,6 +5,7 @@ import { authorize } from '../middleware/authorization.middleware';
 import { validateRequest } from '../middleware/validation.middleware';
 import { rateLimiter } from '../middleware/rate-limit.middleware';
 import { requestLogger } from '../middleware/request-logger.middleware';
+import { wrapCloudNativeHandler } from '../middleware/request-transformer.middleware';
 
 export function createCloudNativeRoutes(
   controller: CloudNativeController
@@ -21,7 +22,7 @@ export function createCloudNativeRoutes(
     authenticate,
     authorize(['admin', 'developer']),
     validateRequest('deploy'),
-    controller.deployApplication.bind(controller)
+    wrapCloudNativeHandler(controller.deployApplication.bind(controller))
   );
 
   router.put(
@@ -29,7 +30,7 @@ export function createCloudNativeRoutes(
     authenticate,
     authorize(['admin', 'developer']),
     validateRequest('scale'),
-    controller.scaleDeployment.bind(controller)
+    wrapCloudNativeHandler(controller.scaleDeployment.bind(controller))
   );
 
   router.put(
@@ -37,39 +38,39 @@ export function createCloudNativeRoutes(
     authenticate,
     authorize(['admin', 'developer']),
     validateRequest('rollout'),
-    controller.performRollout.bind(controller)
+    wrapCloudNativeHandler(controller.performRollout.bind(controller))
   );
 
   router.get(
     '/deployments/:namespace/:name',
     authenticate,
-    controller.getDeploymentStatus.bind(controller)
+    wrapCloudNativeHandler(controller.getDeploymentStatus.bind(controller))
   );
 
   router.get(
     '/deployments',
     authenticate,
-    controller.getAllDeployments.bind(controller)
+    wrapCloudNativeHandler(controller.getAllDeployments.bind(controller))
   );
 
   // Service routes
   router.get(
     '/services/:namespace/:name',
     authenticate,
-    controller.getServiceStatus.bind(controller)
+    wrapCloudNativeHandler(controller.getServiceStatus.bind(controller))
   );
 
   router.get(
     '/services',
     authenticate,
-    controller.getAllServices.bind(controller)
+    wrapCloudNativeHandler(controller.getAllServices.bind(controller))
   );
 
   // Pod routes
   router.get(
     '/pods/:namespace',
     authenticate,
-    controller.getPodStatus.bind(controller)
+    wrapCloudNativeHandler(controller.getPodStatus.bind(controller))
   );
 
   // Docker routes
@@ -78,7 +79,7 @@ export function createCloudNativeRoutes(
     authenticate,
     authorize(['admin', 'developer']),
     validateRequest('docker-build'),
-    controller.buildDockerImage.bind(controller)
+    wrapCloudNativeHandler(controller.buildDockerImage.bind(controller))
   );
 
   router.post(
@@ -86,7 +87,7 @@ export function createCloudNativeRoutes(
     authenticate,
     authorize(['admin', 'developer']),
     validateRequest('docker-push'),
-    controller.pushDockerImage.bind(controller)
+    wrapCloudNativeHandler(controller.pushDockerImage.bind(controller))
   );
 
   // Manifest routes
@@ -95,20 +96,20 @@ export function createCloudNativeRoutes(
     authenticate,
     authorize(['admin']),
     validateRequest('manifest'),
-    controller.applyManifest.bind(controller)
+    wrapCloudNativeHandler(controller.applyManifest.bind(controller))
   );
 
   // Event routes
   router.get(
     '/events',
     authenticate,
-    controller.getEvents.bind(controller)
+    wrapCloudNativeHandler(controller.getEvents.bind(controller))
   );
 
   // Health check
   router.get(
     '/health',
-    controller.healthCheck.bind(controller)
+    wrapCloudNativeHandler(controller.healthCheck.bind(controller))
   );
 
   return router;

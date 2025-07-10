@@ -141,6 +141,11 @@ const services = {
     target: process.env.INTEGRATION_SERVICE_URL || 'http://integration-service:3008',
     changeOrigin: true,
     pathRewrite: { '^/webhooks': '/webhooks' }
+  },
+  '/api/tmac': {
+    target: process.env.TMAC_SERVICE_URL || 'http://tmac-service:3010',
+    changeOrigin: true,
+    pathRewrite: { '^/api/tmac': '/api/tmac' }
   }
 };
 

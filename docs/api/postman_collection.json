@@ -1,0 +1,632 @@
+{
+  "info": {
+    "name": "Threat Modeling Platform API",
+    "description": "Complete API collection for the Enterprise Threat Modeling Platform",
+    "version": "1.0.0",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{jwt_token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:3000/api",
+      "type": "string"
+    },
+    {
+      "key": "jwt_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "threat_model_id",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "🔐 Authentication",
+      "item": [
+        {
+          "name": "Register User",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"security.architect@company.com\",\n  \"password\": \"SecurePass123@\",\n  \"firstName\": \"Sarah\",\n  \"lastName\": \"Johnson\",\n  \"organization\": \"ACME Corp\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/register",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "register"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Login User",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// Extract JWT token from response",
+                  "if (pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    pm.collectionVariables.set('jwt_token', response.accessToken);",
+                  "    console.log('JWT token saved:', response.accessToken);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"security.architect@company.com\",\n  \"password\": \"SecurePass123@\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "login"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Refresh Token",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"your_refresh_token_here\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/refresh",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "refresh"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Logout User",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"your_refresh_token_here\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/logout",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "logout"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "🛡️ Threat Models",
+      "item": [
+        {
+          "name": "List Threat Models",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/threat-models?search=ecommerce&status=draft&limit=20&offset=0",
+              "host": ["{{base_url}}"],
+              "path": ["threat-models"],
+              "query": [
+                {
+                  "key": "search",
+                  "value": "ecommerce"
+                },
+                {
+                  "key": "status",
+                  "value": "draft"
+                },
+                {
+                  "key": "limit",
+                  "value": "20"
+                },
+                {
+                  "key": "offset",
+                  "value": "0"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Threat Model",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// Extract threat model ID from response",
+                  "if (pm.response.code === 201) {",
+                  "    const response = pm.response.json();",
+                  "    pm.collectionVariables.set('threat_model_id', response.threatModel.id);",
+                  "    console.log('Threat model ID saved:', response.threatModel.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"E-commerce Platform Security Model\",\n  \"description\": \"Comprehensive threat model for online retail platform\",\n  \"methodology\": \"STRIDE\",\n  \"scope\": {\n    \"systems\": [\"web-frontend\", \"api-gateway\", \"payment-service\", \"user-database\"],\n    \"boundaries\": [\"internet\", \"dmz\", \"internal-network\"]\n  },\n  \"metadata\": {\n    \"industry\": \"retail\",\n    \"compliance\": [\"PCI-DSS\", \"GDPR\"],\n    \"technologies\": [\"React\", \"Node.js\", \"PostgreSQL\", \"Redis\"]\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/threat-models",
+              "host": ["{{base_url}}"],
+              "path": ["threat-models"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Threat Model Details",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/threat-models/{{threat_model_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["threat-models", "{{threat_model_id}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Threat Model",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Updated E-commerce Platform Security Model\",\n  \"description\": \"Updated comprehensive threat model for online retail platform\",\n  \"status\": \"published\",\n  \"risk_level\": \"high\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/threat-models/{{threat_model_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["threat-models", "{{threat_model_id}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Threat Model",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/threat-models/{{threat_model_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["threat-models", "{{threat_model_id}}"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "🤖 AI Analysis",
+      "item": [
+        {
+          "name": "AI Threat Analysis",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"threat_model_id\": \"{{threat_model_id}}\",\n  \"analysis_type\": \"deep\",\n  \"focus_areas\": [\"authentication\", \"data_protection\", \"api_security\"],\n  \"include_compliance\": true,\n  \"compliance_frameworks\": [\"SOC2\", \"ISO27001\"]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/ai/analyze-threats",
+              "host": ["{{base_url}}"],
+              "path": ["ai", "analyze-threats"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "AI Mitigation Suggestions",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"threat_id\": \"threat-uuid-here\",\n  \"context\": {\n    \"environment\": \"production\",\n    \"budget_constraint\": \"medium\",\n    \"time_constraint\": \"normal\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/ai/suggest-mitigations",
+              "host": ["{{base_url}}"],
+              "path": ["ai", "suggest-mitigations"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "📝 TMAC (Threat Modeling as Code)",
+      "item": [
+        {
+          "name": "Parse TMAC File",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": "/path/to/threat-model.tmac.yaml"
+                },
+                {
+                  "key": "validate",
+                  "value": "true",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/tmac/parse",
+              "host": ["{{base_url}}"],
+              "path": ["tmac", "parse"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Validate TMAC Content",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": "/path/to/threat-model.tmac.yaml"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/tmac/validate",
+              "host": ["{{base_url}}"],
+              "path": ["tmac", "validate"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Analyze TMAC Model",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": "/path/to/threat-model.tmac.yaml"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/tmac/analyze",
+              "host": ["{{base_url}}"],
+              "path": ["tmac", "analyze"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Convert TMAC Format",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": "/path/to/threat-model.tmac.yaml"
+                },
+                {
+                  "key": "format",
+                  "value": "json",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/tmac/convert",
+              "host": ["{{base_url}}"],
+              "path": ["tmac", "convert"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "📊 Reports",
+      "item": [
+        {
+          "name": "Generate Executive Summary",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"threat_model_id\": \"{{threat_model_id}}\",\n  \"report_type\": \"executive_summary\",\n  \"format\": \"pdf\",\n  \"include_charts\": true,\n  \"include_recommendations\": true,\n  \"custom_branding\": {\n    \"company_name\": \"ACME Corp\",\n    \"logo_url\": \"https://company.com/logo.png\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/reports/generate",
+              "host": ["{{base_url}}"],
+              "path": ["reports", "generate"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Generate Technical Report",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"threat_model_id\": \"{{threat_model_id}}\",\n  \"report_type\": \"technical\",\n  \"format\": \"html\",\n  \"include_threat_details\": true,\n  \"include_mitigation_status\": true\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/reports/generate",
+              "host": ["{{base_url}}"],
+              "path": ["reports", "generate"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Generate Compliance Report",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"threat_model_id\": \"{{threat_model_id}}\",\n  \"report_type\": \"compliance\",\n  \"format\": \"docx\",\n  \"compliance_frameworks\": [\"SOC2\", \"ISO27001\", \"NIST\"],\n  \"include_gap_analysis\": true\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/reports/generate",
+              "host": ["{{base_url}}"],
+              "path": ["reports", "generate"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "🔗 Integrations",
+      "item": [
+        {
+          "name": "Create JIRA Tickets",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"threat_model_id\": \"{{threat_model_id}}\",\n  \"jira_config\": {\n    \"server_url\": \"https://company.atlassian.net\",\n    \"project_key\": \"SEC\",\n    \"issue_type\": \"Task\",\n    \"assignee\": \"security-team@company.com\"\n  },\n  \"filter_criteria\": {\n    \"severity_threshold\": \"high\",\n    \"status\": [\"open\", \"in_progress\"]\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/integrations/jira",
+              "host": ["{{base_url}}"],
+              "path": ["integrations", "jira"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Send Slack Notification",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"channel\": \"#security-alerts\",\n  \"threat_model_id\": \"{{threat_model_id}}\",\n  \"notification_type\": \"threat_identified\",\n  \"message\": \"🚨 Critical threat identified in Payment Service: SQL Injection vulnerability affecting user data. Immediate review required.\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/integrations/slack/notify",
+              "host": ["{{base_url}}"],
+              "path": ["integrations", "slack", "notify"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "🏥 System Health",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/health",
+              "host": ["{{base_url}}"],
+              "path": ["health"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Prometheus Metrics",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/metrics",
+              "host": ["{{base_url}}"],
+              "path": ["metrics"]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Auto-refresh JWT token if expired",
+          "const jwtToken = pm.collectionVariables.get('jwt_token');",
+          "if (jwtToken) {",
+          "    try {",
+          "        const payload = JSON.parse(atob(jwtToken.split('.')[1]));",
+          "        const currentTime = Math.floor(Date.now() / 1000);",
+          "        if (payload.exp && payload.exp < currentTime) {",
+          "            console.log('JWT token expired, consider refreshing');",
+          "        }",
+          "    } catch (e) {",
+          "        console.log('Could not parse JWT token');",
+          "    }",
+          "}"
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Global test for all requests",
+          "pm.test('Response time is less than 5000ms', function () {",
+          "    pm.expect(pm.response.responseTime).to.be.below(5000);",
+          "});",
+          "",
+          "pm.test('Response has proper headers', function () {",
+          "    pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json');",
+          "});",
+          "",
+          "if (pm.response.code !== 200 && pm.response.code !== 201 && pm.response.code !== 202) {",
+          "    pm.test('Error response has proper structure', function () {",
+          "        const response = pm.response.json();",
+          "        pm.expect(response).to.have.property('success', false);",
+          "        pm.expect(response).to.have.property('error');",
+          "    });",
+          "}"
+        ]
+      }
+    }
+  ]
+}

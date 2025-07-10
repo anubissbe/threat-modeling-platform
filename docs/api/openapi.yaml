@@ -1,0 +1,2253 @@
+openapi: 3.0.3
+info:
+  title: Threat Modeling Platform API
+  description: |
+    # World-Class Threat Modeling Platform API
+    
+    This is a comprehensive API for an enterprise-grade threat modeling platform that provides:
+    
+    ## 🚀 Key Features
+    - **TMAC (Threat Modeling as Code)** - Define threat models as code
+    - **AI-Powered Analysis** - Automated threat identification and risk assessment
+    - **Multiple Methodologies** - STRIDE, PASTA, LINDDUN, VAST, and more
+    - **Enterprise Integration** - SSO, SIEM, DevOps pipeline integration
+    - **Real-time Collaboration** - Multi-user editing and review workflows
+    - **Comprehensive Reporting** - Executive summaries to technical details
+    
+    ## 🔒 Security
+    - JWT-based authentication with refresh tokens
+    - Role-based access control (RBAC)
+    - Rate limiting and DDoS protection
+    - CORS security with allowlisted origins
+    - Input validation and sanitization
+    
+    ## 📊 Monitoring
+    - Health checks for all services
+    - Prometheus metrics
+    - Distributed tracing
+    - Comprehensive logging
+    
+    ## 🔧 Service Architecture
+    - **API Gateway** (Port 3000) - Central routing and security
+    - **Auth Service** (Port 3001) - Authentication and authorization
+    - **Core Service** (Port 3002) - Threat models and projects
+    - **AI Service** (Port 3003) - ML-powered threat analysis
+    - **Diagram Service** (Port 3004) - Visual threat modeling
+    - **Report Service** (Port 3005) - Document generation
+    - **Integration Service** (Port 3008) - External system connectors
+    - **Notification Service** (Port 3009) - Multi-channel alerts
+    - **TMAC Service** (Port 3010) - Threat Modeling as Code
+    
+  version: '1.0.0'
+  contact:
+    name: Threat Modeling Platform Team
+    email: support@threatmodeling.dev
+    url: https://threatmodeling.dev
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+  termsOfService: https://threatmodeling.dev/terms
+
+servers:
+  - url: http://localhost:3000/api
+    description: Development server (API Gateway)
+  - url: http://192.168.1.24:3000/api
+    description: Local deployment server
+  - url: https://api.threatmodeling.dev/api
+    description: Production server
+
+security:
+  - BearerAuth: []
+  - ApiKeyAuth: []
+
+paths:
+  # ========================================
+  # AUTHENTICATION ENDPOINTS
+  # ========================================
+  /auth/register:
+    post:
+      tags: [Authentication]
+      summary: Register new user
+      description: |
+        Create a new user account with email and password.
+        
+        **Security Features:**
+        - Password strength validation (8+ chars, uppercase, lowercase, number, special char)
+        - Email format validation
+        - Duplicate email prevention
+        - Account verification workflow
+      operationId: registerUser
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserRegistration'
+            examples:
+              standard_user:
+                summary: Standard user registration
+                value:
+                  email: "john.doe@company.com"
+                  password: "SecurePass123@"
+                  firstName: "John"
+                  lastName: "Doe"
+                  organization: "ACME Corp"
+      responses:
+        '201':
+          description: User registered successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  /auth/login:
+    post:
+      tags: [Authentication]
+      summary: User login
+      description: |
+        Authenticate user with email and password.
+        
+        **Features:**
+        - JWT access token (15 min expiry)
+        - Refresh token (7 day expiry)
+        - Rate limiting (5 attempts per 15 minutes)
+        - Security monitoring and alerting
+      operationId: loginUser
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserLogin'
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+
+  /auth/refresh:
+    post:
+      tags: [Authentication]
+      summary: Refresh access token
+      description: Generate new access token using refresh token
+      operationId: refreshToken
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [refreshToken]
+              properties:
+                refreshToken:
+                  type: string
+                  description: Valid refresh token
+      responses:
+        '200':
+          description: Token refreshed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /auth/logout:
+    post:
+      tags: [Authentication]
+      summary: User logout
+      description: Invalidate refresh token and logout user
+      operationId: logoutUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                refreshToken:
+                  type: string
+      responses:
+        '200':
+          description: Logout successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+
+  # ========================================
+  # THREAT MODEL ENDPOINTS
+  # ========================================
+  /threat-models:
+    get:
+      tags: [Threat Models]
+      summary: List threat models
+      description: |
+        Retrieve threat models with filtering, searching, and pagination.
+        
+        **Features:**
+        - Multi-field search (name, description, tags)
+        - Status filtering (draft, published, archived)
+        - Methodology filtering
+        - Risk level filtering
+        - Sorting by creation date, last modified, risk score
+      operationId: listThreatModels
+      parameters:
+        - name: search
+          in: query
+          description: Search in name, description, and tags
+          schema:
+            type: string
+            example: "e-commerce payment"
+        - name: status
+          in: query
+          description: Filter by status
+          schema:
+            type: string
+            enum: [draft, in_review, published, archived]
+        - name: methodology
+          in: query
+          description: Filter by methodology
+          schema:
+            type: string
+            enum: [STRIDE, PASTA, LINDDUN, VAST, OCTAVE, TRIKE]
+        - name: risk_level
+          in: query
+          description: Filter by risk level
+          schema:
+            type: string
+            enum: [low, medium, high, critical]
+        - name: limit
+          in: query
+          description: Number of results per page
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+        - name: offset
+          in: query
+          description: Pagination offset
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+        - name: sort
+          in: query
+          description: Sort field and direction
+          schema:
+            type: string
+            enum: [created_at, updated_at, risk_score, name]
+            default: updated_at
+        - name: order
+          in: query
+          description: Sort order
+          schema:
+            type: string
+            enum: [asc, desc]
+            default: desc
+      responses:
+        '200':
+          description: Threat models retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ThreatModelListResponse'
+
+    post:
+      tags: [Threat Models]
+      summary: Create threat model
+      description: |
+        Create a new threat model with comprehensive metadata.
+        
+        **Supported Methodologies:**
+        - **STRIDE** - Spoofing, Tampering, Repudiation, Information Disclosure, Denial of Service, Elevation of Privilege
+        - **PASTA** - Process for Attack Simulation and Threat Analysis
+        - **LINDDUN** - Privacy threat modeling methodology
+        - **VAST** - Visual, Agile, and Simple Threat modeling
+        - **OCTAVE** - Operationally Critical Threat, Asset, and Vulnerability Evaluation
+        - **TRIKE** - Risk-based approach to security auditing
+      operationId: createThreatModel
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ThreatModelCreate'
+            examples:
+              ecommerce_model:
+                summary: E-commerce threat model
+                value:
+                  name: "E-commerce Platform Security Model"
+                  description: "Comprehensive threat model for online retail platform"
+                  methodology: "STRIDE"
+                  scope:
+                    systems: ["web-frontend", "api-gateway", "payment-service", "user-database"]
+                    boundaries: ["internet", "dmz", "internal-network"]
+                  metadata:
+                    industry: "retail"
+                    compliance: ["PCI-DSS", "GDPR"]
+                    technologies: ["React", "Node.js", "PostgreSQL", "Redis"]
+      responses:
+        '201':
+          description: Threat model created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ThreatModelResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /threat-models/{id}:
+    get:
+      tags: [Threat Models]
+      summary: Get threat model details
+      description: Retrieve detailed threat model with all components, threats, and mitigations
+      operationId: getThreatModel
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Threat model ID
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Threat model details retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ThreatModelDetailsResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    put:
+      tags: [Threat Models]
+      summary: Update threat model
+      description: Update threat model details, status, or configuration
+      operationId: updateThreatModel
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ThreatModelUpdate'
+      responses:
+        '200':
+          description: Threat model updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ThreatModelResponse'
+
+    delete:
+      tags: [Threat Models]
+      summary: Delete threat model
+      description: |
+        Delete threat model and all associated data.
+        
+        **⚠️ Warning:** This operation cannot be undone. All threats, mitigations, 
+        and analysis data will be permanently deleted.
+      operationId: deleteThreatModel
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Threat model deleted successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+
+  # ========================================
+  # AI-POWERED ANALYSIS ENDPOINTS
+  # ========================================
+  /ai/analyze-threats:
+    post:
+      tags: [AI Analysis]
+      summary: AI threat analysis
+      description: |
+        Perform comprehensive AI-powered threat analysis.
+        
+        **AI Capabilities:**
+        - Automated threat identification using ML models
+        - Risk scoring based on CVSS and industry data
+        - Mitigation recommendations from threat intelligence
+        - Attack vector analysis
+        - Compliance gap identification
+        
+        **Analysis Types:**
+        - **Quick Scan** - Basic threat identification (< 30 seconds)
+        - **Deep Analysis** - Comprehensive assessment (2-5 minutes)
+        - **Continuous Monitoring** - Ongoing threat landscape updates
+      operationId: analyzeThreats
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ThreatAnalysisRequest'
+            examples:
+              quick_analysis:
+                summary: Quick threat analysis
+                value:
+                  threat_model_id: "123e4567-e89b-12d3-a456-426614174000"
+                  analysis_type: "quick"
+                  focus_areas: ["authentication", "data_protection"]
+              deep_analysis:
+                summary: Deep threat analysis
+                value:
+                  threat_model_id: "123e4567-e89b-12d3-a456-426614174000"
+                  analysis_type: "deep"
+                  include_compliance: true
+                  compliance_frameworks: ["SOC2", "ISO27001"]
+      responses:
+        '200':
+          description: AI analysis completed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ThreatAnalysisResponse'
+        '202':
+          description: Analysis started (check status endpoint)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnalysisJobResponse'
+
+  /ai/suggest-mitigations:
+    post:
+      tags: [AI Analysis]
+      summary: AI mitigation suggestions
+      description: |
+        Get AI-powered mitigation recommendations for specific threats.
+        
+        **Features:**
+        - Context-aware recommendations
+        - Cost-benefit analysis
+        - Implementation complexity assessment
+        - Industry best practices integration
+      operationId: suggestMitigations
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MitigationSuggestionRequest'
+      responses:
+        '200':
+          description: Mitigation suggestions generated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MitigationSuggestionResponse'
+
+  # ========================================
+  # TMAC (THREAT MODELING AS CODE) ENDPOINTS
+  # ========================================
+  /tmac/parse:
+    post:
+      tags: [TMAC]
+      summary: Parse TMAC file
+      description: |
+        Parse and validate TMAC (Threat Modeling as Code) files.
+        
+        **Supported Formats:**
+        - YAML (.yaml, .yml)
+        - JSON (.json)
+        
+        **TMAC Schema Features:**
+        - OpenAPI 3.0 based schema definition
+        - Comprehensive validation rules
+        - Multi-methodology support
+        - Extensible metadata structure
+      operationId: parseTMACFile
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: TMAC file (YAML or JSON)
+                validate:
+                  type: boolean
+                  default: true
+                  description: Perform validation during parsing
+      responses:
+        '200':
+          description: TMAC file parsed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TMACParseResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /tmac/validate:
+    post:
+      tags: [TMAC]
+      summary: Validate TMAC content
+      description: |
+        Validate TMAC content against schema and business rules.
+        
+        **Validation Checks:**
+        - Schema compliance (required fields, data types)
+        - Reference integrity (component IDs, threat IDs)
+        - Business rules (severity levels, categories)
+        - Best practices (naming conventions, completeness)
+      operationId: validateTMACContent
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+      responses:
+        '200':
+          description: TMAC validation completed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TMACValidationResponse'
+
+  /tmac/analyze:
+    post:
+      tags: [TMAC]
+      summary: Analyze TMAC model
+      description: |
+        Perform comprehensive analysis of TMAC threat model.
+        
+        **Analysis Metrics:**
+        - Risk score calculation
+        - Coverage percentage
+        - Threat distribution analysis
+        - Mitigation effectiveness assessment
+        - Compliance gap analysis
+      operationId: analyzeTMACModel
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+      responses:
+        '200':
+          description: TMAC analysis completed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TMACAnalysisResponse'
+
+  /tmac/convert:
+    post:
+      tags: [TMAC]
+      summary: Convert TMAC format
+      description: Convert between YAML and JSON formats
+      operationId: convertTMACFormat
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+                format:
+                  type: string
+                  enum: [yaml, json]
+                  description: Target format
+      responses:
+        '200':
+          description: Format conversion successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TMACConversionResponse'
+
+  # ========================================
+  # REPORTING ENDPOINTS
+  # ========================================
+  /reports/generate:
+    post:
+      tags: [Reports]
+      summary: Generate threat model report
+      description: |
+        Generate comprehensive threat model reports in various formats.
+        
+        **Report Types:**
+        - **Executive Summary** - High-level risk overview for leadership
+        - **Technical Report** - Detailed technical analysis for security teams
+        - **Compliance Report** - Regulatory compliance assessment
+        - **Risk Register** - Structured risk documentation
+        - **Mitigation Plan** - Action-oriented implementation guide
+        
+        **Output Formats:**
+        - PDF (recommended for formal reports)
+        - HTML (web-friendly format)
+        - DOCX (Microsoft Word format)
+        - CSV (data export format)
+      operationId: generateReport
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReportGenerationRequest'
+            examples:
+              executive_summary:
+                summary: Executive summary report
+                value:
+                  threat_model_id: "123e4567-e89b-12d3-a456-426614174000"
+                  report_type: "executive_summary"
+                  format: "pdf"
+                  include_charts: true
+                  include_recommendations: true
+              technical_report:
+                summary: Technical detailed report
+                value:
+                  threat_model_id: "123e4567-e89b-12d3-a456-426614174000"
+                  report_type: "technical"
+                  format: "html"
+                  include_threat_details: true
+                  include_mitigation_status: true
+      responses:
+        '200':
+          description: Report generated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReportResponse'
+        '202':
+          description: Report generation started (check status)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobResponse'
+
+  # ========================================
+  # INTEGRATION ENDPOINTS
+  # ========================================
+  /integrations/jira:
+    post:
+      tags: [Integrations]
+      summary: Create JIRA tickets
+      description: |
+        Create JIRA tickets for threats and mitigations.
+        
+        **Features:**
+        - Automatic ticket creation for high-risk threats
+        - Custom field mapping
+        - Assignee auto-assignment based on component ownership
+        - Progress tracking and status synchronization
+      operationId: createJiraTickets
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/JiraIntegrationRequest'
+      responses:
+        '200':
+          description: JIRA tickets created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JiraIntegrationResponse'
+
+  /integrations/slack/notify:
+    post:
+      tags: [Integrations]
+      summary: Send Slack notification
+      description: Send threat model updates to Slack channels
+      operationId: sendSlackNotification
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SlackNotificationRequest'
+      responses:
+        '200':
+          description: Slack notification sent successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotificationResponse'
+
+  # ========================================
+  # SSO MANAGEMENT ENDPOINTS
+  # ========================================
+  /auth/sso/dashboard:
+    get:
+      tags: [SSO Management]
+      summary: Get SSO dashboard overview
+      description: |
+        Comprehensive SSO dashboard with metrics, health status, and recent activity.
+        
+        **Dashboard Includes:**
+        - Provider status and health checks
+        - Performance metrics and analytics
+        - Security alerts and recent activity
+        - Session management overview
+      operationId: getSSODashboard
+      responses:
+        '200':
+          description: SSO dashboard data retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SSODashboardResponse'
+
+  /auth/sso/templates:
+    get:
+      tags: [SSO Management]
+      summary: Get available SSO provider templates
+      description: |
+        Get pre-configured templates for popular identity providers.
+        
+        **Available Templates:**
+        - Microsoft Azure AD / Entra ID
+        - Google Workspace
+        - Okta
+        - Generic SAML 2.0
+        - Generic OpenID Connect
+        - PingIdentity
+      operationId: getSSOTemplates
+      responses:
+        '200':
+          description: SSO templates retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SSOTemplatesResponse'
+
+  /auth/sso/templates/generate:
+    post:
+      tags: [SSO Management]
+      summary: Generate SSO provider configuration
+      description: |
+        Generate a pre-configured SSO provider template based on the provider type.
+        
+        **Supported Providers:**
+        - azure-ad (requires: tenantId, clientId, clientSecret)
+        - google-workspace (requires: clientId, clientSecret, hostedDomain)
+        - okta (requires: oktaDomain, clientId, clientSecret)
+        - saml (requires: ssoUrl, x509Certificate)
+        - oidc (requires: issuer, clientId, clientSecret)
+        - ping-identity (requires: environmentId, clientId, clientSecret)
+      operationId: generateSSOTemplate
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SSOTemplateRequest'
+            examples:
+              azure_ad:
+                summary: Azure AD template
+                value:
+                  provider: "azure-ad"
+                  domain: "threatmodeling.company.com"
+                  tenantId: "12345678-1234-1234-1234-123456789012"
+                  clientId: "87654321-4321-4321-4321-210987654321"
+                  clientSecret: "your-client-secret"
+              okta:
+                summary: Okta template
+                value:
+                  provider: "okta"
+                  domain: "threatmodeling.company.com"
+                  oktaDomain: "company.okta.com"
+                  clientId: "okta-client-id"
+                  clientSecret: "okta-client-secret"
+      responses:
+        '200':
+          description: SSO template generated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SSOTemplateResponse'
+
+  /auth/sso/wizard/{provider}:
+    get:
+      tags: [SSO Management]
+      summary: Get configuration wizard steps
+      description: |
+        Get step-by-step configuration wizard for the specified SSO provider.
+        
+        **Wizard Features:**
+        - Step-by-step configuration guide
+        - Field validation and descriptions
+        - Security recommendations
+        - Estimated completion time
+      operationId: getSSOWizard
+      parameters:
+        - name: provider
+          in: path
+          required: true
+          schema:
+            type: string
+            enum: [azure-ad, google-workspace, okta, saml, oidc, ping-identity]
+          description: SSO provider type
+      responses:
+        '200':
+          description: Configuration wizard steps retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SSOWizardResponse'
+
+  /auth/sso/analytics:
+    get:
+      tags: [SSO Management]
+      summary: Get SSO analytics and metrics
+      description: |
+        Comprehensive SSO analytics including performance metrics, security reports, and trends.
+        
+        **Analytics Include:**
+        - Login performance metrics (avg, P95, P99)
+        - Security statistics and threat detection
+        - Provider-specific metrics
+        - Trend analysis and growth metrics
+      operationId: getSSOAnalytics
+      parameters:
+        - name: timeRange
+          in: query
+          schema:
+            type: string
+            enum: [hour, day, week, month]
+            default: day
+          description: Time range for analytics
+      responses:
+        '200':
+          description: SSO analytics retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SSOAnalyticsResponse'
+
+  /auth/sso/alerts:
+    get:
+      tags: [SSO Management]
+      summary: Get SSO security alerts
+      description: |
+        Get SSO security and operational alerts with filtering capabilities.
+        
+        **Alert Types:**
+        - Security: Failed logins, suspicious activity
+        - Performance: Slow response times, timeouts
+        - Availability: Provider downtime, certificate issues
+        - Compliance: Policy violations, audit requirements
+      operationId: getSSOAlerts
+      parameters:
+        - name: type
+          in: query
+          schema:
+            type: string
+            enum: [security, performance, availability, compliance]
+          description: Filter by alert type
+        - name: severity
+          in: query
+          schema:
+            type: string
+            enum: [low, medium, high, critical]
+          description: Filter by alert severity
+        - name: acknowledged
+          in: query
+          schema:
+            type: boolean
+          description: Filter by acknowledgment status
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 50
+          description: Maximum number of alerts to return
+      responses:
+        '200':
+          description: SSO alerts retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SSOAlertsResponse'
+
+  /auth/sso/alerts/{alertId}/acknowledge:
+    post:
+      tags: [SSO Management]
+      summary: Acknowledge SSO alert
+      description: Mark an SSO alert as acknowledged to prevent continued notifications
+      operationId: acknowledgeSSOAlert
+      parameters:
+        - name: alertId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Alert ID to acknowledge
+      responses:
+        '200':
+          description: Alert acknowledged successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+
+  /auth/sso/test-configuration:
+    post:
+      tags: [SSO Management]
+      summary: Test SSO provider configuration
+      description: |
+        Test and validate SSO provider configuration before activation.
+        
+        **Testing Includes:**
+        - Configuration validation
+        - Connectivity testing
+        - Certificate verification
+        - Attribute mapping validation
+        - Security recommendations
+      operationId: testSSOConfiguration
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SSOProviderConfig'
+      responses:
+        '200':
+          description: Configuration test completed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SSOTestResponse'
+
+  /auth/sso/sessions/active:
+    get:
+      tags: [SSO Management]
+      summary: Get active SSO sessions
+      description: |
+        Get all active SSO sessions with detailed information.
+        
+        **Session Information:**
+        - User and provider details
+        - Login time and duration
+        - Activity status and expiration
+        - Security attributes and groups
+      operationId: getActiveSSOSessions
+      responses:
+        '200':
+          description: Active SSO sessions retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SSOSessionsResponse'
+
+  /auth/sso/compliance/report:
+    post:
+      tags: [SSO Management]
+      summary: Generate compliance report
+      description: |
+        Generate comprehensive compliance report for various standards.
+        
+        **Supported Standards:**
+        - SOC2 Type II
+        - GDPR compliance
+        - HIPAA requirements
+        - PCI-DSS standards
+      operationId: generateComplianceReport
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ComplianceReportRequest'
+      responses:
+        '200':
+          description: Compliance report generated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ComplianceReportResponse'
+
+  # ========================================
+  # SYSTEM ENDPOINTS
+  # ========================================
+  /health:
+    get:
+      tags: [System]
+      summary: Health check
+      description: |
+        Comprehensive health check for all system components.
+        
+        **Health Checks Include:**
+        - Database connectivity
+        - Redis cache status
+        - External service availability
+        - AI model readiness
+        - Storage system health
+      operationId: healthCheck
+      security: []
+      responses:
+        '200':
+          description: System is healthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+        '503':
+          description: System is unhealthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+
+  /metrics:
+    get:
+      tags: [System]
+      summary: Prometheus metrics
+      description: Prometheus-compatible metrics endpoint for monitoring
+      operationId: getMetrics
+      security: []
+      responses:
+        '200':
+          description: Metrics data
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: |
+                  # HELP threat_models_total Total number of threat models
+                  # TYPE threat_models_total counter
+                  threat_models_total 42
+                  
+                  # HELP api_requests_duration_seconds API request duration
+                  # TYPE api_requests_duration_seconds histogram
+                  api_requests_duration_seconds_bucket{le="0.1"} 100
+                  api_requests_duration_seconds_bucket{le="0.5"} 200
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT token obtained from /auth/login endpoint
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+      description: API key for service-to-service authentication
+
+  schemas:
+    # ========================================
+    # AUTHENTICATION SCHEMAS
+    # ========================================
+    UserRegistration:
+      type: object
+      required: [email, password, first_name, last_name]
+      properties:
+        email:
+          type: string
+          format: email
+          description: User email address
+          example: "john.doe@company.com"
+        password:
+          type: string
+          minLength: 8
+          description: Password (min 8 chars, must include uppercase, lowercase, number, special char)
+          example: "SecurePass123!"
+        first_name:
+          type: string
+          minLength: 1
+          maxLength: 50
+          example: "John"
+        last_name:
+          type: string
+          minLength: 1
+          maxLength: 50
+          example: "Doe"
+        organization:
+          type: string
+          maxLength: 100
+          example: "ACME Corp"
+        role:
+          type: string
+          enum: [admin, security_architect, analyst, developer, viewer]
+          default: analyst
+          description: User role determining access permissions
+
+    UserLogin:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          format: email
+          example: "john.doe@company.com"
+        password:
+          type: string
+          example: "SecurePass123!"
+
+    AuthResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        user:
+          $ref: '#/components/schemas/User'
+        accessToken:
+          type: string
+          description: JWT access token (15 minute expiry)
+          example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+        refreshToken:
+          type: string
+          description: Refresh token (7 day expiry)
+          example: "rt_1234567890abcdef..."
+        tokenType:
+          type: string
+          example: "Bearer"
+        expiresIn:
+          type: integer
+          description: Access token expiry in seconds
+          example: 900
+
+    TokenResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        accessToken:
+          type: string
+        refreshToken:
+          type: string
+        expiresIn:
+          type: integer
+
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: "123e4567-e89b-12d3-a456-426614174000"
+        email:
+          type: string
+          format: email
+          example: "john.doe@company.com"
+        first_name:
+          type: string
+          example: "John"
+        last_name:
+          type: string
+          example: "Doe"
+        organization:
+          type: string
+          example: "ACME Corp"
+        role:
+          type: string
+          enum: [admin, security_architect, analyst, developer, viewer]
+        is_active:
+          type: boolean
+          example: true
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    # ========================================
+    # THREAT MODEL SCHEMAS
+    # ========================================
+    ThreatModelCreate:
+      type: object
+      required: [name, description, methodology]
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 255
+          description: Threat model name
+          example: "E-commerce Platform Security Model"
+        description:
+          type: string
+          maxLength: 2000
+          description: Detailed description of the threat model
+          example: "Comprehensive threat model for online retail platform"
+        methodology:
+          type: string
+          enum: [STRIDE, PASTA, LINDDUN, VAST, OCTAVE, TRIKE]
+          description: Threat modeling methodology
+          example: "STRIDE"
+        scope:
+          type: object
+          description: Threat model scope definition
+          properties:
+            systems:
+              type: array
+              items:
+                type: string
+              description: Systems included in scope
+              example: ["web-frontend", "api-gateway", "payment-service"]
+            boundaries:
+              type: array
+              items:
+                type: string
+              description: Trust boundaries
+              example: ["internet", "dmz", "internal-network"]
+            data_flows:
+              type: array
+              items:
+                $ref: '#/components/schemas/DataFlow'
+        metadata:
+          type: object
+          description: Additional metadata
+          properties:
+            industry:
+              type: string
+              example: "retail"
+            compliance:
+              type: array
+              items:
+                type: string
+              example: ["PCI-DSS", "GDPR"]
+            technologies:
+              type: array
+              items:
+                type: string
+              example: ["React", "Node.js", "PostgreSQL"]
+
+    ThreatModelUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+          maxLength: 255
+        description:
+          type: string
+          maxLength: 2000
+        status:
+          type: string
+          enum: [draft, in_review, published, archived]
+        risk_level:
+          type: string
+          enum: [low, medium, high, critical]
+        metadata:
+          type: object
+
+    ThreatModelResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        threatModel:
+          $ref: '#/components/schemas/ThreatModel'
+
+    ThreatModel:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: "123e4567-e89b-12d3-a456-426614174000"
+        name:
+          type: string
+          example: "E-commerce Platform Security Model"
+        description:
+          type: string
+          example: "Comprehensive threat model for online retail platform"
+        methodology:
+          type: string
+          enum: [STRIDE, PASTA, LINDDUN, VAST, OCTAVE, TRIKE]
+        status:
+          type: string
+          enum: [draft, in_review, published, archived]
+        risk_level:
+          type: string
+          enum: [low, medium, high, critical]
+        user_id:
+          type: string
+          format: uuid
+        version:
+          type: string
+          example: "1.0.0"
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        scope:
+          type: object
+        metadata:
+          type: object
+
+    ThreatModelListResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        threatModels:
+          type: array
+          items:
+            $ref: '#/components/schemas/ThreatModel'
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+
+    ThreatModelDetailsResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        threatModel:
+          allOf:
+            - $ref: '#/components/schemas/ThreatModel'
+            - type: object
+              properties:
+                components:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Component'
+                threats:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Threat'
+                mitigations:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Mitigation'
+                dataFlows:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/DataFlow'
+
+    Component:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          example: "Payment API"
+        type:
+          type: string
+          enum: [web_application, database, api, microservice, external_system, user]
+        description:
+          type: string
+        trust_level:
+          type: string
+          enum: [trusted, partially_trusted, untrusted]
+        technologies:
+          type: array
+          items:
+            type: string
+        created_at:
+          type: string
+          format: date-time
+
+    Threat:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        threat_model_id:
+          type: string
+          format: uuid
+        title:
+          type: string
+          example: "SQL Injection Attack"
+        description:
+          type: string
+          example: "Attacker could inject malicious SQL queries"
+        category:
+          type: string
+          enum: [spoofing, tampering, repudiation, information_disclosure, denial_of_service, elevation_of_privilege]
+        severity:
+          type: string
+          enum: [low, medium, high, critical]
+        likelihood:
+          type: string
+          enum: [low, medium, high]
+        impact:
+          type: string
+          enum: [low, medium, high, critical]
+        stride:
+          type: array
+          items:
+            type: string
+            enum: [S, T, R, I, D, E]
+        mitre_attack:
+          type: array
+          items:
+            type: string
+          description: MITRE ATT&CK technique IDs
+        cvss_score:
+          type: number
+          minimum: 0
+          maximum: 10
+        status:
+          type: string
+          enum: [open, in_progress, resolved, accepted_risk]
+        affected_components:
+          type: array
+          items:
+            type: string
+            format: uuid
+        created_at:
+          type: string
+          format: date-time
+
+    Mitigation:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        threat_id:
+          type: string
+          format: uuid
+        title:
+          type: string
+          example: "Input Validation"
+        description:
+          type: string
+          example: "Implement parameterized queries and input sanitization"
+        type:
+          type: string
+          enum: [preventive, detective, corrective]
+        effectiveness:
+          type: string
+          enum: [low, medium, high]
+        cost:
+          type: string
+          enum: [low, medium, high]
+        implementation_effort:
+          type: string
+          enum: [low, medium, high]
+        status:
+          type: string
+          enum: [planned, in_progress, implemented, verified]
+        assigned_to:
+          type: string
+          format: email
+        due_date:
+          type: string
+          format: date
+        created_at:
+          type: string
+          format: date-time
+
+    DataFlow:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          example: "Payment Processing"
+        source_component_id:
+          type: string
+          format: uuid
+        destination_component_id:
+          type: string
+          format: uuid
+        protocol:
+          type: string
+          example: "HTTPS"
+        port:
+          type: integer
+          example: 443
+        authentication:
+          type: string
+          example: "OAuth2"
+        encryption:
+          type: string
+          example: "TLS 1.3"
+        data_classification:
+          type: string
+          enum: [public, internal, confidential, secret]
+
+    # ========================================
+    # AI ANALYSIS SCHEMAS
+    # ========================================
+    ThreatAnalysisRequest:
+      type: object
+      required: [threat_model_id]
+      properties:
+        threat_model_id:
+          type: string
+          format: uuid
+        analysis_type:
+          type: string
+          enum: [quick, deep, continuous]
+          default: quick
+        focus_areas:
+          type: array
+          items:
+            type: string
+          description: Specific areas to focus analysis on
+          example: ["authentication", "data_protection", "api_security"]
+        include_compliance:
+          type: boolean
+          default: false
+        compliance_frameworks:
+          type: array
+          items:
+            type: string
+          example: ["SOC2", "ISO27001", "NIST"]
+
+    ThreatAnalysisResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        analysis:
+          type: object
+          properties:
+            threat_model_id:
+              type: string
+              format: uuid
+            analysis_type:
+              type: string
+            threats_identified:
+              type: array
+              items:
+                $ref: '#/components/schemas/IdentifiedThreat'
+            risk_score:
+              type: number
+              description: Overall risk score (0-100)
+              example: 75.5
+            coverage_percentage:
+              type: number
+              description: Threat coverage percentage
+              example: 85.2
+            recommendations:
+              type: array
+              items:
+                type: string
+            compliance_gaps:
+              type: array
+              items:
+                $ref: '#/components/schemas/ComplianceGap'
+            generated_at:
+              type: string
+              format: date-time
+
+    IdentifiedThreat:
+      type: object
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+        category:
+          type: string
+        severity:
+          type: string
+        likelihood:
+          type: string
+        confidence:
+          type: number
+          description: AI confidence score (0-1)
+          example: 0.85
+        affected_components:
+          type: array
+          items:
+            type: string
+        mitre_attack:
+          type: array
+          items:
+            type: string
+        suggested_mitigations:
+          type: array
+          items:
+            $ref: '#/components/schemas/SuggestedMitigation'
+
+    SuggestedMitigation:
+      type: object
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        type:
+          type: string
+        effectiveness:
+          type: string
+        cost:
+          type: string
+        implementation_effort:
+          type: string
+        priority:
+          type: string
+          enum: [low, medium, high, critical]
+
+    MitigationSuggestionRequest:
+      type: object
+      required: [threat_id]
+      properties:
+        threat_id:
+          type: string
+          format: uuid
+        context:
+          type: object
+          description: Additional context for suggestions
+        budget_constraint:
+          type: string
+          enum: [low, medium, high, unlimited]
+        time_constraint:
+          type: string
+          enum: [urgent, normal, flexible]
+
+    MitigationSuggestionResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        suggestions:
+          type: array
+          items:
+            $ref: '#/components/schemas/SuggestedMitigation'
+        threat_id:
+          type: string
+          format: uuid
+        generated_at:
+          type: string
+          format: date-time
+
+    ComplianceGap:
+      type: object
+      properties:
+        framework:
+          type: string
+          example: "SOC2"
+        control_id:
+          type: string
+          example: "CC6.1"
+        control_name:
+          type: string
+          example: "Logical and Physical Access Controls"
+        gap_description:
+          type: string
+        severity:
+          type: string
+          enum: [low, medium, high, critical]
+        remediation_guidance:
+          type: string
+
+    # ========================================
+    # TMAC SCHEMAS
+    # ========================================
+    TMACParseResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        model:
+          type: object
+          description: Parsed TMAC model
+        metadata:
+          type: object
+          properties:
+            filename:
+              type: string
+            format:
+              type: string
+              enum: [yaml, json]
+            size:
+              type: integer
+            parsing_time_ms:
+              type: integer
+
+    TMACValidationResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        validation:
+          type: object
+          properties:
+            valid:
+              type: boolean
+            errors:
+              type: array
+              items:
+                type: string
+            warnings:
+              type: array
+              items:
+                type: string
+            schema_version:
+              type: string
+            validation_time_ms:
+              type: integer
+
+    TMACAnalysisResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        analysis:
+          type: object
+          properties:
+            summary:
+              type: object
+              properties:
+                total_components:
+                  type: integer
+                total_threats:
+                  type: integer
+                critical_threats:
+                  type: integer
+                high_threats:
+                  type: integer
+                unmitigated_threats:
+                  type: integer
+                coverage_percentage:
+                  type: integer
+                risk_score:
+                  type: integer
+            findings:
+              type: array
+              items:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  severity:
+                    type: string
+                  description:
+                    type: string
+            recommendations:
+              type: array
+              items:
+                type: string
+
+    TMACConversionResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        content:
+          type: string
+          description: Converted content
+        format:
+          type: string
+          enum: [yaml, json]
+        original_format:
+          type: string
+          enum: [yaml, json]
+
+    # ========================================
+    # REPORTING SCHEMAS
+    # ========================================
+    ReportGenerationRequest:
+      type: object
+      required: [threat_model_id, report_type, format]
+      properties:
+        threat_model_id:
+          type: string
+          format: uuid
+        report_type:
+          type: string
+          enum: [executive_summary, technical, compliance, risk_register, mitigation_plan]
+        format:
+          type: string
+          enum: [pdf, html, docx, csv]
+        include_charts:
+          type: boolean
+          default: true
+        include_recommendations:
+          type: boolean
+          default: true
+        include_threat_details:
+          type: boolean
+          default: false
+        include_mitigation_status:
+          type: boolean
+          default: true
+        custom_branding:
+          type: object
+          properties:
+            logo_url:
+              type: string
+              format: uri
+            company_name:
+              type: string
+            colors:
+              type: object
+
+    ReportResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        report:
+          type: object
+          properties:
+            id:
+              type: string
+              format: uuid
+            download_url:
+              type: string
+              format: uri
+            expires_at:
+              type: string
+              format: date-time
+            format:
+              type: string
+            size_bytes:
+              type: integer
+            generated_at:
+              type: string
+              format: date-time
+
+    # ========================================
+    # INTEGRATION SCHEMAS
+    # ========================================
+    JiraIntegrationRequest:
+      type: object
+      required: [threat_model_id, jira_config]
+      properties:
+        threat_model_id:
+          type: string
+          format: uuid
+        jira_config:
+          type: object
+          properties:
+            server_url:
+              type: string
+              format: uri
+            project_key:
+              type: string
+            issue_type:
+              type: string
+              default: "Task"
+            assignee:
+              type: string
+        filter_criteria:
+          type: object
+          properties:
+            severity_threshold:
+              type: string
+              enum: [low, medium, high, critical]
+              default: medium
+            status:
+              type: array
+              items:
+                type: string
+
+    JiraIntegrationResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        tickets_created:
+          type: array
+          items:
+            type: object
+            properties:
+              threat_id:
+                type: string
+                format: uuid
+              jira_key:
+                type: string
+                example: "SEC-123"
+              jira_url:
+                type: string
+                format: uri
+        summary:
+          type: object
+          properties:
+            total_threats:
+              type: integer
+            tickets_created:
+              type: integer
+            tickets_updated:
+              type: integer
+
+    SlackNotificationRequest:
+      type: object
+      required: [channel, message]
+      properties:
+        channel:
+          type: string
+          example: "#security-alerts"
+        message:
+          type: string
+        threat_model_id:
+          type: string
+          format: uuid
+        notification_type:
+          type: string
+          enum: [threat_identified, analysis_complete, review_required]
+
+    NotificationResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        message_id:
+          type: string
+        channel:
+          type: string
+        sent_at:
+          type: string
+          format: date-time
+
+    # ========================================
+    # SYSTEM SCHEMAS
+    # ========================================
+    HealthResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [healthy, degraded, unhealthy]
+          example: "healthy"
+        service:
+          type: string
+          example: "api-gateway"
+        timestamp:
+          type: string
+          format: date-time
+        version:
+          type: string
+          example: "1.0.0"
+        checks:
+          type: object
+          properties:
+            database:
+              $ref: '#/components/schemas/HealthCheck'
+            redis:
+              $ref: '#/components/schemas/HealthCheck'
+            ai_service:
+              $ref: '#/components/schemas/HealthCheck'
+            external_apis:
+              $ref: '#/components/schemas/HealthCheck'
+
+    HealthCheck:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [healthy, unhealthy]
+        response_time_ms:
+          type: integer
+        last_check:
+          type: string
+          format: date-time
+        error:
+          type: string
+          nullable: true
+
+    # ========================================
+    # COMMON SCHEMAS
+    # ========================================
+    SuccessResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        message:
+          type: string
+          example: "Operation completed successfully"
+        timestamp:
+          type: string
+          format: date-time
+
+    ErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: string
+          example: "Validation failed"
+        details:
+          type: array
+          items:
+            type: string
+        code:
+          type: string
+          example: "VALIDATION_ERROR"
+        timestamp:
+          type: string
+          format: date-time
+
+    Pagination:
+      type: object
+      properties:
+        total:
+          type: integer
+          description: Total number of items
+          example: 150
+        limit:
+          type: integer
+          description: Items per page
+          example: 20
+        offset:
+          type: integer
+          description: Current offset
+          example: 40
+        has_next:
+          type: boolean
+          description: Whether there are more items
+          example: true
+        has_previous:
+          type: boolean
+          description: Whether there are previous items
+          example: true
+
+    AnalysisJobResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        job_id:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum: [queued, running, completed, failed]
+        estimated_completion:
+          type: string
+          format: date-time
+        status_url:
+          type: string
+          format: uri
+
+    JobResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        job_id:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum: [queued, running, completed, failed]
+        progress_percentage:
+          type: integer
+          minimum: 0
+          maximum: 100
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+  responses:
+    BadRequest:
+      description: Bad request - validation errors
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            success: false
+            error: "Validation failed"
+            details: ["Email is required", "Password must be at least 8 characters"]
+            code: "VALIDATION_ERROR"
+
+    Unauthorized:
+      description: Unauthorized - authentication required
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            success: false
+            error: "Authentication required"
+            code: "UNAUTHORIZED"
+
+    Forbidden:
+      description: Forbidden - insufficient permissions
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            success: false
+            error: "Insufficient permissions"
+            code: "FORBIDDEN"
+
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            success: false
+            error: "Resource not found"
+            code: "NOT_FOUND"
+
+    Conflict:
+      description: Conflict - resource already exists
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            success: false
+            error: "Email already exists"
+            code: "CONFLICT"
+
+    TooManyRequests:
+      description: Too many requests - rate limit exceeded
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            success: false
+            error: "Rate limit exceeded"
+            code: "RATE_LIMIT_EXCEEDED"
+            details: ["Try again in 60 seconds"]
+
+tags:
+  - name: Authentication
+    description: |
+      User authentication and authorization operations.
+      
+      **Features:**
+      - JWT-based authentication with refresh tokens
+      - Role-based access control (RBAC)
+      - Enterprise SSO integration
+      - Multi-factor authentication (MFA)
+      - Security monitoring and alerting
+  
+  - name: Threat Models
+    description: |
+      Core threat modeling operations.
+      
+      **Capabilities:**
+      - Create and manage threat models
+      - Support for multiple methodologies (STRIDE, PASTA, LINDDUN, etc.)
+      - Component and data flow modeling
+      - Version control and collaboration
+      - Template and baseline management
+  
+  - name: AI Analysis
+    description: |
+      AI-powered threat analysis and recommendations.
+      
+      **AI Features:**
+      - Automated threat identification
+      - Risk scoring and prioritization
+      - Mitigation recommendations
+      - Attack vector analysis
+      - Compliance gap detection
+      - Continuous threat landscape monitoring
+  
+  - name: TMAC
+    description: |
+      Threat Modeling as Code (TMAC) operations.
+      
+      **TMAC Benefits:**
+      - Version-controlled threat models
+      - CI/CD pipeline integration
+      - Automated validation and analysis
+      - Infrastructure as Code compatibility
+      - GitOps workflow support
+  
+  - name: Reports
+    description: |
+      Report generation and export capabilities.
+      
+      **Report Types:**
+      - Executive summaries for leadership
+      - Technical reports for security teams
+      - Compliance reports for auditors
+      - Risk registers for risk management
+      - Mitigation plans for implementation
+  
+  - name: Integrations
+    description: |
+      External system integrations.
+      
+      **Supported Integrations:**
+      - JIRA for task management
+      - Slack for notifications
+      - SIEM systems for security monitoring
+      - CI/CD pipelines for automation
+      - Identity providers for SSO
+  
+  - name: System
+    description: |
+      System health, monitoring, and administrative operations.
+      
+      **System Features:**
+      - Health checks for all components
+      - Prometheus metrics for monitoring
+      - Distributed tracing
+      - Audit logging
+      - Performance monitoring
+
+externalDocs:
+  description: Find out more about the Threat Modeling Platform
+  url: https://threatmodeling.dev/docs

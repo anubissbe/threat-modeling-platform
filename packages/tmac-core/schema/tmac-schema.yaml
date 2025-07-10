@@ -1,0 +1,361 @@
+openapi: 3.0.0
+info:
+  title: TMAC (Threat Modeling as Code) Schema
+  version: 1.0.0
+  description: Schema definition for threat models as code
+
+components:
+  schemas:
+    ThreatModel:
+      type: object
+      required:
+        - version
+        - metadata
+        - system
+        - dataFlows
+        - threats
+      properties:
+        version:
+          type: string
+          pattern: '^\d+\.\d+\.\d+$'
+          description: TMAC schema version
+          example: "1.0.0"
+        
+        metadata:
+          $ref: '#/components/schemas/Metadata'
+        
+        system:
+          $ref: '#/components/schemas/System'
+        
+        dataFlows:
+          type: array
+          items:
+            $ref: '#/components/schemas/DataFlow'
+        
+        threats:
+          type: array
+          items:
+            $ref: '#/components/schemas/Threat'
+        
+        mitigations:
+          type: array
+          items:
+            $ref: '#/components/schemas/Mitigation'
+        
+        assumptions:
+          type: array
+          items:
+            type: string
+        
+        outOfScope:
+          type: array
+          items:
+            type: string
+
+    Metadata:
+      type: object
+      required:
+        - name
+        - author
+        - created
+        - updated
+      properties:
+        name:
+          type: string
+          description: Name of the threat model
+        description:
+          type: string
+          description: Detailed description
+        author:
+          type: string
+          description: Author of the threat model
+        version:
+          type: string
+          description: Version of this threat model
+        created:
+          type: string
+          format: date-time
+        updated:
+          type: string
+          format: date-time
+        tags:
+          type: array
+          items:
+            type: string
+        compliance:
+          type: array
+          items:
+            type: string
+          description: Compliance frameworks (ISO27001, SOC2, etc.)
+
+    System:
+      type: object
+      required:
+        - name
+        - type
+        - components
+      properties:
+        name:
+          type: string
+        type:
+          type: string
+          enum: [web, mobile, api, desktop, embedded, cloud, hybrid]
+        description:
+          type: string
+        architecture:
+          type: string
+          enum: [monolithic, microservices, serverless, distributed]
+        components:
+          type: array
+          items:
+            $ref: '#/components/schemas/Component'
+        trustBoundaries:
+          type: array
+          items:
+            $ref: '#/components/schemas/TrustBoundary'
+
+    Component:
+      type: object
+      required:
+        - id
+        - name
+        - type
+      properties:
+        id:
+          type: string
+          pattern: '^[a-zA-Z0-9-_]+$'
+        name:
+          type: string
+        type:
+          type: string
+          enum: [
+            webserver, appserver, database, cache, queue,
+            loadbalancer, firewall, api, frontend, backend,
+            mobile-app, desktop-app, service, function,
+            storage, cdn, dns, identity-provider
+          ]
+        description:
+          type: string
+        technology:
+          type: string
+          description: Technology stack (e.g., "Node.js", "PostgreSQL")
+        trust:
+          type: string
+          enum: [trusted, untrusted, semi-trusted]
+        encryption:
+          type: object
+          properties:
+            atRest:
+              type: boolean
+            inTransit:
+              type: boolean
+            algorithm:
+              type: string
+        authentication:
+          type: string
+          enum: [none, basic, oauth2, saml, jwt, certificate, api-key]
+        authorization:
+          type: string
+          enum: [none, rbac, abac, acl]
+        dataClassification:
+          type: string
+          enum: [public, internal, confidential, restricted]
+
+    DataFlow:
+      type: object
+      required:
+        - id
+        - name
+        - source
+        - destination
+        - protocol
+      properties:
+        id:
+          type: string
+          pattern: '^[a-zA-Z0-9-_]+$'
+        name:
+          type: string
+        description:
+          type: string
+        source:
+          type: string
+          description: Reference to component ID
+        destination:
+          type: string
+          description: Reference to component ID
+        protocol:
+          type: string
+          enum: [http, https, tcp, udp, websocket, grpc, amqp, mqtt]
+        port:
+          type: integer
+        authentication:
+          type: boolean
+        encryption:
+          type: boolean
+        dataType:
+          type: string
+          enum: [json, xml, binary, text, multimedia]
+        dataClassification:
+          type: string
+          enum: [public, internal, confidential, restricted]
+        bidirectional:
+          type: boolean
+          default: false
+
+    TrustBoundary:
+      type: object
+      required:
+        - id
+        - name
+        - components
+      properties:
+        id:
+          type: string
+          pattern: '^[a-zA-Z0-9-_]+$'
+        name:
+          type: string
+        type:
+          type: string
+          enum: [network, process, machine, datacenter, cloud]
+        components:
+          type: array
+          items:
+            type: string
+          description: Component IDs within this boundary
+
+    Threat:
+      type: object
+      required:
+        - id
+        - name
+        - category
+        - severity
+        - likelihood
+        - components
+      properties:
+        id:
+          type: string
+          pattern: '^T[0-9]{3,}$'
+          description: Threat ID (e.g., T001)
+        name:
+          type: string
+        description:
+          type: string
+        category:
+          type: string
+          enum: [
+            spoofing, tampering, repudiation,
+            information-disclosure, denial-of-service,
+            elevation-of-privilege, lateral-movement,
+            data-exfiltration, supply-chain
+          ]
+        severity:
+          type: string
+          enum: [critical, high, medium, low, info]
+        likelihood:
+          type: string
+          enum: [certain, likely, possible, unlikely, rare]
+        components:
+          type: array
+          items:
+            type: string
+          description: Affected component IDs
+        dataFlows:
+          type: array
+          items:
+            type: string
+          description: Affected data flow IDs
+        attackVector:
+          type: string
+          enum: [network, adjacent, local, physical]
+        attackComplexity:
+          type: string
+          enum: [low, high]
+        privilegesRequired:
+          type: string
+          enum: [none, low, high]
+        userInteraction:
+          type: string
+          enum: [none, required]
+        scope:
+          type: string
+          enum: [unchanged, changed]
+        confidentialityImpact:
+          type: string
+          enum: [none, low, high]
+        integrityImpact:
+          type: string
+          enum: [none, low, high]
+        availabilityImpact:
+          type: string
+          enum: [none, low, high]
+        cvssScore:
+          type: number
+          minimum: 0
+          maximum: 10
+        cweId:
+          type: string
+          pattern: '^CWE-[0-9]+$'
+        mitreAttack:
+          type: object
+          properties:
+            tactic:
+              type: string
+            technique:
+              type: string
+            subtechnique:
+              type: string
+
+    Mitigation:
+      type: object
+      required:
+        - id
+        - name
+        - threats
+        - status
+      properties:
+        id:
+          type: string
+          pattern: '^M[0-9]{3,}$'
+          description: Mitigation ID (e.g., M001)
+        name:
+          type: string
+        description:
+          type: string
+        threats:
+          type: array
+          items:
+            type: string
+          description: Threat IDs addressed
+        status:
+          type: string
+          enum: [planned, in-progress, implemented, verified]
+        priority:
+          type: string
+          enum: [critical, high, medium, low]
+        effort:
+          type: string
+          enum: [low, medium, high]
+        type:
+          type: string
+          enum: [
+            preventive, detective, corrective,
+            deterrent, compensating, administrative,
+            technical, physical
+          ]
+        components:
+          type: array
+          items:
+            type: string
+          description: Component IDs where mitigation is applied
+        verification:
+          type: object
+          properties:
+            method:
+              type: string
+              enum: [manual, automated, continuous]
+            lastVerified:
+              type: string
+              format: date-time
+            evidence:
+              type: string

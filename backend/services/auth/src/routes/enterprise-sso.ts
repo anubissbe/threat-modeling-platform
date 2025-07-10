@@ -22,7 +22,7 @@ export function createEnterpriseSSORouter(): Router {
    */
   router.post('/providers', 
     authMiddleware,
-    requireRole([UserRole.ADMIN]),
+    requireRole(UserRole.ADMIN),
     validateSSOConfig,
     async (req: Request, res: Response) => {
       try {
@@ -47,9 +47,10 @@ export function createEnterpriseSSORouter(): Router {
           success: false,
           message: error instanceof Error ? error.message : 'Configuration failed'
         });
-      }
+      
+      return;
     }
-  );
+  });
 
   /**
    * Test SSO Provider Connection
@@ -57,7 +58,7 @@ export function createEnterpriseSSORouter(): Router {
    */
   router.post('/providers/:providerId/test',
     authMiddleware,
-    requireRole([UserRole.ADMIN]),
+    requireRole(UserRole.ADMIN),
     validateProviderTest,
     async (req: Request, res: Response) => {
       try {
@@ -77,9 +78,10 @@ export function createEnterpriseSSORouter(): Router {
           success: false,
           message: error instanceof Error ? error.message : 'Connection test failed'
         });
-      }
+      
+      return;
     }
-  );
+  });
 
   /**
    * Initiate SSO Login
@@ -103,8 +105,16 @@ export function createEnterpriseSSORouter(): Router {
       // Initiate SSO based on provider type
       switch (provider) {
         case 'saml':
-          passport.authenticate(`saml-${providerId}`, {
-            additionalParams: RelayState ? { RelayState: RelayState as string } : {}
+          passport.authenticate(`saml-${providerId}`, (err: any, user: any, info: any) => {
+            if (err || !user) {
+              return res.status(401).json({ success: false, message: 'Authentication failed' });
+            }
+            req.logIn(user, (err) => {
+              if (err) {
+                return res.status(500).json({ success: false, message: 'Login failed' });
+              }
+              return res.redirect(RelayState as string || '/dashboard');
+            });
           })(req, res);
           break;
           
@@ -128,6 +138,8 @@ export function createEnterpriseSSORouter(): Router {
         success: false,
         message: 'SSO initiation failed'
       });
+    
+      return;
     }
   });
 
@@ -198,6 +210,8 @@ export function createEnterpriseSSORouter(): Router {
         success: false,
         message: 'SSO callback processing failed'
       } as SSOCallbackResponse);
+    
+      return;
     }
   });
 
@@ -239,9 +253,10 @@ export function createEnterpriseSSORouter(): Router {
           success: false,
           message: 'Logout processing failed'
         });
-      }
+      
+      return;
     }
-  );
+  });
 
   /**
    * Get SSO Provider Metadata
@@ -266,6 +281,8 @@ export function createEnterpriseSSORouter(): Router {
         success: false,
         message: 'Provider metadata not found'
       });
+    
+      return;
     }
   });
 
@@ -275,7 +292,7 @@ export function createEnterpriseSSORouter(): Router {
    */
   router.get('/metrics',
     authMiddleware,
-    requireRole([UserRole.ADMIN]),
+    requireRole(UserRole.ADMIN),
     async (req: Request, res: Response) => {
       try {
         const metrics = ssoService.getSSOMetrics();
@@ -289,9 +306,10 @@ export function createEnterpriseSSORouter(): Router {
           success: false,
           message: 'Failed to retrieve metrics'
         });
-      }
+      
+      return;
     }
-  );
+  });
 
   /**
    * Get Active SSO Sessions
@@ -299,7 +317,7 @@ export function createEnterpriseSSORouter(): Router {
    */
   router.get('/sessions',
     authMiddleware,
-    requireRole([UserRole.ADMIN]),
+    requireRole(UserRole.ADMIN),
     async (req: Request, res: Response) => {
       try {
         const sessions = ssoService.getActiveSessions();
@@ -314,9 +332,10 @@ export function createEnterpriseSSORouter(): Router {
           success: false,
           message: 'Failed to retrieve sessions'
         });
-      }
+      
+      return;
     }
-  );
+  });
 
   /**
    * Terminate SSO Session
@@ -324,7 +343,7 @@ export function createEnterpriseSSORouter(): Router {
    */
   router.delete('/sessions/:sessionId',
     authMiddleware,
-    requireRole([UserRole.ADMIN]),
+    requireRole(UserRole.ADMIN),
     async (req: Request, res: Response) => {
       try {
         const { sessionId } = req.params;
@@ -340,9 +359,10 @@ export function createEnterpriseSSORouter(): Router {
           success: false,
           message: 'Failed to terminate session'
         });
-      }
+      
+      return;
     }
-  );
+  });
 
   /**
    * SSO Health Check
@@ -372,6 +392,8 @@ export function createEnterpriseSSORouter(): Router {
         timestamp: new Date().toISOString(),
         error: 'SSO service unavailable'
       });
+    
+      return;
     }
   });
 
@@ -385,7 +407,7 @@ export function createEnterpriseSSORouter(): Router {
    */
   router.get('/providers',
     authMiddleware,
-    requireRole([UserRole.ADMIN]),
+    requireRole(UserRole.ADMIN),
     async (req: Request, res: Response) => {
       try {
         const { organizationId } = req.query;
@@ -403,9 +425,10 @@ export function createEnterpriseSSORouter(): Router {
           success: false,
           message: 'Failed to list providers'
         });
-      }
+      
+      return;
     }
-  );
+  });
 
   /**
    * Update SSO Provider
@@ -413,7 +436,7 @@ export function createEnterpriseSSORouter(): Router {
    */
   router.put('/providers/:providerId',
     authMiddleware,
-    requireRole([UserRole.ADMIN]),
+    requireRole(UserRole.ADMIN),
     validateSSOConfig,
     async (req: Request, res: Response) => {
       try {
@@ -431,9 +454,10 @@ export function createEnterpriseSSORouter(): Router {
           success: false,
           message: 'Failed to update provider'
         });
-      }
+      
+      return;
     }
-  );
+  });
 
   /**
    * Delete SSO Provider
@@ -441,7 +465,7 @@ export function createEnterpriseSSORouter(): Router {
    */
   router.delete('/providers/:providerId',
     authMiddleware,
-    requireRole([UserRole.ADMIN]),
+    requireRole(UserRole.ADMIN),
     async (req: Request, res: Response) => {
       try {
         const { providerId } = req.params;
@@ -458,9 +482,10 @@ export function createEnterpriseSSORouter(): Router {
           success: false,
           message: 'Failed to delete provider'
         });
-      }
+      
+      return;
     }
-  );
+  });
 
   /**
    * Export SSO Configuration
@@ -468,7 +493,7 @@ export function createEnterpriseSSORouter(): Router {
    */
   router.get('/export',
     authMiddleware,
-    requireRole([UserRole.ADMIN]),
+    requireRole(UserRole.ADMIN),
     async (req: Request, res: Response) => {
       try {
         const { organizationId, format = 'json' } = req.query;
@@ -498,9 +523,10 @@ export function createEnterpriseSSORouter(): Router {
           success: false,
           message: 'Failed to export configuration'
         });
-      }
+      
+      return;
     }
-  );
+  });
 
   return router;
 }

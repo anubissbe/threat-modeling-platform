@@ -1,0 +1,163 @@
+version: "2.0"
+metadata:
+  name: "Test Threat Model"
+  description: "Sample threat model for testing"
+  owner: "security-team"
+  team: "development"
+  domain: "testing"
+  criticality: "medium"
+  classification: "internal"
+  version: "1.0.0"
+  created: "2025-07-10T00:00:00Z"
+  updated: "2025-07-10T12:00:00Z"
+  tags: ["test", "validation"]
+
+system:
+  name: "Test System"
+  type: "web"
+  deployment:
+    environment: "cloud"
+    provider: "aws"
+    region: ["us-east-1"]
+    availability: "single-az"
+    scalability: "fixed"
+  components:
+    - id: "web-server"
+      name: "Web Server"
+      type: "service"
+      description: "Main web application server"
+      technologies: ["nodejs", "express"]
+      criticality: "high"
+      dataClassification: "internal"
+      compliance: ["SOC2"]
+      security:
+        authentication:
+          - type: "jwt"
+            strength: "strong"
+        authorization:
+          type: "rbac"
+          granularity: "fine"
+          enforcement: "mandatory"
+        encryption:
+          atRest:
+            enabled: true
+            algorithm: "AES-256"
+          inTransit:
+            enabled: true
+            protocol: "TLS"
+            version: "1.3"
+      monitoring:
+        healthChecks:
+          - type: "http"
+            endpoint: "/health"
+            interval: "30s"
+            timeout: "5s"
+            retries: 3
+
+security:
+  authentication:
+    policy: "strong-authentication"
+    mfaRequired: true
+    passwordPolicy:
+      minLength: 12
+      complexity: true
+      expiration: "90d"
+      history: 5
+
+compliance:
+  frameworks:
+    - name: "SOC2"
+      version: "2017"
+      applicability: "Trust Services Criteria"
+      requirements: ["CC1", "CC2"]
+      mandatory: true
+
+cicd:
+  pipeline:
+    provider: "github-actions"
+    repository: "https://github.com/test/repo"
+  security:
+    secretScanning: true
+    staticAnalysis: true
+
+monitoring:
+  realTime:
+    events:
+      - type: "authentication"
+        source: ["web-server"]
+        severity: "medium"
+        retention: "90d"
+
+automation:
+  threatDetection:
+    - name: "test-detection"
+      triggers: ["suspicious-activity"]
+      conditions: ["pattern-match"]
+      actions:
+        - type: "alert"
+          target: "security-team"
+      confidence: 0.9
+
+dataFlows:
+  - id: "user-login"
+    name: "User Login"
+    source: "user"
+    destination: "web-server"
+    protocol: "HTTPS"
+    data:
+      - name: "credentials"
+        type: "authentication"
+        classification: "confidential"
+        pii: true
+        encryption: true
+
+threats:
+  - id: "t001"
+    name: "Test SQL Injection"
+    description: "Sample SQL injection threat"
+    category: "Injection"
+    methodology: ["STRIDE"]
+    stride:
+      spoofing: false
+      tampering: true
+      repudiation: false
+      informationDisclosure: true
+      denialOfService: false
+      elevationOfPrivilege: false
+    components: ["web-server"]
+    impact:
+      confidentiality: "high"
+      integrity: "high"
+      availability: "low"
+    likelihood:
+      frequency: "possible"
+      score: 0.5
+      confidence: 0.8
+    risk:
+      inherent:
+        score: 75
+        level: "high"
+      residual:
+        score: 25
+        level: "low"
+    mitigations: ["m001"]
+
+mitigations:
+  - id: "m001"
+    name: "Input Validation"
+    description: "Implement proper input validation"
+    type: "preventive"
+    category: "Secure Coding"
+    threats: ["t001"]
+    effectiveness:
+      score: 0.9
+      confidence: 0.9
+    implementation:
+      effort: "low"
+      duration: "1w"
+
+assumptions:
+  - "Test environment assumptions"
+
+outOfScope:
+  - "Physical security"

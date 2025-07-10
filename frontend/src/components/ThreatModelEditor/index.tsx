@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useRef } from 'react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
 import {
   Box,
   Paper,
@@ -39,6 +39,7 @@ import {
   VpnKey as VpnKeyIcon,
   ArrowForward as ArrowIcon,
   Add as AddIcon,
+  People as PeopleIcon,
 } from '@mui/icons-material';
 import { Canvas } from './Canvas';
 import { ComponentPalette } from './ComponentPalette';
@@ -59,6 +60,13 @@ import {
   deleteThreat,
 } from '../../store/slices/editorSlice';
 import type { DiagramNode, DiagramConnection, Threat } from '../../types/editor';
+import { CollaborationService } from '../../services/collaborationService';
+import { ConflictInfo, ThreatModelOperation } from '../../types/collaboration';
+import CollaborativeCanvas from '../Collaboration/CollaborativeCanvas';
+import UserPresenceIndicator from '../Collaboration/UserPresenceIndicator';
+import RealtimeNotifications from '../Collaboration/RealtimeNotifications';
+import CommentSystem from '../Collaboration/CommentSystem';
+import ConflictResolutionDialog from '../Collaboration/ConflictResolutionDialog';
 
 const drawerWidth = 280;
 
@@ -67,6 +75,7 @@ export const ThreatModelEditor: React.FC = () => {
   const { nodes, connections, selectedElement, threats, canvasState } = useAppSelector(
     (state) => state.editor
   );
+  const { user } = useAppSelector((state) => state.auth);
   
   const [showGrid, setShowGrid] = useState(true);
   const [showThreats, setShowThreats] = useState(false);
@@ -75,8 +84,118 @@ export const ThreatModelEditor: React.FC = () => {
     y: number;
     element?: DiagramNode | DiagramConnection;
   } | null>(null);
+  const [enableCollaboration, setEnableCollaboration] = useState(false);
+  const [conflictDialog, setConflictDialog] = useState<{
+    open: boolean;
+    operationId: string;
+    conflict: ConflictInfo;
+    suggestions: string[];
+  } | null>(null);
 
   const canvasRef = useRef<any>(null);
+  const collaborationServiceRef = useRef<CollaborationService | null>(null);
+
+  // Initialize collaboration service
+  useEffect(() => {
+    if (enableCollaboration && user && !collaborationServiceRef.current) {
+      const token = localStorage.getItem('accessToken');
+      if (token) {
+        collaborationServiceRef.current = new CollaborationService(
+          'current-threat-model-id', // TODO: Get actual threat model ID
+          user.id,
+          token,
+          {
+            websocketUrl: process.env.REACT_APP_WEBSOCKET_URL || 'http://localhost:3001',
+            autoReconnect: true,
+            reconnectAttempts: 5,
+            batchOperations: true,
+            batchDelay: 100,
+          },
+          {
+            onOperationApplied: (operation: ThreatModelOperation) => {
+              // Apply remote operation to local state
+              handleRemoteOperation(operation);
+            },
+            onConflictDetected: (conflict: ConflictInfo) => {
+              setConflictDialog({
+                open: true,
+                operationId: `conflict-${Date.now()}`,
+                conflict,
+                suggestions: ['Try merging changes', 'Review conflicting elements', 'Contact team members'],
+              });
+            },
+            onConflictResolved: (data) => {
+              setConflictDialog(null);
+            },
+            onStateChanged: (newState) => {
+              // Update local state with remote changes
+              // TODO: Implement state synchronization
+            },
+            onConnectionStateChanged: (connected: boolean) => {
+              // Handle connection state changes
+            },
+            onError: (error: Error) => {
+              console.error('Collaboration error:', error);
+            },
+          }
+        );
+      }
+    }
+
+    return () => {
+      if (collaborationServiceRef.current) {
+        collaborationServiceRef.current.disconnect();
+        collaborationServiceRef.current = null;
+      }
+    };
+  }, [enableCollaboration, user]);
+
+  // Handle remote operations
+  const handleRemoteOperation = useCallback((operation: ThreatModelOperation) => {
+    switch (operation.type) {
+      case 'create_component':
+        dispatch(addNode(operation.data));
+        break;
+      case 'update_component':
+        dispatch(updateNode(operation.data));
+        break;
+      case 'delete_component':
+        dispatch(deleteNode(operation.data.id));
+        break;
+      case 'create_data_flow':
+        dispatch(addConnection(operation.data));
+        break;
+      case 'update_data_flow':
+        dispatch(updateConnection(operation.data));
+        break;
+      case 'delete_data_flow':
+        dispatch(deleteConnection(operation.data.id));
+        break;
+      case 'create_threat':
+        dispatch(addThreat(operation.data));
+        break;
+      case 'update_threat':
+        dispatch(updateThreat(operation.data));
+        break;
+      case 'delete_threat':
+        dispatch(deleteThreat(operation.data.id));
+        break;
+      default:
+        console.log('Unknown operation type:', operation.type);
+    }
+  }, [dispatch]);
+
+  // Handle conflict resolution
+  const handleConflictResolution = useCallback((
+    operationId: string,
+    resolution: 'accept' | 'reject' | 'merge',
+    mergeData?: any
+  ) => {
+    if (collaborationServiceRef.current) {
+      collaborationServiceRef.current.resolveConflict(operationId, resolution, mergeData);
+    }
+    setConflictDialog(null);
+  }, []);
 
   // Handle component drop from palette
   const handleDrop = useCallback(
@@ -99,8 +218,18 @@ export const ThreatModelEditor: React.FC = () => {
       };
 
       dispatch(addNode(newNode));
+      
+      // Send collaboration operation
+      if (collaborationServiceRef.current) {
+        collaborationServiceRef.current.performOperation({
+          type: 'create_component',
+          threatModelId: 'current-threat-model-id',
+          userId: user?.id || 'anonymous',
+          data: newNode,
+        });
+      }
     },
-    [dispatch, canvasState]
+    [dispatch, canvasState, user]
   );
 
   // Handle element selection
@@ -116,11 +245,31 @@ export const ThreatModelEditor: React.FC = () => {
     (element: DiagramNode | DiagramConnection) => {
       if ('position' in element) {
         dispatch(updateNode(element));
+        
+        // Send collaboration operation
+        if (collaborationServiceRef.current) {
+          collaborationServiceRef.current.performOperation({
+            type: 'update_component',
+            threatModelId: 'current-threat-model-id',
+            userId: user?.id || 'anonymous',
+            data: element,
+          });
+        }
       } else {
         dispatch(updateConnection(element));
+        
+        // Send collaboration operation
+        if (collaborationServiceRef.current) {
+          collaborationServiceRef.current.performOperation({
+            type: 'update_data_flow',
+            threatModelId: 'current-threat-model-id',
+            userId: user?.id || 'anonymous',
+            data: element,
+          });
+        }
       }
     },
-    [dispatch]
+    [dispatch, user]
   );
 
   // Handle element deletion
@@ -128,12 +277,32 @@ export const ThreatModelEditor: React.FC = () => {
     if (selectedElement) {
       if ('position' in selectedElement) {
         dispatch(deleteNode(selectedElement.id));
+        
+        // Send collaboration operation
+        if (collaborationServiceRef.current) {
+          collaborationServiceRef.current.performOperation({
+            type: 'delete_component',
+            threatModelId: 'current-threat-model-id',
+            userId: user?.id || 'anonymous',
+            data: { id: selectedElement.id },
+          });
+        }
       } else {
         dispatch(deleteConnection(selectedElement.id));
+        
+        // Send collaboration operation
+        if (collaborationServiceRef.current) {
+          collaborationServiceRef.current.performOperation({
+            type: 'delete_data_flow',
+            threatModelId: 'current-threat-model-id',
+            userId: user?.id || 'anonymous',
+            data: { id: selectedElement.id },
+          });
+        }
       }
       dispatch(setSelectedElement(null));
     }
-  }, [dispatch, selectedElement]);
+  }, [dispatch, selectedElement, user]);
 
   // Handle connection creation
   const handleConnect = useCallback(
@@ -152,8 +321,18 @@ export const ThreatModelEditor: React.FC = () => {
         },
       };
       dispatch(addConnection(newConnection));
+      
+      // Send collaboration operation
+      if (collaborationServiceRef.current) {
+        collaborationServiceRef.current.performOperation({
+          type: 'create_data_flow',
+          threatModelId: 'current-threat-model-id',
+          userId: user?.id || 'anonymous',
+          data: newConnection,
+        });
+      }
     },
-    [dispatch]
+    [dispatch, user]
   );
 
   // Handle zoom
@@ -336,6 +515,17 @@ export const ThreatModelEditor: React.FC = () => {
               </Badge>
             </Fab>
           </Tooltip>
+
+          {/* Collaboration Toggle Button */}
+          <Tooltip title={enableCollaboration ? "Disable Collaboration" : "Enable Collaboration"}>
+            <Fab
+              color={enableCollaboration ? "primary" : "default"}
+              sx={{ position: 'absolute', bottom: 80, right: 16 }}
+              onClick={() => setEnableCollaboration(!enableCollaboration)}
+            >
+              <PeopleIcon />
+            </Fab>
+          </Tooltip>
         </Box>
       </Box>
 
@@ -401,6 +591,45 @@ export const ThreatModelEditor: React.FC = () => {
           <ListItemText>Delete</ListItemText>
         </MenuItem>
       </Menu>
+
+      {/* Collaboration Components */}
+      {enableCollaboration && user && (
+        <>
+          {/* Collaborative Canvas Overlay */}
+          <CollaborativeCanvas
+            threatModelId="current-threat-model-id"
+            userId={user.id}
+            userToken={localStorage.getItem('accessToken') || ''}
+            onStateChange={(newState) => {
+              // Handle state changes from collaboration
+            }}
+            onConflictDetected={(conflict) => {
+              setConflictDialog({
+                open: true,
+                operationId: `conflict-${Date.now()}`,
+                conflict,
+                suggestions: ['Try merging changes', 'Review conflicting elements', 'Contact team members'],
+              });
+            }}
+            className="absolute inset-0 pointer-events-none"
+          />
+
+          {/* Real-time Notifications */}
+          <RealtimeNotifications />
+        </>
+      )}
+
+      {/* Conflict Resolution Dialog */}
+      {conflictDialog && (
+        <ConflictResolutionDialog
+          open={conflictDialog.open}
+          operationId={conflictDialog.operationId}
+          conflict={conflictDialog.conflict}
+          suggestions={conflictDialog.suggestions}
+          onResolve={handleConflictResolution}
+          onCancel={() => setConflictDialog(null)}
+        />
+      )}
     </Box>
   );
 };

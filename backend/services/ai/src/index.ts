@@ -6,6 +6,7 @@ import { createClient, RedisClientType } from 'redis';
 import dotenv from 'dotenv';
 import { logger, healthLogger, requestLogger, errorLogger } from './utils/logger';
 import { createAIRoutes } from './routes/ai.routes';
+import metricsRoutes from './routes/metrics.routes';
 import { globalRateLimit } from './middleware/rate-limit.middleware';
 import { validateRequestMiddleware } from './middleware/validation.middleware';
 
@@ -307,6 +308,7 @@ class AIService {
 
     // API routes
     this.app.use('/api/ai', createAIRoutes(this.db, this.redis));
+    this.app.use('/api/metrics', metricsRoutes);
 
     // 404 handler
     this.app.use('*', (req, res) => {

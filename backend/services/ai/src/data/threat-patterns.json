@@ -1,0 +1,312 @@
+{
+  "threat_patterns": [
+    {
+      "id": "OWASP-01",
+      "name": "SQL Injection",
+      "category": "injection",
+      "description": "SQL injection flaws occur when untrusted data is sent to an interpreter as part of a command or query.",
+      "indicators": [
+        "Direct SQL query construction",
+        "String concatenation in queries",
+        "Lack of parameterized queries",
+        "User input in WHERE clauses"
+      ],
+      "mitigations": [
+        "Use parameterized queries (prepared statements)",
+        "Validate all input data",
+        "Escape special characters",
+        "Apply least privilege principle",
+        "Use stored procedures carefully"
+      ],
+      "cwe_id": "CWE-89",
+      "cvss_base_score": 9.8,
+      "real_world_examples": [
+        "Equifax breach (2017)",
+        "Yahoo breach (2014)",
+        "TalkTalk breach (2015)"
+      ]
+    },
+    {
+      "id": "OWASP-02",
+      "name": "Broken Authentication",
+      "category": "authentication",
+      "description": "Authentication and session management functions are often implemented incorrectly.",
+      "indicators": [
+        "Weak password requirements",
+        "Plain text password storage",
+        "Missing multi-factor authentication",
+        "Session fixation vulnerabilities",
+        "Predictable session tokens"
+      ],
+      "mitigations": [
+        "Implement multi-factor authentication",
+        "Use secure session management",
+        "Hash passwords with bcrypt/scrypt/Argon2",
+        "Implement account lockout mechanisms",
+        "Use secure password recovery"
+      ],
+      "cwe_id": "CWE-287",
+      "cvss_base_score": 8.8,
+      "real_world_examples": [
+        "Uber breach (2016)",
+        "Dropbox breach (2012)",
+        "LinkedIn breach (2012)"
+      ]
+    },
+    {
+      "id": "OWASP-03",
+      "name": "Sensitive Data Exposure",
+      "category": "data_exposure",
+      "description": "Many web applications and APIs do not properly protect sensitive data.",
+      "indicators": [
+        "Unencrypted data transmission",
+        "Weak encryption algorithms",
+        "Hardcoded secrets",
+        "Insecure data storage",
+        "Missing encryption at rest"
+      ],
+      "mitigations": [
+        "Encrypt data in transit with TLS 1.3",
+        "Encrypt sensitive data at rest",
+        "Use strong key management",
+        "Disable caching for sensitive data",
+        "Use secure cryptographic algorithms"
+      ],
+      "cwe_id": "CWE-311",
+      "cvss_base_score": 7.5,
+      "real_world_examples": [
+        "Facebook (Cambridge Analytica)",
+        "Capital One breach (2019)",
+        "Marriott breach (2018)"
+      ]
+    },
+    {
+      "id": "OWASP-04",
+      "name": "XML External Entities (XXE)",
+      "category": "xxe",
+      "description": "Many older or poorly configured XML processors evaluate external entity references within XML documents.",
+      "indicators": [
+        "XML parsing without validation",
+        "DTD processing enabled",
+        "External entity references",
+        "SOAP services",
+        "XML upload functionality"
+      ],
+      "mitigations": [
+        "Disable XML external entity processing",
+        "Use JSON instead of XML",
+        "Validate and sanitize XML input",
+        "Update XML processors",
+        "Use XML Schema validation"
+      ],
+      "cwe_id": "CWE-611",
+      "cvss_base_score": 7.1,
+      "real_world_examples": [
+        "Uber XXE (2016)",
+        "PayPal XXE vulnerability",
+        "Google XXE bounty cases"
+      ]
+    },
+    {
+      "id": "OWASP-05",
+      "name": "Broken Access Control",
+      "category": "access_control",
+      "description": "Restrictions on what authenticated users are allowed to do are often not properly enforced.",
+      "indicators": [
+        "Missing authorization checks",
+        "Direct object references",
+        "Privilege escalation paths",
+        "CORS misconfiguration",
+        "JWT validation issues"
+      ],
+      "mitigations": [
+        "Implement proper authorization checks",
+        "Use indirect object references",
+        "Enforce record ownership",
+        "Disable directory listing",
+        "Validate JWT properly"
+      ],
+      "cwe_id": "CWE-285",
+      "cvss_base_score": 8.8,
+      "real_world_examples": [
+        "First American Financial breach",
+        "Panera Bread breach (2018)",
+        "US Voter Database exposure"
+      ]
+    },
+    {
+      "id": "STRIDE-01",
+      "name": "Spoofing Identity",
+      "category": "spoofing",
+      "description": "Threat action aimed at accessing and using another user's credentials.",
+      "indicators": [
+        "Weak authentication",
+        "Missing identity verification",
+        "Session hijacking possibilities",
+        "Phishing vulnerabilities"
+      ],
+      "mitigations": [
+        "Strong authentication mechanisms",
+        "Digital certificates",
+        "Biometric authentication",
+        "Anti-phishing measures"
+      ],
+      "stride_category": "Spoofing",
+      "impact_level": "high"
+    },
+    {
+      "id": "STRIDE-02",
+      "name": "Tampering with Data",
+      "category": "tampering",
+      "description": "Malicious modification of data, either in transit or at rest.",
+      "indicators": [
+        "Missing integrity checks",
+        "Unprotected data channels",
+        "Weak access controls",
+        "Missing audit trails"
+      ],
+      "mitigations": [
+        "Digital signatures",
+        "Hash functions",
+        "Message Authentication Codes",
+        "Access control lists",
+        "Audit logging"
+      ],
+      "stride_category": "Tampering",
+      "impact_level": "high"
+    },
+    {
+      "id": "STRIDE-03",
+      "name": "Information Disclosure",
+      "category": "information_disclosure",
+      "description": "Exposing information to users who are not supposed to have access to it.",
+      "indicators": [
+        "Verbose error messages",
+        "Debug information in production",
+        "Unencrypted sensitive data",
+        "Missing access controls"
+      ],
+      "mitigations": [
+        "Encryption",
+        "Access control",
+        "Error handling",
+        "Data classification",
+        "Need-to-know basis"
+      ],
+      "stride_category": "Information Disclosure",
+      "impact_level": "medium"
+    },
+    {
+      "id": "MITRE-001",
+      "name": "Initial Access via Phishing",
+      "category": "initial_access",
+      "description": "Adversaries may send phishing messages to gain access to victim systems.",
+      "attack_pattern": "CAPEC-98",
+      "tactics": ["Initial Access"],
+      "techniques": ["T1566"],
+      "indicators": [
+        "Suspicious email patterns",
+        "Malicious attachments",
+        "Credential harvesting forms",
+        "URL shorteners"
+      ],
+      "mitigations": [
+        "User training",
+        "Email filtering",
+        "Sandboxing",
+        "URL reputation checking"
+      ]
+    },
+    {
+      "id": "MITRE-002",
+      "name": "Lateral Movement",
+      "category": "lateral_movement",
+      "description": "Adversaries may move through the environment to reach their objective.",
+      "attack_pattern": "CAPEC-554",
+      "tactics": ["Lateral Movement"],
+      "techniques": ["T1021", "T1075"],
+      "indicators": [
+        "Unusual network connections",
+        "Service account usage",
+        "Pass-the-hash attempts",
+        "RDP/SSH connections"
+      ],
+      "mitigations": [
+        "Network segmentation",
+        "Least privilege",
+        "MFA for privileged accounts",
+        "Monitoring"
+      ]
+    }
+  ],
+  "industry_specific_threats": {
+    "financial": [
+      {
+        "name": "ATM Malware",
+        "description": "Malware specifically designed to compromise ATM machines",
+        "specific_indicators": ["ATM software modifications", "Unauthorized cash dispensing"],
+        "regulations": ["PCI-DSS", "SOX"]
+      },
+      {
+        "name": "SWIFT Network Attacks",
+        "description": "Attacks targeting the SWIFT banking network",
+        "specific_indicators": ["Unauthorized SWIFT messages", "Transaction manipulation"],
+        "regulations": ["SWIFT CSP"]
+      }
+    ],
+    "healthcare": [
+      {
+        "name": "Medical Device Hijacking",
+        "description": "Compromise of connected medical devices",
+        "specific_indicators": ["Unauthorized device access", "Firmware modifications"],
+        "regulations": ["HIPAA", "FDA cybersecurity guidance"]
+      },
+      {
+        "name": "Ransomware on Hospital Systems",
+        "description": "Ransomware specifically targeting healthcare providers",
+        "specific_indicators": ["System encryption", "Ransom demands", "Patient data lockout"],
+        "regulations": ["HIPAA", "HITECH"]
+      }
+    ],
+    "technology": [
+      {
+        "name": "Supply Chain Attacks",
+        "description": "Attacks targeting software supply chains",
+        "specific_indicators": ["Compromised dependencies", "Malicious updates"],
+        "examples": ["SolarWinds", "Kaseya"]
+      },
+      {
+        "name": "Zero-Day Exploits",
+        "description": "Exploitation of unknown vulnerabilities",
+        "specific_indicators": ["Novel attack patterns", "Unpatched vulnerabilities"],
+        "examples": ["Operation Aurora", "Stuxnet"]
+      }
+    ]
+  },
+  "threat_intelligence_sources": [
+    {
+      "name": "MITRE ATT&CK",
+      "url": "https://attack.mitre.org/",
+      "type": "framework",
+      "update_frequency": "quarterly"
+    },
+    {
+      "name": "OWASP Top 10",
+      "url": "https://owasp.org/Top10/",
+      "type": "vulnerability_list",
+      "update_frequency": "3-4 years"
+    },
+    {
+      "name": "CVE Database",
+      "url": "https://cve.mitre.org/",
+      "type": "vulnerability_database",
+      "update_frequency": "daily"
+    },
+    {
+      "name": "SANS Internet Storm Center",
+      "url": "https://isc.sans.edu/",
+      "type": "threat_feed",
+      "update_frequency": "real-time"
+    }
+  ]
+}
