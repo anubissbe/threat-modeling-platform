@@ -17,7 +17,7 @@ declare global {
   }
 }
 
-export function authenticateToken(req: Request, res: Response, next: NextFunction): void {
+export function authMiddleware(req: Request, res: Response, next: NextFunction): void {
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
 
@@ -41,6 +41,9 @@ export function authenticateToken(req: Request, res: Response, next: NextFunctio
 
   next();
 }
+
+// Alias for backward compatibility
+export const authenticateToken = authMiddleware;
 
 export function requireRole(...roles: UserRole[]) {
   return (req: Request, res: Response, next: NextFunction): void => {

@@ -29,7 +29,7 @@ export class EmailProvider extends NotificationProvider {
 
   private initializeTransporter(): void {
     try {
-      this.transporter = nodemailer.createTransporter({
+      this.transporter = nodemailer.createTransport({
         host: this.configuration.host,
         port: this.configuration.port,
         secure: this.configuration.secure,

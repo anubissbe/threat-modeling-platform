@@ -208,7 +208,11 @@ export const ThreatModelEditor: React.FC = () => {
   const handleContextMenu = useCallback(
     (e: React.MouseEvent, element?: DiagramNode | DiagramConnection) => {
       e.preventDefault();
-      setContextMenu({ x: e.clientX, y: e.clientY, element });
+      if (element) {
+        setContextMenu({ x: e.clientX, y: e.clientY, element });
+      } else {
+        setContextMenu({ x: e.clientX, y: e.clientY });
+      }
     },
     []
   );
@@ -365,7 +369,7 @@ export const ThreatModelEditor: React.FC = () => {
         anchorPosition={
           contextMenu !== null
             ? { top: contextMenu.y, left: contextMenu.x }
-            : undefined
+            : { top: 0, left: 0 }
         }
       >
         <MenuItem onClick={() => {
@@ -382,7 +386,7 @@ export const ThreatModelEditor: React.FC = () => {
           handleCloseContextMenu();
         }}>
           <ListItemIcon>
-            <ContentPasteIcon fontSize="small" />
+            <PasteIcon fontSize="small" />
           </ListItemIcon>
           <ListItemText>Paste</ListItemText>
         </MenuItem>

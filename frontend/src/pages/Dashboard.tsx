@@ -1,4 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import {
   Box,
   Grid,
@@ -15,6 +17,8 @@ import {
   ListItemText,
   ListItemAvatar,
   Divider,
+  Snackbar,
+  Alert,
 } from '@mui/material';
 import {
   Security,
@@ -27,7 +31,9 @@ import {
   Add,
 } from '@mui/icons-material';
 import { useAppSelector } from '@/store';
+import { projectsApi, threatModelsApi } from '@/services/api';
 
+// Fetch real data instead of mock data
 const mockStats = {
   totalProjects: 12,
   activeThreatModels: 8,
@@ -94,6 +100,55 @@ const mockProjects = [
 
 export const Dashboard: React.FC = () => {
   const { user } = useAppSelector((state) => state.auth);
+  const navigate = useNavigate();
+  const [notification, setNotification] = useState<{
+    open: boolean;
+    message: string;
+    severity: 'success' | 'info' | 'warning' | 'error';
+  }>({
+    open: false,
+    message: '',
+    severity: 'info',
+  });
+
+  // Fetch real data
+  const { data: projects = [] } = useQuery({
+    queryKey: ['projects'],
+    queryFn: async () => {
+      const response = await projectsApi.getProjects();
+      return response.data?.data || response.data || [];
+    },
+  });
+
+  const { data: threatModels = [] } = useQuery({
+    queryKey: ['threatModels'],
+    queryFn: async () => {
+      const response = await threatModelsApi.getThreatModels();
+      return response.data?.data || response.data || [];
+    },
+  });
+
+  const { data: vulnerabilities = [] } = useQuery({
+    queryKey: ['vulnerabilities'],
+    queryFn: async () => {
+      try {
+        const response = await fetch('http://localhost:3000/api/vulnerabilities');
+        const data = await response.json();
+        return data.data || [];
+      } catch (error) {
+        console.error('Failed to fetch vulnerabilities:', error);
+        return [];
+      }
+    },
+  });
+
+  // Calculate real stats
+  const stats = {
+    totalProjects: projects.length,
+    activeThreatModels: threatModels.filter((tm: any) => tm.status === 'active').length,
+    criticalVulnerabilities: vulnerabilities.filter((v: any) => v.severity === 'Critical' || v.severity === 'High').length,
+    resolvedThreats: threatModels.filter((tm: any) => tm.status === 'completed').length,
+  };
 
   const getRiskColor = (risk: string) => {
     switch (risk.toLowerCase()) {
@@ -109,6 +164,40 @@ export const Dashboard: React.FC = () => {
     if (hour < 12) return 'Good morning';
     if (hour < 17) return 'Good afternoon';
     return 'Good evening';
+  };
+
+  const handleNewProject = () => {
+    navigate('/projects');
+    setNotification({
+      open: true,
+      message: 'Navigating to Projects page to create a new project',
+      severity: 'info',
+    });
+  };
+
+  const handleNewThreatModel = () => {
+    navigate('/threat-models');
+    setNotification({
+      open: true,
+      message: 'Navigating to Threat Models page',
+      severity: 'info',
+    });
+  };
+
+  const handleRiskAssessment = () => {
+    navigate('/risk-assessment');
+  };
+
+  const handleReportIssue = () => {
+    setNotification({
+      open: true,
+      message: 'Issue reporting feature coming soon',
+      severity: 'info',
+    });
+  };
+
+  const handleCloseNotification = () => {
+    setNotification(prev => ({ ...prev, open: false }));
   };
 
   return (
@@ -133,7 +222,7 @@ export const Dashboard: React.FC = () => {
                   <FolderOpen />
                 </Avatar>
                 <Box>
-                  <Typography variant="h4">{mockStats.totalProjects}</Typography>
+                  <Typography variant="h4">{stats.totalProjects}</Typography>
                   <Typography variant="body2" color="text.secondary">
                     Total Projects
                   </Typography>
@@ -157,7 +246,7 @@ export const Dashboard: React.FC = () => {
                   <Security />
                 </Avatar>
                 <Box>
-                  <Typography variant="h4">{mockStats.activeThreatModels}</Typography>
+                  <Typography variant="h4">{stats.activeThreatModels}</Typography>
                   <Typography variant="body2" color="text.secondary">
                     Active Threat Models
                   </Typography>
@@ -181,7 +270,7 @@ export const Dashboard: React.FC = () => {
                   <Warning />
                 </Avatar>
                 <Box>
-                  <Typography variant="h4">{mockStats.criticalVulnerabilities}</Typography>
+                  <Typography variant="h4">{stats.criticalVulnerabilities}</Typography>
                   <Typography variant="body2" color="text.secondary">
                     Critical Vulnerabilities
                   </Typography>
@@ -204,7 +293,7 @@ export const Dashboard: React.FC = () => {
                   <CheckCircle />
                 </Avatar>
                 <Box>
-                  <Typography variant="h4">{mockStats.resolvedThreats}</Typography>
+                  <Typography variant="h4">{stats.resolvedThreats}</Typography>
                   <Typography variant="body2" color="text.secondary">
                     Resolved Threats
                   </Typography>
@@ -228,7 +317,7 @@ export const Dashboard: React.FC = () => {
             <CardContent>
               <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
                 <Typography variant="h6">Recent Activity</Typography>
-                <Button size="small">View All</Button>
+                <Button size="small" onClick={() => navigate('/projects')}>View All</Button>
               </Box>
               
               <List disablePadding>
@@ -249,13 +338,13 @@ export const Dashboard: React.FC = () => {
                       <ListItemText
                         primary={activity.title}
                         secondary={
-                          <Box>
-                            <Typography variant="body2" color="text.secondary">
-                              {activity.description}
-                            </Typography>
-                            <Typography variant="caption" color="text.secondary">
-                              {activity.timestamp}
-                            </Typography>
+                          <Box component="span">
+                            {activity.description}
+                            <Box component="span" display="block">
+                              <Typography component="span" variant="caption" color="text.disabled">
+                                {activity.timestamp}
+                              </Typography>
+                            </Box>
                           </Box>
                         }
                       />
@@ -283,6 +372,7 @@ export const Dashboard: React.FC = () => {
                     variant="outlined"
                     startIcon={<Add />}
                     sx={{ py: 1.5 }}
+                    onClick={handleNewProject}
                   >
                     New Project
                   </Button>
@@ -293,6 +383,7 @@ export const Dashboard: React.FC = () => {
                     variant="outlined"
                     startIcon={<Security />}
                     sx={{ py: 1.5 }}
+                    onClick={handleNewThreatModel}
                   >
                     Threat Model
                   </Button>
@@ -303,6 +394,7 @@ export const Dashboard: React.FC = () => {
                     variant="outlined"
                     startIcon={<Assessment />}
                     sx={{ py: 1.5 }}
+                    onClick={handleRiskAssessment}
                   >
                     Risk Assessment
                   </Button>
@@ -313,6 +405,7 @@ export const Dashboard: React.FC = () => {
                     variant="outlined"
                     startIcon={<BugReport />}
                     sx={{ py: 1.5 }}
+                    onClick={handleReportIssue}
                   >
                     Report Issue
                   </Button>
@@ -326,10 +419,10 @@ export const Dashboard: React.FC = () => {
             <CardContent>
               <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
                 <Typography variant="h6">Recent Projects</Typography>
-                <Button size="small">View All</Button>
+                <Button size="small" onClick={() => navigate('/projects')}>View All</Button>
               </Box>
               
-              {mockProjects.map((project) => (
+              {projects.slice(0, 3).map((project: any) => (
                 <Paper
                   key={project.id}
                   sx={{
@@ -352,17 +445,17 @@ export const Dashboard: React.FC = () => {
                   </Box>
                   
                   <Typography variant="body2" color="text.secondary" gutterBottom>
-                    {project.threatModels} threat models • Updated {project.lastUpdated}
+                    {project.threatModels || 0} threat models • Updated {project.lastUpdated || 'recently'}
                   </Typography>
                   
                   <Box sx={{ mt: 2 }}>
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
                       <Typography variant="body2">Progress</Typography>
-                      <Typography variant="body2">{project.progress}%</Typography>
+                      <Typography variant="body2">{project.progress || 0}%</Typography>
                     </Box>
                     <LinearProgress 
                       variant="determinate" 
-                      value={project.progress}
+                      value={project.progress || 0}
                       sx={{ height: 6, borderRadius: 3 }}
                     />
                   </Box>
@@ -372,6 +465,22 @@ export const Dashboard: React.FC = () => {
           </Card>
         </Grid>
       </Grid>
+
+      {/* Notification Snackbar */}
+      <Snackbar
+        open={notification.open}
+        autoHideDuration={3000}
+        onClose={handleCloseNotification}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert
+          onClose={handleCloseNotification}
+          severity={notification.severity}
+          sx={{ width: '100%' }}
+        >
+          {notification.message}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 };

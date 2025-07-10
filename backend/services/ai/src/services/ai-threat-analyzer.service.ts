@@ -23,9 +23,9 @@ export class AIThreatAnalyzerService {
   private modelConfigs: Map<string, AIModelConfig> = new Map();
 
   constructor(
-    private db: Pool,
-    private redis: RedisClientType,
-    private threatIntelService: ThreatIntelligenceService
+    protected db: Pool,
+    protected redis: RedisClientType,
+    protected threatIntelService: ThreatIntelligenceService
   ) {
     this.initializeModels();
   }
@@ -150,7 +150,7 @@ export class AIThreatAnalyzerService {
   /**
    * Generate enhanced threat suggestions with AI analysis
    */
-  private async generateEnhancedThreats(
+  protected async generateEnhancedThreats(
     request: AIAnalysisRequest,
     threatIntel: any[]
   ): Promise<EnhancedThreatSuggestion[]> {
@@ -480,7 +480,7 @@ export class AIThreatAnalyzerService {
   /**
    * Perform global risk assessment
    */
-  private async performGlobalRiskAssessment(
+  protected async performGlobalRiskAssessment(
     threats: EnhancedThreatSuggestion[],
     context: ContextualThreatData
   ): Promise<GlobalRiskAssessment> {
@@ -594,7 +594,7 @@ export class AIThreatAnalyzerService {
   }
 
   // Helper methods
-  private severityToNumber(severity: ThreatSeverity): number {
+  protected severityToNumber(severity: ThreatSeverity): number {
     const severityMap = {
       [ThreatSeverity.CRITICAL]: 5,
       [ThreatSeverity.HIGH]: 4,

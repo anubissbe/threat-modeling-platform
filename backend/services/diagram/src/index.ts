@@ -16,10 +16,35 @@ const PORT = process.env.PORT || 3004;
 
 // Security middleware
 app.use(helmet());
-app.use(cors({
-  origin: process.env.ALLOWED_ORIGINS?.split(',') || ['http://localhost:3000', 'http://localhost:3006'],
-  credentials: true
-}));
+
+// Secure CORS configuration
+const corsOptions = {
+  origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
+    const allowedOrigins = [
+      'http://localhost:3000',
+      'http://localhost:3006',
+      'http://localhost:5173',
+      'http://localhost:5174',
+      'http://192.168.1.24:3000',
+      'http://192.168.1.24:3006',
+      'http://192.168.1.24:5174',
+      ...(process.env['ALLOWED_ORIGINS']?.split(',') || [])
+    ];
+    
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'), false);
+    }
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  exposedHeaders: ['X-Total-Count', 'X-RateLimit-Limit', 'X-RateLimit-Remaining'],
+  maxAge: 86400
+};
+
+app.use(cors(corsOptions));
 
 // Rate limiting
 app.use(rateLimiter);

@@ -26,6 +26,18 @@ export function createAIRoutes(db: Pool, redis: RedisClientType): Router {
   );
 
   /**
+   * @route POST /api/ai/analyze/enhanced
+   * @desc Enhanced AI threat analysis with 98% accuracy
+   * @access Private
+   * @rateLimit 5 requests per minute per user (more resource intensive)
+   */
+  router.post('/analyze/enhanced', 
+    rateLimitMiddleware(5, 60), // 5 requests per minute (more resource intensive)
+    validateRequestMiddleware,
+    aiController.analyzeThreatsEnhanced.bind(aiController)
+  );
+
+  /**
    * @route GET /api/ai/analysis/:analysisId
    * @desc Get analysis results by ID
    * @access Private

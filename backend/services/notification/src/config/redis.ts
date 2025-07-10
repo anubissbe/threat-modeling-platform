@@ -149,19 +149,26 @@ class RedisManager {
 }
 
 // Create Redis instance
-const config: RedisConfig = {
-  host: process.env['REDIS_HOST'] || 'localhost',
-  port: parseInt(process.env['REDIS_PORT'] || '6379'),
-  ...(process.env['REDIS_PASSWORD'] && { password: process.env['REDIS_PASSWORD'] }),
-  db: parseInt(process.env['REDIS_DB'] || '0'),
-};
+let config: RedisConfig;
+
+if (process.env['REDIS_URL']) {
+  // Parse REDIS_URL for compatibility with Docker setup
+  const redisUrl = new URL(process.env['REDIS_URL']);
+  config = {
+    host: redisUrl.hostname,
+    port: parseInt(redisUrl.port) || 6379,
+    password: redisUrl.password || undefined,
+    db: parseInt(redisUrl.pathname.slice(1)) || 0,
+  };
+} else {
+  config = {
+    host: process.env['REDIS_HOST'] || 'localhost',
+    port: parseInt(process.env['REDIS_PORT'] || '6379'),
+    ...(process.env['REDIS_PASSWORD'] && { password: process.env['REDIS_PASSWORD'] }),
+    db: parseInt(process.env['REDIS_DB'] || '0'),
+  };
+}
 
 export const redis = new RedisManager(config);
-
-// Auto-connect on import
-redis.connect().catch((error) => {
-  logger.error('Failed to connect to Redis on startup:', error);
-  process.exit(1);
-});
 
 export default redis;

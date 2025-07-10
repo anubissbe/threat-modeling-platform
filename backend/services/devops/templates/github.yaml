@@ -1,0 +1,249 @@
+name: '{{pipeline.name}}'
+
+on:
+{{#if triggers.push}}
+  push:
+    branches:
+    {{#each triggers.push.branches}}
+      - {{this}}
+    {{/each}}
+{{/if}}
+{{#if triggers.pull_request}}
+  pull_request:
+    branches:
+    {{#each triggers.pull_request.branches}}
+      - {{this}}
+    {{/each}}
+    types: [opened, synchronize, reopened]
+{{/if}}
+{{#if triggers.schedule}}
+  schedule:
+  {{#each triggers.schedule}}
+    - cron: '{{this.cron}}'
+  {{/each}}
+{{/if}}
+{{#if triggers.workflow_dispatch}}
+  workflow_dispatch:
+{{/if}}
+
+env:
+  THREAT_MODEL_ID: '{{pipeline.threatModelId}}'
+  PIPELINE_ID: '{{pipeline.id}}'
+  THREAT_MODEL_API: ${{ secrets.THREAT_MODEL_API }}
+  THREAT_MODEL_TOKEN: ${{ secrets.THREAT_MODEL_TOKEN }}
+
+permissions:
+  contents: read
+  security-events: write
+  issues: write
+  pull-requests: write
+  actions: read
+  checks: write
+
+jobs:
+  threat-model-scan:
+    name: Threat Model Security Scan
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+      
+      - name: Install Threat Model CLI
+        run: |
+          npm install -g @threat-modeling/cli@latest
+          threat-model --version
+      
+      - name: Cache Threat Model Data
+        uses: actions/cache@v3
+        with:
+          path: ~/.threat-model/cache
+          key: threat-model-${{ runner.os }}-${{ hashFiles('**/threat-model.json') }}
+          restore-keys: |
+            threat-model-${{ runner.os }}-
+      
+      - name: Initialize Threat Model Context
+        run: |
+          threat-model init \
+            --api-url "$THREAT_MODEL_API" \
+            --token "$THREAT_MODEL_TOKEN" \
+            --model-id "$THREAT_MODEL_ID"
+      
+      {{#each stages}}
+      {{#if this.enabled}}
+      - name: '{{this.name}}'
+        id: '{{this.id}}'
+        {{#if (eq this.type 'threat-scan')}}
+        run: |
+          threat-model scan threats \
+            --scan-type {{this.config.threatScan.scanType}} \
+            --severity-threshold {{this.config.threatScan.severityThreshold}} \
+            {{#if this.config.threatScan.components}}
+            --components "{{join this.config.threatScan.components ','}}" \
+            {{/if}}
+            --output-format sarif \
+            --output-file results/{{this.id}}-threats.sarif \
+            --json-output results/{{this.id}}-threats.json
+        {{/if}}
+        {{#if (eq this.type 'vulnerability-scan')}}
+        run: |
+          threat-model scan vulnerabilities \
+            --scanners "{{join this.config.vulnerabilityScan.scanners ','}}" \
+            {{#if this.config.vulnerabilityScan.failOnCVSS}}
+            --fail-on-cvss {{this.config.vulnerabilityScan.failOnCVSS}} \
+            {{/if}}
+            {{#if this.config.vulnerabilityScan.includeDevDependencies}}
+            --include-dev-dependencies \
+            {{/if}}
+            --output-format sarif \
+            --output-file results/{{this.id}}-vulnerabilities.sarif \
+            --json-output results/{{this.id}}-vulnerabilities.json
+        {{/if}}
+        {{#if (eq this.type 'compliance-check')}}
+        run: |
+          threat-model scan compliance \
+            --frameworks "{{join this.config.complianceCheck.frameworks ','}}" \
+            {{#if this.config.complianceCheck.controls}}
+            --controls "{{join this.config.complianceCheck.controls ','}}" \
+            {{/if}}
+            {{#if this.config.complianceCheck.generateReport}}
+            --generate-report \
+            {{/if}}
+            --output-format sarif \
+            --output-file results/{{this.id}}-compliance.sarif \
+            --json-output results/{{this.id}}-compliance.json
+        {{/if}}
+        {{#if (eq this.type 'custom')}}
+        run: |
+          {{this.config.custom.script}}
+        {{#if this.config.custom.environment}}
+        env:
+          {{#each this.config.custom.environment}}
+          {{@key}}: '{{this}}'
+          {{/each}}
+        {{/if}}
+        {{/if}}
+        {{#if this.timeout}}
+        timeout-minutes: {{divide this.timeout 60000}}
+        {{/if}}
+        {{#if (ne this.failureAction 'fail')}}
+        continue-on-error: true
+        {{/if}}
+      {{/if}}
+      {{/each}}
+      
+      - name: Merge SARIF Results
+        if: always()
+        run: |
+          threat-model merge-results \
+            --input-dir results \
+            --output-file merged-results.sarif \
+            --format sarif
+      
+      - name: Upload SARIF to GitHub Security
+        if: always()
+        uses: github/codeql-action/upload-sarif@v2
+        with:
+          sarif_file: merged-results.sarif
+          category: threat-model-scan
+      
+      - name: Generate Summary Report
+        if: always()
+        run: |
+          threat-model report \
+            --input-dir results \
+            --output-format markdown \
+            --output-file threat-model-report.md
+          
+          # Add to GitHub Summary
+          cat threat-model-report.md >> $GITHUB_STEP_SUMMARY
+      
+      - name: Upload Scan Results
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: threat-model-scan-results
+          path: |
+            results/
+            merged-results.sarif
+            threat-model-report.md
+          retention-days: 30
+      
+      - name: Create Issue for Critical Findings
+        if: failure() && github.event_name == 'push'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const results = JSON.parse(fs.readFileSync('results/summary.json', 'utf8'));
+            
+            if (results.criticalFindings > 0) {
+              await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title: `🚨 Critical Security Findings: ${results.criticalFindings} issues detected`,
+                body: fs.readFileSync('threat-model-report.md', 'utf8'),
+                labels: ['security', 'critical', 'automated']
+              });
+            }
+      
+      - name: Comment on Pull Request
+        if: always() && github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const report = fs.readFileSync('threat-model-report.md', 'utf8');
+            
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: report
+            });
+      
+      - name: Auto-Apply Fixes (if enabled)
+        if: always()
+        run: |
+          {{#if (some stages 'config.threatScan.autoRemediate')}}
+          threat-model auto-fix \
+            --input-dir results \
+            --apply-fixes \
+            --create-pr \
+            --pr-title "🔧 Auto-fix security issues" \
+            --pr-body "This PR automatically fixes security issues found by the threat model scan"
+          {{else}}
+          echo "Auto-remediation is not enabled for this pipeline"
+          {{/if}}
+
+  notify-results:
+    name: Notify Scan Results
+    needs: threat-model-scan
+    runs-on: ubuntu-latest
+    if: always()
+    
+    steps:
+      - name: Download Results
+        uses: actions/download-artifact@v3
+        with:
+          name: threat-model-scan-results
+          path: results
+      
+      - name: Send Notifications
+        run: |
+          # Notification logic based on pipeline configuration
+          echo "Sending notifications based on pipeline settings..."
+          {{#if notifications.enabled}}
+          threat-model notify \
+            --results results/summary.json \
+            --channels "{{join notifications.channels ','}}" \
+            --pipeline-id "$PIPELINE_ID"
+          {{/if}}

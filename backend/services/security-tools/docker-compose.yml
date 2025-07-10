@@ -1,0 +1,112 @@
+version: '3.8'
+
+services:
+  security-tools:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: security-tools-service
+    ports:
+      - "3024:3024"
+    environment:
+      - NODE_ENV=development
+      - PORT=3024
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_NAME=threat_modeling
+      - DB_USER=postgres
+      - DB_PASSWORD=postgres
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - JWT_SECRET=development-secret-key
+      - ENCRYPTION_KEY=development-encryption-key
+      - CORS_ORIGIN=http://localhost:3000,http://localhost:3001
+      - LOG_LEVEL=debug
+    depends_on:
+      - postgres
+      - redis
+    volumes:
+      - ./logs:/app/logs
+      - ./src:/app/src:ro
+    networks:
+      - security-tools-network
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:14-alpine
+    container_name: security-tools-postgres
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=threat_modeling
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./src/config/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+    ports:
+      - "5433:5432"
+    networks:
+      - security-tools-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: security-tools-redis
+    command: redis-server --appendonly yes
+    volumes:
+      - redis-data:/data
+    ports:
+      - "6380:6379"
+    networks:
+      - security-tools-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Optional: pgAdmin for database management
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: security-tools-pgadmin
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=admin@example.com
+      - PGADMIN_DEFAULT_PASSWORD=admin
+      - PGADMIN_CONFIG_SERVER_MODE=False
+      - PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED=False
+    ports:
+      - "5050:80"
+    networks:
+      - security-tools-network
+    depends_on:
+      - postgres
+    profiles:
+      - dev-tools
+
+  # Optional: RedisInsight for Redis management
+  redis-insight:
+    image: redislabs/redisinsight:latest
+    container_name: security-tools-redis-insight
+    ports:
+      - "8001:8001"
+    networks:
+      - security-tools-network
+    depends_on:
+      - redis
+    profiles:
+      - dev-tools
+
+volumes:
+  postgres-data:
+    driver: local
+  redis-data:
+    driver: local
+
+networks:
+  security-tools-network:
+    driver: bridge

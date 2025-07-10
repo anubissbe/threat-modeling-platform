@@ -211,6 +211,10 @@ const startServer = async () => {
     // Wait for database and Redis connections
     logger.info('Waiting for database and Redis connections...');
     
+    // Connect to database and Redis
+    await database.connect();
+    await redis.connect();
+    
     // Test connections
     await database.query('SELECT 1');
     await redis.getClient().ping();

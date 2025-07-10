@@ -87,6 +87,120 @@ export const Canvas = forwardRef<HTMLCanvasElement, CanvasProps>(
       return null;
     };
 
+    // Helper function to draw an icon for a node type
+    const drawNodeIcon = (ctx: CanvasRenderingContext2D, nodeType: string, centerX: number, centerY: number) => {
+      ctx.strokeStyle = '#424242';
+      ctx.fillStyle = '#424242';
+      ctx.lineWidth = 2;
+      
+      switch (nodeType) {
+        case 'user':
+          // Draw a simple person icon
+          ctx.beginPath();
+          ctx.arc(centerX, centerY - 8, 6, 0, 2 * Math.PI); // head
+          ctx.fill();
+          ctx.beginPath();
+          ctx.arc(centerX, centerY + 6, 12, 0, Math.PI); // body
+          ctx.stroke();
+          break;
+          
+        case 'process':
+        case 'webserver':
+          // Draw a simple computer/server icon
+          ctx.fillRect(centerX - 12, centerY - 8, 24, 16);
+          ctx.strokeRect(centerX - 12, centerY - 8, 24, 16);
+          ctx.fillRect(centerX - 2, centerY + 8, 4, 3);
+          break;
+          
+        case 'database':
+          // Draw a simple database icon
+          ctx.beginPath();
+          ctx.ellipse(centerX, centerY - 6, 12, 4, 0, 0, 2 * Math.PI);
+          ctx.fill();
+          ctx.stroke();
+          ctx.fillRect(centerX - 12, centerY - 6, 24, 12);
+          ctx.strokeRect(centerX - 12, centerY - 6, 24, 12);
+          ctx.beginPath();
+          ctx.ellipse(centerX, centerY + 6, 12, 4, 0, 0, 2 * Math.PI);
+          ctx.stroke();
+          break;
+          
+        case 'external':
+        case 'cloud':
+          // Draw a simple cloud icon
+          ctx.beginPath();
+          ctx.arc(centerX - 6, centerY, 6, 0, 2 * Math.PI);
+          ctx.arc(centerX + 6, centerY, 6, 0, 2 * Math.PI);
+          ctx.arc(centerX, centerY - 4, 8, 0, 2 * Math.PI);
+          ctx.fill();
+          break;
+          
+        case 'api':
+          // Draw a simple API icon (gear)
+          ctx.beginPath();
+          const spokes = 8;
+          const outerRadius = 10;
+          const innerRadius = 6;
+          for (let i = 0; i < spokes; i++) {
+            const angle = (i * 2 * Math.PI) / spokes;
+            const x1 = centerX + Math.cos(angle) * innerRadius;
+            const y1 = centerY + Math.sin(angle) * innerRadius;
+            const x2 = centerX + Math.cos(angle) * outerRadius;
+            const y2 = centerY + Math.sin(angle) * outerRadius;
+            ctx.moveTo(x1, y1);
+            ctx.lineTo(x2, y2);
+          }
+          ctx.stroke();
+          ctx.beginPath();
+          ctx.arc(centerX, centerY, 4, 0, 2 * Math.PI);
+          ctx.stroke();
+          break;
+          
+        case 'firewall':
+        case 'shield':
+          // Draw a simple shield icon
+          ctx.beginPath();
+          ctx.moveTo(centerX, centerY - 10);
+          ctx.lineTo(centerX - 8, centerY - 4);
+          ctx.lineTo(centerX - 8, centerY + 4);
+          ctx.lineTo(centerX, centerY + 10);
+          ctx.lineTo(centerX + 8, centerY + 4);
+          ctx.lineTo(centerX + 8, centerY - 4);
+          ctx.closePath();
+          ctx.fill();
+          ctx.stroke();
+          break;
+          
+        case 'loadbalancer':
+        case 'router':
+          // Draw a simple router icon
+          ctx.fillRect(centerX - 10, centerY - 6, 20, 12);
+          ctx.strokeRect(centerX - 10, centerY - 6, 20, 12);
+          // Add ports
+          for (let i = 0; i < 3; i++) {
+            ctx.fillRect(centerX - 8 + i * 8, centerY - 2, 2, 4);
+          }
+          break;
+          
+        case 'mobile':
+          // Draw a simple mobile device
+          ctx.fillRect(centerX - 6, centerY - 10, 12, 20);
+          ctx.strokeRect(centerX - 6, centerY - 10, 12, 20);
+          ctx.fillRect(centerX - 4, centerY - 8, 8, 12);
+          ctx.strokeRect(centerX - 4, centerY - 8, 8, 12);
+          break;
+          
+        default:
+          // Default icon - simple rectangle with question mark
+          ctx.strokeRect(centerX - 8, centerY - 8, 16, 16);
+          ctx.font = '14px sans-serif';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText('?', centerX, centerY);
+          break;
+      }
+    };
+
     // Helper function to draw a node
     const drawNode = (ctx: CanvasRenderingContext2D, node: DiagramNode) => {
       const { x, y } = node.position;
@@ -114,25 +228,16 @@ export const Canvas = forwardRef<HTMLCanvasElement, CanvasProps>(
       ctx.fill();
       ctx.stroke();
 
-      // Icon based on type
-      ctx.fillStyle = '#424242';
-      ctx.font = '32px Material Icons';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      
-      const icons: Record<string, string> = {
-        user: '\ue7fd', // person icon
-        process: '\ue8b8', // computer icon
-        database: '\ue8b8', // storage icon
-        external: '\ue30a', // cloud icon
-        api: '\ue8f5', // api icon
-      };
-      
-      ctx.fillText(icons[node.type] || '\ue8b8', x + width / 2, y + height / 2 - 10);
+      // Draw icon
+      const iconCenterX = x + width / 2;
+      const iconCenterY = y + height / 2 - 10;
+      drawNodeIcon(ctx, node.type, iconCenterX, iconCenterY);
 
       // Label
       ctx.font = '14px Roboto, sans-serif';
       ctx.fillStyle = '#212121';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
       ctx.fillText(node.data.label, x + width / 2, y + height - 20);
 
       // Connection points
@@ -274,7 +379,6 @@ export const Canvas = forwardRef<HTMLCanvasElement, CanvasProps>(
           };
         } else {
           // Start dragging
-          const canvasPos = screenToCanvas(e.clientX, e.clientY);
           dragState.current = {
             isDragging: true,
             isConnecting: false,

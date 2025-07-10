@@ -1,12 +1,13 @@
 import { createSlice, createAsyncThunk, type PayloadAction } from '@reduxjs/toolkit';
-import { authApi } from '@/services/api';
+import { authApi, setAuthToken } from '@/services/api';
+import { debugAuth } from '@/utils/auth-debug';
 
 export interface User {
   id: string;
   email: string;
   firstName: string;
   lastName: string;
-  role: 'admin' | 'security_analyst' | 'architect' | 'developer' | 'viewer';
+  role: string;
   organization: string;
   isActive: boolean;
   lastLogin?: string;
@@ -56,13 +57,26 @@ export const login = createAsyncThunk(
   'auth/login',
   async (credentials: LoginRequest, { rejectWithValue }) => {
     try {
-      const response = await authApi.login(credentials);
+      const loginResponse = await authApi.login(credentials);
       
       // Store tokens in localStorage
-      localStorage.setItem('accessToken', response.data.accessToken);
-      localStorage.setItem('refreshToken', response.data.refreshToken);
+      localStorage.setItem('accessToken', loginResponse.data.accessToken);
+      localStorage.setItem('refreshToken', loginResponse.data.refreshToken);
       
-      return response.data;
+      // Debug token storage
+      console.log('[AUTH] Tokens stored in localStorage');
+      debugAuth.checkToken();
+      
+      // Set token in axios immediately
+      setAuthToken(loginResponse.data.accessToken);
+      
+      // Now fetch profile with the token already set
+      const profileResponse = await authApi.getProfile();
+      
+      return {
+        tokens: loginResponse.data,
+        user: profileResponse.data,
+      };
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.error || 'Login failed');
     }
@@ -78,6 +92,9 @@ export const register = createAsyncThunk(
       // Store tokens in localStorage
       localStorage.setItem('accessToken', response.data.accessToken);
       localStorage.setItem('refreshToken', response.data.refreshToken);
+      
+      // Set token in axios immediately
+      setAuthToken(response.data.accessToken);
       
       return response.data;
     } catch (error: any) {
@@ -100,9 +117,10 @@ export const getProfile = createAsyncThunk(
 
 export const refreshTokens = createAsyncThunk(
   'auth/refreshTokens',
-  async (_, { getState, rejectWithValue }) => {
+  async (_, { rejectWithValue }) => {
     try {
       const refreshToken = localStorage.getItem('refreshToken');
+      
       if (!refreshToken) {
         throw new Error('No refresh token available');
       }
@@ -112,6 +130,9 @@ export const refreshTokens = createAsyncThunk(
       // Update tokens in localStorage
       localStorage.setItem('accessToken', response.data.accessToken);
       localStorage.setItem('refreshToken', response.data.refreshToken);
+      
+      // Set the new token in axios immediately
+      setAuthToken(response.data.accessToken);
       
       return response.data;
     } catch (error: any) {
@@ -125,7 +146,7 @@ export const refreshTokens = createAsyncThunk(
 
 export const logout = createAsyncThunk(
   'auth/logout',
-  async (_, { getState, rejectWithValue }) => {
+  async (_, { rejectWithValue }) => {
     try {
       const refreshToken = localStorage.getItem('refreshToken');
       if (refreshToken) {
@@ -138,54 +159,42 @@ export const logout = createAsyncThunk(
       // Always clear tokens
       localStorage.removeItem('accessToken');
       localStorage.removeItem('refreshToken');
+      setAuthToken(null);
     }
   }
 );
 
 export const initializeAuth = createAsyncThunk(
   'auth/initialize',
-  async (_, { dispatch, rejectWithValue }) => {
+  async (_, { rejectWithValue }) => {
+    // Since we've disabled token refresh, just check if there are tokens
+    // and mark as not authenticated to redirect to login
+    const accessToken = localStorage.getItem('accessToken');
+    const refreshToken = localStorage.getItem('refreshToken');
+    
+    if (!accessToken || !refreshToken) {
+      return rejectWithValue('No tokens found');
+    }
+    
+    // Set token in axios before making requests
+    setAuthToken(accessToken);
+    
+    // If tokens exist, try to get profile once
     try {
-      const accessToken = localStorage.getItem('accessToken');
-      const refreshToken = localStorage.getItem('refreshToken');
-      
-      if (!accessToken || !refreshToken) {
-        throw new Error('No tokens found');
-      }
-
-      // Try to get user profile to verify token validity
       const response = await authApi.getProfile();
-      
       return {
         user: response.data,
         tokens: {
           accessToken,
           refreshToken,
-          expiresIn: 900, // Default 15 minutes
+          expiresIn: 900,
         },
       };
     } catch (error: any) {
-      // If profile fetch fails, try to refresh tokens
-      try {
-        await dispatch(refreshTokens()).unwrap();
-        const response = await authApi.getProfile();
-        
-        const accessToken = localStorage.getItem('accessToken');
-        const refreshToken = localStorage.getItem('refreshToken');
-        
-        return {
-          user: response.data,
-          tokens: {
-            accessToken: accessToken!,
-            refreshToken: refreshToken!,
-            expiresIn: 900,
-          },
-        };
-      } catch (refreshError) {
-        localStorage.removeItem('accessToken');
-        localStorage.removeItem('refreshToken');
-        return rejectWithValue('Authentication session expired');
-      }
+      // Clear tokens and reject
+      localStorage.removeItem('accessToken');
+      localStorage.removeItem('refreshToken');
+      return rejectWithValue('Authentication session expired');
     }
   }
 );
@@ -207,6 +216,7 @@ const authSlice = createSlice({
       state.error = null;
       localStorage.removeItem('accessToken');
       localStorage.removeItem('refreshToken');
+      setAuthToken(null);
     },
   },
   extraReducers: (builder) => {
@@ -218,7 +228,8 @@ const authSlice = createSlice({
       })
       .addCase(login.fulfilled, (state, action) => {
         state.isLoading = false;
-        state.tokens = action.payload;
+        state.tokens = action.payload.tokens;
+        state.user = action.payload.user;
         state.isAuthenticated = true;
         state.error = null;
       })

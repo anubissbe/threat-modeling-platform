@@ -147,7 +147,7 @@ export const ThreatModelEditorPage: React.FC = () => {
           dispatch(
             showNotification({
               message: 'Threat model loaded successfully',
-              severity: 'success',
+              type: 'success',
             })
           );
         }, 1000);
@@ -157,7 +157,7 @@ export const ThreatModelEditorPage: React.FC = () => {
         dispatch(
           showNotification({
             message: 'Failed to load threat model',
-            severity: 'error',
+            type: 'error',
           })
         );
       }

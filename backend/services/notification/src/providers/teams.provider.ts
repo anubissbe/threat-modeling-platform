@@ -68,7 +68,7 @@ export class TeamsProvider extends NotificationProvider {
     // Add potential actions
     const actions = this.buildActions(notification);
     if (actions.length > 0) {
-      payload.potentialAction = actions;
+      (payload as any).potentialAction = actions;
     }
 
     return payload;

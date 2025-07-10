@@ -223,7 +223,7 @@ export class WebhookProvider extends NotificationProvider {
   }
 
   private extractResponseTime(response: AxiosResponse): number | undefined {
-    const requestStart = response.config.metadata?.startTime;
+    const requestStart = (response.config as any).metadata?.startTime;
     if (requestStart) {
       return Date.now() - requestStart;
     }

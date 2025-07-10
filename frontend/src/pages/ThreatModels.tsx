@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   Box,
   Typography,
@@ -18,6 +19,21 @@ import {
   Tab,
   Tabs,
   Paper,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  CircularProgress,
+  Alert,
+  Skeleton,
+  Snackbar,
+  ListItemText,
+  ListItemSecondaryAction,
+  List,
+  ListItem,
+  ListItemAvatar,
+  CardActions,
+  LinearProgress,
 } from '@mui/material';
 import {
   Add,
@@ -33,151 +49,220 @@ import {
   CheckCircle,
   Schedule,
   Brush,
+  Launch,
 } from '@mui/icons-material';
+import { threatModelsApi, projectsApi } from '@/services/api';
+import { formatDistanceToNow } from 'date-fns';
 
 interface ThreatModel {
   id: string;
   name: string;
-  methodology: 'STRIDE' | 'PASTA' | 'LINDDUN' | 'VAST' | 'DREAD';
-  project: string;
-  status: 'Draft' | 'In Review' | 'Approved' | 'Published';
+  description: string;
+  methodology: string;
+  projectId: string;
+  status: string;
   threats: number;
-  mitigations: number;
-  riskLevel: 'High' | 'Medium' | 'Low';
-  lastModified: string;
-  createdBy: string;
-  collaborators: string[];
-  completionRate: number;
+  createdAt: string;
+  updatedAt: string;
 }
 
-const mockThreatModels: ThreatModel[] = [
-  {
-    id: '1',
-    name: 'Payment Processing Security',
-    methodology: 'STRIDE',
-    project: 'E-commerce Platform',
-    status: 'In Review',
-    threats: 12,
-    mitigations: 8,
-    riskLevel: 'High',
-    lastModified: '2 hours ago',
-    createdBy: 'John Smith',
-    collaborators: ['JS', 'SJ', 'MW'],
-    completionRate: 75,
-  },
-  {
-    id: '2',
-    name: 'User Authentication Flow',
-    methodology: 'LINDDUN',
-    project: 'Mobile Banking App',
-    status: 'Published',
-    threats: 8,
-    mitigations: 7,
-    riskLevel: 'Medium',
-    lastModified: '1 day ago',
-    createdBy: 'Sarah Johnson',
-    collaborators: ['SJ', 'ED'],
-    completionRate: 95,
-  },
-  {
-    id: '3',
-    name: 'Data Storage Security',
-    methodology: 'PASTA',
-    project: 'HR Management System',
-    status: 'Draft',
-    threats: 15,
-    mitigations: 5,
-    riskLevel: 'High',
-    lastModified: '3 days ago',
-    createdBy: 'Mike Wilson',
-    collaborators: ['MW', 'AC', 'JS'],
-    completionRate: 40,
-  },
-  {
-    id: '4',
-    name: 'API Gateway Security',
-    methodology: 'VAST',
-    project: 'Microservices Architecture',
-    status: 'Approved',
-    threats: 6,
-    mitigations: 6,
-    riskLevel: 'Low',
-    lastModified: '1 week ago',
-    createdBy: 'Emily Davis',
-    collaborators: ['ED', 'MW'],
-    completionRate: 100,
-  },
-];
-
-const methodologyColors = {
-  STRIDE: 'primary',
-  PASTA: 'secondary',
-  LINDDUN: 'success',
-  VAST: 'warning',
-  DREAD: 'error',
-} as const;
+interface Project {
+  id: string;
+  name: string;
+}
 
 export const ThreatModels: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const queryClient = useQueryClient();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-  const [selectedModel, setSelectedModel] = useState<string | null>(null);
+  const [selectedThreatModel, setSelectedThreatModel] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [tabValue, setTabValue] = useState(0);
+  const [createDialog, setCreateDialog] = useState({
+    open: false,
+    name: '',
+    description: '',
+    methodology: 'STRIDE',
+    projectId: '',
+  });
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [notification, setNotification] = useState({
+    open: false,
+    message: '',
+    severity: 'info' as 'success' | 'info' | 'warning' | 'error',
+  });
 
-  const handleMenuOpen = (event: React.MouseEvent<HTMLElement>, modelId: string) => {
+  // Get projectId from location state if coming from project details
+  const projectIdFromState = location.state?.projectId;
+
+  // Fetch all threat models
+  const { data: threatModels = [], isLoading, error } = useQuery({
+    queryKey: ['threatModels'],
+    queryFn: async () => {
+      const response = await threatModelsApi.getThreatModels();
+      if (response.data?.data && Array.isArray(response.data.data)) {
+        return response.data.data;
+      } else if (Array.isArray(response.data)) {
+        return response.data;
+      }
+      return [];
+    },
+    retry: 1,
+  });
+
+  // Fetch projects for the dropdown
+  const { data: projects = [] } = useQuery({
+    queryKey: ['projects'],
+    queryFn: async () => {
+      const response = await projectsApi.getProjects();
+      if (response.data?.data && Array.isArray(response.data.data)) {
+        return response.data.data;
+      } else if (Array.isArray(response.data)) {
+        return response.data;
+      }
+      return [];
+    },
+  });
+
+  // Create threat model mutation
+  const createThreatModelMutation = useMutation({
+    mutationFn: async (data: Partial<ThreatModel>) => {
+      const response = await threatModelsApi.createThreatModel(data);
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['threatModels'] });
+      setNotification({
+        open: true,
+        message: 'Threat model created successfully!',
+        severity: 'success',
+      });
+      setCreateDialog({
+        open: false,
+        name: '',
+        description: '',
+        methodology: 'STRIDE',
+        projectId: '',
+      });
+    },
+    onError: (error: any) => {
+      setNotification({
+        open: true,
+        message: error.response?.data?.message || error.response?.data?.error || 'Failed to create threat model',
+        severity: 'error',
+      });
+    },
+  });
+
+  // Delete threat model mutation
+  const deleteThreatModelMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const response = await threatModelsApi.deleteThreatModel(id);
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['threatModels'] });
+      setNotification({
+        open: true,
+        message: 'Threat model deleted successfully!',
+        severity: 'success',
+      });
+      setDeleteConfirmOpen(false);
+      setSelectedThreatModel(null);
+    },
+    onError: (error: any) => {
+      setNotification({
+        open: true,
+        message: error.response?.data?.message || error.response?.data?.error || 'Failed to delete threat model',
+        severity: 'error',
+      });
+    },
+  });
+
+  const handleMenuOpen = (event: React.MouseEvent<HTMLElement>, threatModelId: string) => {
     setAnchorEl(event.currentTarget);
-    setSelectedModel(modelId);
+    setSelectedThreatModel(threatModelId);
   };
 
   const handleMenuClose = () => {
     setAnchorEl(null);
-    setSelectedModel(null);
+    setSelectedThreatModel(null);
   };
 
-  const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
-    setTabValue(newValue);
+  const handleCreateThreatModel = () => {
+    createThreatModelMutation.mutate({
+      name: createDialog.name,
+      description: createDialog.description,
+      methodology: createDialog.methodology,
+      projectId: createDialog.projectId,
+      status: 'Draft',
+    });
   };
 
-  const getRiskColor = (risk: string) => {
-    switch (risk.toLowerCase()) {
-      case 'high': return 'error';
-      case 'medium': return 'warning';
-      case 'low': return 'success';
-      default: return 'default';
+  const handleEditThreatModel = (threatModelId: string) => {
+    navigate(`/threat-models/${threatModelId}/edit`);
+    handleMenuClose();
+  };
+
+  const handleDeleteThreatModel = () => {
+    if (selectedThreatModel) {
+      deleteThreatModelMutation.mutate(selectedThreatModel);
     }
+  };
+
+  const handleViewThreatModel = (threatModelId: string) => {
+    navigate(`/threat-models/${threatModelId}`);
+  };
+
+  const handleCloseNotification = () => {
+    setNotification(prev => ({ ...prev, open: false }));
   };
 
   const getStatusColor = (status: string) => {
     switch (status.toLowerCase()) {
       case 'draft': return 'default';
-      case 'in review': return 'warning';
-      case 'approved': return 'info';
-      case 'published': return 'success';
+      case 'active': return 'primary';
+      case 'in_review': return 'warning';
+      case 'completed': return 'success';
       default: return 'default';
     }
   };
 
-  const getStatusIcon = (status: string) => {
-    switch (status.toLowerCase()) {
-      case 'draft': return <Edit fontSize="small" />;
-      case 'in review': return <Schedule fontSize="small" />;
-      case 'approved': return <CheckCircle fontSize="small" />;
-      case 'published': return <Security fontSize="small" />;
-      default: return <Security fontSize="small" />;
+  const getMethodologyColor = (methodology: string) => {
+    switch (methodology.toUpperCase()) {
+      case 'STRIDE': return 'primary';
+      case 'PASTA': return 'secondary';
+      case 'LINDDUN': return 'success';
+      case 'VAST': return 'warning';
+      case 'DREAD': return 'error';
+      default: return 'default';
     }
   };
 
-  const filteredModels = mockThreatModels.filter(model => {
-    const matchesSearch = model.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         model.project.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    if (tabValue === 0) return matchesSearch; // All
-    if (tabValue === 1) return matchesSearch && model.status === 'Draft';
-    if (tabValue === 2) return matchesSearch && model.status === 'In Review';
-    if (tabValue === 3) return matchesSearch && (model.status === 'Approved' || model.status === 'Published');
-    
-    return matchesSearch;
-  });
+  const filteredThreatModels = threatModels.filter((model: ThreatModel) =>
+    model.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    model.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    model.methodology.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const getProjectName = (projectId: string) => {
+    const project = projects.find((p: Project) => p.id === projectId);
+    return project?.name || 'Unknown Project';
+  };
+
+  if (error) {
+    return (
+      <Box sx={{ textAlign: 'center', py: 8 }}>
+        <Typography variant="h6" color="error" gutterBottom>
+          Failed to load threat models
+        </Typography>
+        <Typography variant="body2" color="text.secondary">
+          {(error as any).message}
+        </Typography>
+      </Box>
+    );
+  }
 
   return (
     <Box>
@@ -188,183 +273,155 @@ export const ThreatModels: React.FC = () => {
             Threat Models
           </Typography>
           <Typography variant="body1" color="text.secondary">
-            Create and manage security threat models using various methodologies
+            Create and manage threat models for your security assessments
           </Typography>
         </Box>
         <Button
           variant="contained"
           startIcon={<Add />}
           size="large"
+          onClick={() => setCreateDialog({ ...createDialog, open: true })}
         >
           New Threat Model
         </Button>
       </Box>
 
-      {/* Tabs and Search */}
-      <Paper sx={{ mb: 4 }}>
-        <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
-          <Tabs value={tabValue} onChange={handleTabChange}>
-            <Tab label="All Models" />
-            <Tab label="Draft" />
-            <Tab label="In Review" />
-            <Tab label="Published" />
-          </Tabs>
-        </Box>
-        
-        <Box sx={{ p: 3, display: 'flex', gap: 2 }}>
-          <TextField
-            placeholder="Search threat models..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <Search />
-                </InputAdornment>
-              ),
-            }}
-            sx={{ flexGrow: 1 }}
-          />
-          <Button
-            variant="outlined"
-            startIcon={<FilterList />}
-          >
-            Filter
-          </Button>
-        </Box>
-      </Paper>
+      {/* Search and Filter */}
+      <Box sx={{ display: 'flex', gap: 2, mb: 4 }}>
+        <TextField
+          placeholder="Search threat models..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <Search />
+              </InputAdornment>
+            ),
+          }}
+          sx={{ flexGrow: 1 }}
+        />
+        <Button
+          variant="outlined"
+          startIcon={<FilterList />}
+        >
+          Filter
+        </Button>
+      </Box>
 
       {/* Threat Models Grid */}
-      <Grid container spacing={3}>
-        {filteredModels.map((model) => (
-          <Grid item xs={12} lg={6} key={model.id}>
-            <Card 
-              sx={{ 
-                height: '100%',
-                transition: 'transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out',
-                '&:hover': {
-                  transform: 'translateY(-2px)',
-                  boxShadow: 3,
-                },
-              }}
-            >
-              <CardContent>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', mb: 2 }}>
-                  <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-                    <Chip
-                      label={model.methodology}
+      {isLoading ? (
+        <Grid container spacing={3}>
+          {[1, 2, 3, 4, 5, 6].map((i) => (
+            <Grid item xs={12} md={6} lg={4} key={i}>
+              <Card>
+                <CardContent>
+                  <Skeleton variant="rectangular" height={200} />
+                </CardContent>
+              </Card>
+            </Grid>
+          ))}
+        </Grid>
+      ) : (
+        <Grid container spacing={3}>
+          {filteredThreatModels.map((model: ThreatModel) => (
+            <Grid item xs={12} md={6} lg={4} key={model.id}>
+              <Card 
+                sx={{ 
+                  height: '100%',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  transition: 'transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out',
+                  '&:hover': {
+                    transform: 'translateY(-4px)',
+                    boxShadow: 4,
+                  },
+                }}
+              >
+                <CardContent sx={{ flexGrow: 1 }}>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', mb: 2 }}>
+                    <Box sx={{ display: 'flex', gap: 1 }}>
+                      <Chip
+                        label={model.methodology}
+                        size="small"
+                        color={getMethodologyColor(model.methodology) as any}
+                      />
+                      <Chip
+                        label={model.status}
+                        size="small"
+                        color={getStatusColor(model.status) as any}
+                        variant="outlined"
+                      />
+                    </Box>
+                    <IconButton
                       size="small"
-                      color={methodologyColors[model.methodology] as any}
-                      variant="outlined"
-                    />
-                    <Chip
-                      icon={getStatusIcon(model.status)}
-                      label={model.status}
-                      size="small"
-                      color={getStatusColor(model.status) as any}
-                    />
-                    <Chip
-                      label={model.riskLevel}
-                      size="small"
-                      color={getRiskColor(model.riskLevel) as any}
-                      variant="filled"
-                    />
+                      onClick={(e) => handleMenuOpen(e, model.id)}
+                    >
+                      <MoreVert />
+                    </IconButton>
                   </Box>
-                  <IconButton
-                    size="small"
-                    onClick={(e) => handleMenuOpen(e, model.id)}
-                  >
-                    <MoreVert />
-                  </IconButton>
-                </Box>
 
-                <Typography variant="h6" gutterBottom>
-                  {model.name}
-                </Typography>
+                  <Typography variant="h6" gutterBottom>
+                    {model.name}
+                  </Typography>
 
-                <Typography variant="body2" color="text.secondary" gutterBottom>
-                  Project: {model.project}
-                </Typography>
+                  <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                    {model.description}
+                  </Typography>
 
-                <Box sx={{ display: 'flex', gap: 3, my: 2 }}>
-                  <Box sx={{ textAlign: 'center' }}>
-                    <Typography variant="h6" color="error.main">
-                      {model.threats}
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary">
-                      Threats
-                    </Typography>
+                  <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                    Project: {getProjectName(model.projectId)}
+                  </Typography>
+
+                  <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <Security fontSize="small" color="action" />
+                      <Typography variant="body2">
+                        {model.threats || 0} threats
+                      </Typography>
+                    </Box>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <Schedule fontSize="small" color="action" />
+                      <Typography variant="body2">
+                        {formatDistanceToNow(new Date(model.updatedAt), { addSuffix: true })}
+                      </Typography>
+                    </Box>
                   </Box>
-                  <Box sx={{ textAlign: 'center' }}>
-                    <Typography variant="h6" color="success.main">
-                      {model.mitigations}
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary">
-                      Mitigations
+
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <Avatar sx={{ width: 24, height: 24, fontSize: '0.75rem' }}>
+                      TM
+                    </Avatar>
+                    <Typography variant="body2" color="text.secondary">
+                      Team Model
                     </Typography>
                   </Box>
-                  <Box sx={{ textAlign: 'center' }}>
-                    <Typography variant="h6" color="primary.main">
-                      {model.completionRate}%
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary">
-                      Complete
-                    </Typography>
-                  </Box>
-                </Box>
+                </CardContent>
 
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 3 }}>
-                  <Box>
-                    <Typography variant="caption" color="text.secondary">
-                      Created by {model.createdBy}
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary" display="block">
-                      Modified {model.lastModified}
-                    </Typography>
-                  </Box>
-                  
-                  <AvatarGroup max={3} sx={{ '& .MuiAvatar-root': { width: 28, height: 28, fontSize: '0.75rem' } }}>
-                    {model.collaborators.map((collaborator, index) => (
-                      <Avatar key={index}>
-                        {collaborator}
-                      </Avatar>
-                    ))}
-                  </AvatarGroup>
-                </Box>
-
-                <Box sx={{ mt: 3, display: 'flex', gap: 1 }}>
+                <CardActions>
                   <Button 
                     size="small" 
-                    variant="contained"
-                    startIcon={<Brush />}
-                    onClick={() => navigate(`/threat-models/${model.id}/edit`)}
-                    sx={{ minWidth: 'auto' }}
+                    startIcon={<Launch />}
+                    onClick={() => handleViewThreatModel(model.id)}
                   >
-                    Edit Model
+                    Open
                   </Button>
                   <Button 
                     size="small" 
-                    startIcon={<Share />}
-                    sx={{ minWidth: 'auto' }}
+                    startIcon={<Edit />}
+                    onClick={() => handleEditThreatModel(model.id)}
                   >
-                    Share
+                    Edit
                   </Button>
-                  <Button 
-                    size="small" 
-                    startIcon={<Download />}
-                    sx={{ minWidth: 'auto' }}
-                  >
-                    Export
-                  </Button>
-                </Box>
-              </CardContent>
-            </Card>
-          </Grid>
-        ))}
-      </Grid>
+                </CardActions>
+              </Card>
+            </Grid>
+          ))}
+        </Grid>
+      )}
 
       {/* Empty State */}
-      {filteredModels.length === 0 && (
+      {!isLoading && filteredThreatModels.length === 0 && (
         <Box sx={{ textAlign: 'center', py: 8 }}>
           <Security sx={{ fontSize: 64, color: 'text.secondary', mb: 2 }} />
           <Typography variant="h6" gutterBottom>
@@ -372,12 +429,16 @@ export const ThreatModels: React.FC = () => {
           </Typography>
           <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
             {searchTerm 
-              ? 'Try adjusting your search terms or filters'
-              : 'Create your first threat model to identify security risks'
+              ? 'Try adjusting your search terms'
+              : 'Create your first threat model to start security analysis'
             }
           </Typography>
           {!searchTerm && (
-            <Button variant="contained" startIcon={<Add />}>
+            <Button 
+              variant="contained" 
+              startIcon={<Add />} 
+              onClick={() => setCreateDialog({ ...createDialog, open: true })}
+            >
               Create Threat Model
             </Button>
           )}
@@ -390,32 +451,155 @@ export const ThreatModels: React.FC = () => {
         open={Boolean(anchorEl)}
         onClose={handleMenuClose}
       >
+        <MenuItem onClick={() => selectedThreatModel && handleEditThreatModel(selectedThreatModel)}>
+          <Edit sx={{ mr: 1 }} />
+          Edit
+        </MenuItem>
+        <MenuItem onClick={() => selectedThreatModel && handleViewThreatModel(selectedThreatModel)}>
+          <Security sx={{ mr: 1 }} />
+          View Details
+        </MenuItem>
         <MenuItem onClick={() => {
-          if (selectedModel) {
-            navigate(`/threat-models/${selectedModel}/edit`);
-          }
+          setNotification({
+            open: true,
+            message: 'Share functionality coming soon',
+            severity: 'info',
+          });
           handleMenuClose();
         }}>
-          <Brush sx={{ mr: 1 }} />
-          Edit in Visual Editor
-        </MenuItem>
-        <MenuItem onClick={handleMenuClose}>
-          <Edit sx={{ mr: 1 }} />
-          Edit Properties
-        </MenuItem>
-        <MenuItem onClick={handleMenuClose}>
           <Share sx={{ mr: 1 }} />
           Share
         </MenuItem>
-        <MenuItem onClick={handleMenuClose}>
+        <MenuItem onClick={() => {
+          setNotification({
+            open: true,
+            message: 'Download functionality coming soon',
+            severity: 'info',
+          });
+          handleMenuClose();
+        }}>
           <Download sx={{ mr: 1 }} />
-          Export
+          Download
         </MenuItem>
-        <MenuItem onClick={handleMenuClose} sx={{ color: 'error.main' }}>
+        <MenuItem 
+          onClick={() => {
+            setDeleteConfirmOpen(true);
+            handleMenuClose();
+          }} 
+          sx={{ color: 'error.main' }}
+        >
           <Delete sx={{ mr: 1 }} />
           Delete
         </MenuItem>
       </Menu>
+
+      {/* Create Threat Model Dialog */}
+      <Dialog open={createDialog.open} onClose={() => setCreateDialog({ ...createDialog, open: false })} maxWidth="sm" fullWidth>
+        <DialogTitle>Create New Threat Model</DialogTitle>
+        <DialogContent>
+          <TextField
+            autoFocus
+            margin="dense"
+            label="Threat Model Name"
+            fullWidth
+            variant="outlined"
+            value={createDialog.name}
+            onChange={(e) => setCreateDialog({ ...createDialog, name: e.target.value })}
+            sx={{ mb: 2 }}
+          />
+          <TextField
+            margin="dense"
+            label="Description"
+            fullWidth
+            multiline
+            rows={4}
+            variant="outlined"
+            value={createDialog.description}
+            onChange={(e) => setCreateDialog({ ...createDialog, description: e.target.value })}
+            sx={{ mb: 2 }}
+          />
+          <TextField
+            select
+            margin="dense"
+            label="Methodology"
+            fullWidth
+            variant="outlined"
+            value={createDialog.methodology}
+            onChange={(e) => setCreateDialog({ ...createDialog, methodology: e.target.value })}
+            sx={{ mb: 2 }}
+          >
+            <MenuItem value="STRIDE">STRIDE</MenuItem>
+            <MenuItem value="PASTA">PASTA</MenuItem>
+            <MenuItem value="LINDDUN">LINDDUN</MenuItem>
+            <MenuItem value="VAST">VAST</MenuItem>
+            <MenuItem value="DREAD">DREAD</MenuItem>
+          </TextField>
+          <TextField
+            select
+            margin="dense"
+            label="Project"
+            fullWidth
+            variant="outlined"
+            value={createDialog.projectId}
+            onChange={(e) => setCreateDialog({ ...createDialog, projectId: e.target.value })}
+          >
+            {projects.map((project: Project) => (
+              <MenuItem key={project.id} value={project.id}>
+                {project.name}
+              </MenuItem>
+            ))}
+          </TextField>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setCreateDialog({ ...createDialog, open: false })}>
+            Cancel
+          </Button>
+          <Button 
+            onClick={handleCreateThreatModel} 
+            variant="contained"
+            disabled={!createDialog.name || !createDialog.projectId || createThreatModelMutation.isPending}
+          >
+            {createThreatModelMutation.isPending ? <CircularProgress size={20} /> : 'Create'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={deleteConfirmOpen} onClose={() => setDeleteConfirmOpen(false)}>
+        <DialogTitle>Delete Threat Model</DialogTitle>
+        <DialogContent>
+          <Typography>
+            Are you sure you want to delete this threat model? This action cannot be undone.
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setDeleteConfirmOpen(false)}>Cancel</Button>
+          <Button 
+            onClick={handleDeleteThreatModel} 
+            color="error" 
+            variant="contained"
+            disabled={deleteThreatModelMutation.isPending}
+          >
+            {deleteThreatModelMutation.isPending ? <CircularProgress size={20} /> : 'Delete'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Notification Snackbar */}
+      <Snackbar
+        open={notification.open}
+        autoHideDuration={4000}
+        onClose={handleCloseNotification}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert
+          onClose={handleCloseNotification}
+          severity={notification.severity}
+          sx={{ width: '100%' }}
+        >
+          {notification.message}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 };

@@ -60,13 +60,34 @@ async function startServer() {
       crossOriginEmbedderPolicy: false,
     }));
 
-    // CORS configuration
-    app.use(cors({
-      origin: process.env['ALLOWED_ORIGINS']?.split(',') || '*',
+    // Secure CORS configuration
+    const corsOptions = {
+      origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
+        const allowedOrigins = [
+          'http://localhost:3000',
+          'http://localhost:3006',
+          'http://localhost:5173',
+          'http://localhost:5174',
+          'http://192.168.1.24:3000',
+          'http://192.168.1.24:3006',
+          'http://192.168.1.24:5174',
+          ...(process.env['ALLOWED_ORIGINS']?.split(',') || [])
+        ];
+        
+        if (!origin || allowedOrigins.includes(origin)) {
+          callback(null, true);
+        } else {
+          callback(new Error('Not allowed by CORS'), false);
+        }
+      },
       credentials: true,
       methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-      allowedHeaders: ['Content-Type', 'Authorization', 'X-Webhook-Signature'],
-    }));
+      allowedHeaders: ['Content-Type', 'Authorization', 'X-Webhook-Signature', 'X-Requested-With'],
+      exposedHeaders: ['X-Total-Count', 'X-RateLimit-Limit', 'X-RateLimit-Remaining'],
+      maxAge: 86400
+    };
+
+    app.use(cors(corsOptions));
 
     // Body parsing
     app.use(express.json({ limit: '10mb' }));
@@ -76,13 +97,21 @@ async function startServer() {
     // Trust proxy
     app.set('trust proxy', 1);
 
-    // Global rate limiting
-    app.use(rateLimiter);
-
-    // Routes
+    // Routes - Health check before rate limiting
     app.use('/health', createHealthRouter());
+
+    // Global rate limiting (after health check)
+    app.use(rateLimiter);
     app.use('/api/integrations', createIntegrationRouter(eventBus));
-    app.use('/webhooks', createWebhookRouter(eventBus));
+    
+    // Webhook routes with specific CORS configuration
+    const webhookCorsOptions = {
+      ...corsOptions,
+      methods: ['POST', 'OPTIONS'], // Only allow POST for webhooks
+      allowedHeaders: [...corsOptions.allowedHeaders, 'X-GitHub-Delivery', 'X-GitHub-Event', 'X-Hub-Signature']
+    };
+    
+    app.use('/webhooks', cors(webhookCorsOptions), createWebhookRouter(eventBus));
 
     // 404 handler
     app.use(notFoundHandler);

@@ -213,7 +213,7 @@ export class EventHandlerService {
       await notificationService.handleEvent(event);
 
       // Broadcast system events to all users if critical
-      if (event.data.severity === 'critical') {
+      if ((event.data as any).severity === 'critical') {
         await this.broadcastSystemAlert(event);
       }
 

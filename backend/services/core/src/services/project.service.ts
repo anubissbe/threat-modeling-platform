@@ -16,7 +16,7 @@ import { NotFoundError, ConflictError } from '../middleware/error-handler';
 export class ProjectService {
   async createProject(
     userId: string,
-    organizationId: string,
+    organizationNameOrId: string,
     data: CreateProjectRequest
   ): Promise<Project> {
     const client = await pool.connect();
@@ -24,14 +24,31 @@ export class ProjectService {
     try {
       await client.query('BEGIN');
 
+      // Look up organization ID if name was provided
+      let organizationId = organizationNameOrId;
+      
+      // Check if it's a valid UUID
+      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+      if (!uuidRegex.test(organizationNameOrId)) {
+        // It's a name, look up the ID
+        const orgResult = await client.query(
+          'SELECT id FROM organizations WHERE name = $1',
+          [organizationNameOrId]
+        );
+        if (orgResult.rows.length === 0) {
+          throw new NotFoundError('Organization not found');
+        }
+        organizationId = orgResult.rows[0].id;
+      }
+
       // Create the project
       const projectId = uuidv4();
       const projectResult = await client.query(`
         INSERT INTO projects (
-          id, name, description, organization_id, owner_id,
-          status, risk_level, metadata, created_at, updated_at
+          id, name, description, organization_id, created_by,
+          status, metadata, created_at, updated_at
         )
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8::jsonb, NOW(), NOW())
+        VALUES ($1, $2, $3, $4, $5, $6, $7::jsonb, NOW(), NOW())
         RETURNING *
       `, [
         projectId,
@@ -40,18 +57,16 @@ export class ProjectService {
         organizationId,
         userId,
         ProjectStatus.ACTIVE,
-        RiskLevel.LOW,
         JSON.stringify(data.metadata || {})
       ]);
 
       // Add the creator as project owner
       await client.query(`
         INSERT INTO project_members (
-          id, project_id, user_id, role, permissions, joined_at
+          project_id, user_id, role, permissions, joined_at
         )
-        VALUES ($1, $2, $3, $4, $5, NOW())
+        VALUES ($1, $2, $3, $4::jsonb, NOW())
       `, [
-        uuidv4(),
         projectId,
         userId,
         ProjectRole.OWNER,
@@ -114,8 +129,9 @@ export class ProjectService {
         SELECT DISTINCT p.*, COUNT(*) OVER() as total_count
         FROM projects p
         INNER JOIN project_members pm ON p.id = pm.project_id
+        INNER JOIN organizations o ON p.organization_id = o.id
         WHERE pm.user_id = $1 
-          AND p.organization_id = $2
+          AND o.name = $2
           AND p.archived_at IS NULL
       `;
       

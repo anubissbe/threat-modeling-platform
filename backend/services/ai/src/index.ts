@@ -99,8 +99,13 @@ class AIService {
     // Request logging
     this.app.use(requestLogger);
 
-    // Global rate limiting
-    this.app.use(globalRateLimit);
+    // Global rate limiting (exclude health checks)
+    this.app.use((req, res, next) => {
+      if (req.path === '/health' || req.path === '/metrics') {
+        return next();
+      }
+      return globalRateLimit(req, res, next);
+    });
 
     // Request validation
     this.app.use(validateRequestMiddleware);
@@ -234,6 +239,7 @@ class AIService {
       END;
       $$ language 'plpgsql';
 
+      DROP TRIGGER IF EXISTS update_threat_intelligence_updated_at ON threat_intelligence;
       CREATE TRIGGER update_threat_intelligence_updated_at 
         BEFORE UPDATE ON threat_intelligence 
         FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();

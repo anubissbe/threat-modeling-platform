@@ -363,3 +363,212 @@ export interface AIMetrics {
   }>;
   threat_intelligence_freshness: Date;
 }
+
+// Enhanced AI Types for World's #1 Threat Modeling Platform
+export interface PatternRecognitionResult {
+  recognized_patterns: {
+    pattern_id: string;
+    pattern_name: string;
+    match_score: number;
+    threat_indicators: string[];
+    mitigation_suggestions: string[];
+  }[];
+  anomaly_score: number;
+  confidence: number;
+  processing_time_ms: number;
+}
+
+export interface MachineLearningPrediction {
+  prediction_type: 'threat_emergence' | 'attack_evolution' | 'risk_escalation';
+  confidence: number;
+  time_horizon: string;
+  predicted_values: Record<string, number>;
+  contributing_factors: string[];
+  model_metadata: {
+    algorithm: string;
+    training_data_size: number;
+    accuracy_score: number;
+    last_trained: Date;
+  };
+}
+
+export interface AutomatedThreatGeneration {
+  generated_threats: {
+    threat_id: string;
+    name: string;
+    description: string;
+    category: string;
+    confidence: number;
+    novelty_score: number;
+    methodology_alignment: MethodologyType;
+    generation_reasoning: string;
+  }[];
+  generation_metadata: {
+    model_used: string;
+    creativity_score: number;
+    relevance_score: number;
+    total_generated: number;
+  };
+}
+
+export interface DeepLearningAnalysis {
+  threat_probability: number;
+  threat_categories: string[];
+  feature_importance: Record<string, number>;
+  model_confidence: number;
+  model_version: string;
+  analysis_depth: 'surface' | 'deep' | 'comprehensive';
+  neural_network_outputs: {
+    layer_activations: Record<string, number[]>;
+    attention_weights: Record<string, number>;
+    gradient_magnitudes: Record<string, number>;
+  };
+}
+
+export interface RealTimeIntelligence {
+  live_threat_feeds: {
+    feed_id: string;
+    last_update: Date;
+    threat_indicators: number;
+    severity_distribution: Record<string, number>;
+    confidence_level: number;
+  }[];
+  emerging_threats: {
+    threat_type: string;
+    emergence_velocity: number;
+    geographic_spread: string[];
+    affected_industries: string[];
+    first_detection: Date;
+  }[];
+  threat_actor_activities: {
+    actor_id: string;
+    activity_level: 'low' | 'medium' | 'high' | 'critical';
+    recent_campaigns: string[];
+    target_sectors: string[];
+    capability_evolution: string[];
+  }[];
+}
+
+export interface ContextualThreatData {
+  system_components: SystemComponent[];
+  data_flows: DataFlow[];
+  trust_boundaries: TrustBoundary[];
+  assets: Asset[];
+  existing_controls: SecurityControl[];
+  compliance_requirements: string[];
+  business_context: BusinessContext;
+  external_dependencies?: ExternalDependency[];
+}
+
+export interface ExternalDependency {
+  id: string;
+  name: string;
+  type: 'library' | 'service' | 'api' | 'database' | 'infrastructure';
+  version: string;
+  vendor: string;
+  criticality: 'low' | 'medium' | 'high' | 'critical';
+  last_security_review: Date;
+  known_vulnerabilities: string[];
+  update_frequency: string;
+  license_type: string;
+  compliance_status: 'compliant' | 'non_compliant' | 'under_review';
+}
+
+export interface DataFlow {
+  id: string;
+  source: string;
+  destination: string;
+  data_types: string[];
+  sensitivity: 'public' | 'internal' | 'confidential' | 'secret';
+  encryption: boolean;
+  authentication_required: boolean;
+  protocols: string[];
+  data_classification: 'user_input' | 'system_generated' | 'external_feed' | 'processed_data';
+}
+
+export interface ProcessingMetadata {
+  processing_time_ms: number;
+  models_used: string[];
+  data_sources_consulted: string[];
+  analysis_timestamp: Date;
+  version: string;
+  limitations: string[];
+  accuracy_score?: number;
+  confidence_level?: number;
+}
+
+export interface PredictiveAnalyticsResult {
+  short_term_predictions: {
+    threat_type: string;
+    probability: number;
+    time_horizon: string;
+    impact_assessment: number;
+    preparation_recommendations: string[];
+  }[];
+  medium_term_trends: {
+    trend_type: string;
+    growth_rate: number;
+    peak_probability: string;
+    affected_sectors: string[];
+    mitigation_window: string;
+  }[];
+  long_term_forecast: {
+    paradigm_shifts: string[];
+    technology_impacts: string[];
+    regulatory_changes: string[];
+    threat_landscape_evolution: string[];
+  };
+  confidence_intervals: Record<string, { lower: number; upper: number; }>;
+}
+
+export interface ThreatEvolutionAnalysis {
+  historical_patterns: {
+    threat_family: string;
+    evolution_timeline: {
+      date: Date;
+      variant: string;
+      capabilities: string[];
+      impact_level: number;
+    }[];
+    prediction_accuracy: number;
+  }[];
+  mutation_indicators: {
+    indicator_type: string;
+    current_value: number;
+    historical_average: number;
+    trend_direction: 'increasing' | 'stable' | 'decreasing';
+    significance_level: number;
+  }[];
+  adaptive_responses: {
+    threat_adaptation: string;
+    defensive_countermeasures: string[];
+    effectiveness_score: number;
+    implementation_priority: 'immediate' | 'short_term' | 'long_term';
+  }[];
+}
+
+export interface CollaborativeIntelligence {
+  crowd_sourced_threats: {
+    submission_id: string;
+    contributor: string;
+    threat_description: string;
+    verification_status: 'pending' | 'verified' | 'rejected';
+    confidence_votes: number;
+    expert_reviews: number;
+    adoption_rate: number;
+  }[];
+  community_insights: {
+    insight_type: string;
+    description: string;
+    supporting_evidence: string[];
+    community_consensus: number;
+    expert_validation: boolean;
+  }[];
+  collaborative_models: {
+    model_id: string;
+    contributors: number;
+    accuracy_improvement: number;
+    specialization_areas: string[];
+    last_update: Date;
+  }[];
+}

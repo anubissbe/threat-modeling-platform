@@ -1,7 +1,6 @@
 import axios, { type AxiosResponse, type InternalAxiosRequestConfig } from 'axios';
 import { store } from '@/store';
 import { refreshTokens, clearAuth } from '@/store/slices/authSlice';
-import { addNotification } from '@/store/slices/uiSlice';
 
 // API base configuration with runtime config fallback
 const getApiBaseUrl = (): string => {
@@ -10,8 +9,8 @@ const getApiBaseUrl = (): string => {
     return window.APP_CONFIG.API_BASE_URL;
   }
   
-  // Fallback to build-time environment variable
-  return import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
+  // Fallback to default
+  return 'http://localhost:3000';
 };
 
 const API_BASE_URL = getApiBaseUrl();
@@ -25,12 +24,34 @@ const apiClient = axios.create({
   },
 });
 
-// Request interceptor to add auth token
+// Helper to set auth token immediately
+export const setAuthToken = (token: string | null) => {
+  if (token) {
+    apiClient.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+    console.log('[API] Token set in axios defaults');
+  } else {
+    delete apiClient.defaults.headers.common['Authorization'];
+    console.log('[API] Token removed from axios defaults');
+  }
+};
+
+// Request interceptor to add auth token from localStorage as fallback
 apiClient.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
-    const token = localStorage.getItem('accessToken');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
+    // Debug logging
+    console.log('[API] Request interceptor:', {
+      url: config.url,
+      hasAuthHeader: !!config.headers.Authorization,
+      authHeader: config.headers.Authorization ? String(config.headers.Authorization).substring(0, 50) + '...' : 'none'
+    });
+    
+    // Only add from localStorage if not already set
+    if (!config.headers.Authorization) {
+      const token = localStorage.getItem('accessToken');
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+        console.log('[API] Added token from localStorage');
+      }
     }
     return config;
   },
@@ -39,39 +60,63 @@ apiClient.interceptors.request.use(
   }
 );
 
+// Track refresh attempts to prevent infinite loops
+let isRefreshing = false;
+let refreshAttempts = 0;
+const MAX_REFRESH_ATTEMPTS = 1;
+
 // Response interceptor for token refresh
 apiClient.interceptors.response.use(
   (response: AxiosResponse) => {
+    // Reset refresh attempts on successful request
+    refreshAttempts = 0;
     return response;
   },
   async (error) => {
     const originalRequest = error.config;
 
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    console.log('[API] Response error:', {
+      status: error.response?.status,
+      url: originalRequest.url,
+      message: error.response?.data?.message
+    });
+
+    // Don't retry auth endpoints to prevent loops
+    if (originalRequest.url?.includes('/auth/')) {
+      return Promise.reject(error);
+    }
+
+    if (error.response?.status === 401 && !originalRequest._retry && refreshAttempts < MAX_REFRESH_ATTEMPTS) {
       originalRequest._retry = true;
 
-      try {
-        // Try to refresh the token
-        await store.dispatch(refreshTokens()).unwrap();
-        
-        // Retry the original request with new token
-        const newToken = localStorage.getItem('accessToken');
-        if (newToken) {
-          originalRequest.headers.Authorization = `Bearer ${newToken}`;
-          return apiClient(originalRequest);
-        }
-      } catch (refreshError) {
-        // Refresh failed, clear auth and redirect to login
-        store.dispatch(clearAuth());
-        store.dispatch(addNotification({
-          type: 'error',
-          title: 'Session Expired',
-          message: 'Please log in again.',
-        }));
-        
-        // Redirect to login if not already there
-        if (window.location.pathname !== '/login') {
-          window.location.href = '/login';
+      // Prevent multiple simultaneous refresh attempts
+      if (!isRefreshing) {
+        isRefreshing = true;
+        refreshAttempts++;
+
+        try {
+          await store.dispatch(refreshTokens()).unwrap();
+          isRefreshing = false;
+          
+          // Retry the original request with new token
+          const token = localStorage.getItem('accessToken');
+          if (token) {
+            originalRequest.headers.Authorization = `Bearer ${token}`;
+            return apiClient(originalRequest);
+          }
+        } catch (refreshError) {
+          isRefreshing = false;
+          refreshAttempts = 0;
+          
+          // Clear auth and redirect to login
+          store.dispatch(clearAuth());
+          
+          // Only redirect if not already on login page
+          if (window.location.pathname !== '/login') {
+            window.location.href = '/login';
+          }
+          
+          return Promise.reject(refreshError);
         }
       }
     }
@@ -175,5 +220,5 @@ export const threatModelsApi = {
     apiClient.delete(`/api/threat-models/${id}`),
 };
 
-// Export the configured axios instance for custom requests
+// Export axios instance for direct use if needed
 export default apiClient;

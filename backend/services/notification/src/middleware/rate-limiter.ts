@@ -43,7 +43,7 @@ const createRateLimiter = (options: {
         errors: [{ field: 'rate_limit', message: options.message }],
       } as ApiResponse);
     },
-    store: redis.isHealthy() ? new RedisRateLimitStore() : undefined,
+    store: redis.isHealthy() ? new RedisRateLimitStore() as any : undefined,
   });
 };
 
@@ -188,7 +188,7 @@ export const dynamicRateLimit = (req: Request, res: Response, next: Function) =>
     },
   });
 
-  dynamicLimiter(req, res, next);
+  dynamicLimiter(req, res, next as any);
 };
 
 // Progressive rate limiter (increases restrictions on repeated violations)
@@ -250,7 +250,7 @@ export const emergencyBypass = (req: Request, res: Response, next: Function) => 
   }
 
   // Apply normal rate limiting
-  rateLimitMiddleware(req, res, next);
+  rateLimitMiddleware(req, res, next as any);
 };
 
 // Rate limit monitoring and alerts

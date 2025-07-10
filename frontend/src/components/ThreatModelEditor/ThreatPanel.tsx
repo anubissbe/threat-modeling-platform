@@ -296,68 +296,14 @@ export const ThreatPanel: React.FC<ThreatPanelProps> = ({
                         <ListItemText
                           primary={threat.name}
                           secondary={
-                            <Box sx={{ mt: 1 }}>
-                              <Box sx={{ display: 'flex', gap: 1, mb: 1 }}>
-                                <Chip
-                                  label={threat.severity}
-                                  size="small"
-                                  color={
-                                    threat.severity === 'critical' ||
-                                    threat.severity === 'high'
-                                      ? 'error'
-                                      : threat.severity === 'medium'
-                                      ? 'warning'
-                                      : 'default'
-                                  }
-                                />
-                                <Chip
-                                  label={`Likelihood: ${threat.likelihood}`}
-                                  size="small"
-                                  variant="outlined"
-                                />
-                                {threat.mitigations.length > 0 && (
-                                  <Chip
-                                    icon={<CheckCircleIcon />}
-                                    label={`${threat.mitigations.length} mitigations`}
-                                    size="small"
-                                    color="success"
-                                    variant="outlined"
-                                  />
-                                )}
-                              </Box>
-                              
-                              {/* Affected Elements */}
-                              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                                {threat.affectedComponents.map((compId) => (
-                                  <Chip
-                                    key={compId}
-                                    label={getAffectedElementName(compId)}
-                                    size="small"
-                                    icon={<LocationIcon />}
-                                    onClick={() => {
-                                      const node = nodes.find((n) => n.id === compId);
-                                      if (node) onSelectElement(node);
-                                    }}
-                                    sx={{ cursor: 'pointer' }}
-                                  />
-                                ))}
-                                {threat.affectedFlows.map((flowId) => (
-                                  <Chip
-                                    key={flowId}
-                                    label={getAffectedElementName(flowId)}
-                                    size="small"
-                                    icon={<TimelineIcon />}
-                                    onClick={() => {
-                                      const conn = connections.find(
-                                        (c) => c.id === flowId
-                                      );
-                                      if (conn) onSelectElement(conn);
-                                    }}
-                                    sx={{ cursor: 'pointer' }}
-                                  />
-                                ))}
-                              </Box>
-                            </Box>
+                            <>
+                              {`${threat.severity} - Likelihood: ${threat.likelihood}`}
+                              {threat.mitigations.length > 0 && ` - ${threat.mitigations.length} mitigations`}
+                              <br />
+                              <Typography component="span" variant="caption" color="text.disabled">
+                                {threat.affectedComponents.length + threat.affectedFlows.length} affected elements
+                              </Typography>
+                            </>
                           }
                         />
                         <ListItemSecondaryAction>
@@ -448,7 +394,7 @@ export const ThreatPanel: React.FC<ThreatPanelProps> = ({
                         onChange={(e) =>
                           setEditingThreat({
                             ...editingThreat,
-                            severity: e.target.value,
+                            severity: e.target.value as 'critical' | 'high' | 'medium' | 'low' | 'info',
                           })
                         }
                       >
@@ -469,7 +415,7 @@ export const ThreatPanel: React.FC<ThreatPanelProps> = ({
                         onChange={(e) =>
                           setEditingThreat({
                             ...editingThreat,
-                            likelihood: e.target.value,
+                            likelihood: e.target.value as 'very_high' | 'high' | 'medium' | 'low' | 'very_low',
                           })
                         }
                       >

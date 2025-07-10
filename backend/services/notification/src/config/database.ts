@@ -90,25 +90,38 @@ class Database {
   }
 }
 
-// Create database instance
-const config: DatabaseConfig = {
-  host: process.env['DB_HOST'] || 'localhost',
-  port: parseInt(process.env['DB_PORT'] || '5432'),
-  database: process.env['DB_NAME'] || 'threatmodel_db',
-  user: process.env['DB_USER'] || 'threatmodel',
-  password: process.env['DB_PASSWORD'] || 'threatmodel123',
-  ssl: process.env['NODE_ENV'] === 'production',
-  max: parseInt(process.env['DB_MAX_CONNECTIONS'] || '20'),
-  idleTimeoutMillis: parseInt(process.env['DB_IDLE_TIMEOUT'] || '30000'),
-  connectionTimeoutMillis: parseInt(process.env['DB_CONNECTION_TIMEOUT'] || '2000'),
-};
+// Create database instance - Use DATABASE_URL if available
+let config: DatabaseConfig;
+
+if (process.env['DATABASE_URL']) {
+  // Parse DATABASE_URL for compatibility with Docker setup
+  const dbUrl = new URL(process.env['DATABASE_URL']);
+  config = {
+    host: dbUrl.hostname,
+    port: parseInt(dbUrl.port) || 5432,
+    database: dbUrl.pathname.slice(1), // Remove leading slash
+    user: dbUrl.username,
+    password: dbUrl.password,
+    ssl: false, // Disable SSL for local development
+    max: parseInt(process.env['DB_MAX_CONNECTIONS'] || '20'),
+    idleTimeoutMillis: parseInt(process.env['DB_IDLE_TIMEOUT'] || '30000'),
+    connectionTimeoutMillis: parseInt(process.env['DB_CONNECTION_TIMEOUT'] || '2000'),
+  };
+} else {
+  // Fallback to individual environment variables
+  config = {
+    host: process.env['DB_HOST'] || 'localhost',
+    port: parseInt(process.env['DB_PORT'] || '5432'),
+    database: process.env['DB_NAME'] || 'threatmodel_db',
+    user: process.env['DB_USER'] || 'threatmodel',
+    password: process.env['DB_PASSWORD'] || 'threatmodel123',
+    ssl: false, // Disable SSL for local development
+    max: parseInt(process.env['DB_MAX_CONNECTIONS'] || '20'),
+    idleTimeoutMillis: parseInt(process.env['DB_IDLE_TIMEOUT'] || '30000'),
+    connectionTimeoutMillis: parseInt(process.env['DB_CONNECTION_TIMEOUT'] || '2000'),
+  };
+}
 
 export const database = new Database(config);
-
-// Auto-connect on import
-database.connect().catch((error) => {
-  logger.error('Failed to connect to database on startup:', error);
-  process.exit(1);
-});
 
 export default database;

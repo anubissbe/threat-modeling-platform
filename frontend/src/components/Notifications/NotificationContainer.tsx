@@ -5,9 +5,11 @@ import { removeNotification } from '@/store/slices/uiSlice';
 
 type TransitionProps = Omit<SlideProps, 'children'>;
 
-function SlideTransition(props: TransitionProps) {
-  return <Slide {...props} direction="up" />;
-}
+const SlideTransition = React.forwardRef<unknown, TransitionProps>(
+  function SlideTransition(props, ref) {
+    return <Slide {...props} direction="up" ref={ref} />;
+  }
+);
 
 export const NotificationContainer: React.FC = () => {
   const dispatch = useAppDispatch();
@@ -19,15 +21,20 @@ export const NotificationContainer: React.FC = () => {
 
   // Auto-remove notifications after their duration
   useEffect(() => {
+    const timers: NodeJS.Timeout[] = [];
+    
     notifications.forEach((notification) => {
       if (notification.duration && notification.duration > 0) {
         const timer = setTimeout(() => {
           dispatch(removeNotification(notification.id));
         }, notification.duration);
-
-        return () => clearTimeout(timer);
+        timers.push(timer);
       }
     });
+    
+    return () => {
+      timers.forEach(timer => clearTimeout(timer));
+    };
   }, [notifications, dispatch]);
 
   return (

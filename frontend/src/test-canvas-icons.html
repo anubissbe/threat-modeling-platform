@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Canvas Icons Test</title>
+</head>
+<body>
+    <h1>Canvas Icons Test</h1>
+    <canvas id="testCanvas" width="800" height="400" style="border: 1px solid #ccc;"></canvas>
+    
+    <script>
+        const canvas = document.getElementById('testCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        // Test the same drawing functions as in the Canvas component
+        const drawNodeIcon = (ctx, nodeType, centerX, centerY) => {
+            ctx.strokeStyle = '#424242';
+            ctx.fillStyle = '#424242';
+            ctx.lineWidth = 2;
+            
+            switch (nodeType) {
+                case 'user':
+                    // Draw a simple person icon
+                    ctx.beginPath();
+                    ctx.arc(centerX, centerY - 8, 6, 0, 2 * Math.PI); // head
+                    ctx.fill();
+                    ctx.beginPath();
+                    ctx.arc(centerX, centerY + 6, 12, 0, Math.PI); // body
+                    ctx.stroke();
+                    break;
+                    
+                case 'process':
+                case 'webserver':
+                    // Draw a simple computer/server icon
+                    ctx.fillRect(centerX - 12, centerY - 8, 24, 16);
+                    ctx.strokeRect(centerX - 12, centerY - 8, 24, 16);
+                    ctx.fillRect(centerX - 2, centerY + 8, 4, 3);
+                    break;
+                    
+                case 'database':
+                    // Draw a simple database icon
+                    ctx.beginPath();
+                    ctx.ellipse(centerX, centerY - 6, 12, 4, 0, 0, 2 * Math.PI);
+                    ctx.fill();
+                    ctx.stroke();
+                    ctx.fillRect(centerX - 12, centerY - 6, 24, 12);
+                    ctx.strokeRect(centerX - 12, centerY - 6, 24, 12);
+                    ctx.beginPath();
+                    ctx.ellipse(centerX, centerY + 6, 12, 4, 0, 0, 2 * Math.PI);
+                    ctx.stroke();
+                    break;
+                    
+                case 'external':
+                case 'cloud':
+                    // Draw a simple cloud icon
+                    ctx.beginPath();
+                    ctx.arc(centerX - 6, centerY, 6, 0, 2 * Math.PI);
+                    ctx.arc(centerX + 6, centerY, 6, 0, 2 * Math.PI);
+                    ctx.arc(centerX, centerY - 4, 8, 0, 2 * Math.PI);
+                    ctx.fill();
+                    break;
+                    
+                case 'api':
+                    // Draw a simple API icon (gear)
+                    ctx.beginPath();
+                    const spokes = 8;
+                    const outerRadius = 10;
+                    const innerRadius = 6;
+                    for (let i = 0; i < spokes; i++) {
+                        const angle = (i * 2 * Math.PI) / spokes;
+                        const x1 = centerX + Math.cos(angle) * innerRadius;
+                        const y1 = centerY + Math.sin(angle) * innerRadius;
+                        const x2 = centerX + Math.cos(angle) * outerRadius;
+                        const y2 = centerY + Math.sin(angle) * outerRadius;
+                        ctx.moveTo(x1, y1);
+                        ctx.lineTo(x2, y2);
+                    }
+                    ctx.stroke();
+                    ctx.beginPath();
+                    ctx.arc(centerX, centerY, 4, 0, 2 * Math.PI);
+                    ctx.stroke();
+                    break;
+                    
+                default:
+                    // Default icon - simple rectangle with question mark
+                    ctx.strokeRect(centerX - 8, centerY - 8, 16, 16);
+                    ctx.font = '14px sans-serif';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText('?', centerX, centerY);
+                    break;
+            }
+        };
+        
+        // Test all icon types
+        const iconTypes = ['user', 'process', 'database', 'external', 'api', 'webserver'];
+        const iconLabels = ['User', 'Process', 'Database', 'External', 'API', 'Web Server'];
+        
+        iconTypes.forEach((type, index) => {
+            const x = 100 + (index * 120);
+            const y = 200;
+            
+            // Draw node background
+            ctx.fillStyle = '#ffffff';
+            ctx.strokeStyle = '#bdbdbd';
+            ctx.lineWidth = 1;
+            ctx.fillRect(x - 50, y - 30, 100, 60);
+            ctx.strokeRect(x - 50, y - 30, 100, 60);
+            
+            // Draw icon
+            drawNodeIcon(ctx, type, x, y - 10);
+            
+            // Draw label
+            ctx.fillStyle = '#212121';
+            ctx.font = '12px Arial, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(iconLabels[index], x, y + 15);
+        });
+        
+        // Add title
+        ctx.fillStyle = '#000000';
+        ctx.font = '20px Arial, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('Canvas Icon Rendering Test', 400, 50);
+        
+        console.log('Canvas icons test rendered successfully!');
+    </script>
+</body>
+</html>

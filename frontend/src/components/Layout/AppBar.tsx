@@ -56,8 +56,11 @@ export const AppBar: React.FC<AppBarProps> = ({ drawerWidth, sidebarOpen }) => {
     dispatch(toggleTheme());
   };
 
-  const getUserInitials = (firstName: string, lastName: string): string => {
-    return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase();
+  const getUserInitials = (firstName?: string, lastName?: string): string => {
+    if (!firstName && !lastName) return 'U';
+    const first = firstName?.charAt(0) || '';
+    const last = lastName?.charAt(0) || '';
+    return `${first}${last}`.toUpperCase() || 'U';
   };
 
   const getRoleColor = (role: string): string => {
