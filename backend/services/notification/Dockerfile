@@ -1,5 +1,5 @@
 # Use Node.js 20 LTS Alpine image for smaller size and better security
-FROM node:20-alpine AS base
+FROM node:22-alpine AS base
 
 # Install build dependencies for native modules
 RUN apk add --no-cache \
@@ -41,7 +41,7 @@ COPY . .
 # RUN npm run build
 
 # Production stage
-FROM node:20-alpine AS production
+FROM node:22-alpine AS production
 
 # Install runtime dependencies
 RUN apk add --no-cache \
