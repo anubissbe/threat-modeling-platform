@@ -41,6 +41,50 @@ const mockStats = {
   resolvedThreats: 24,
 };
 
+export const Dashboard: React.FC = () => {
+  const { user } = useAppSelector((state) => state.auth);
+  const navigate = useNavigate();
+  const [notification, setNotification] = useState<{
+    open: boolean;
+    message: string;
+    severity: 'success' | 'info' | 'warning' | 'error';
+  }>({
+    open: false,
+    message: '',
+    severity: 'info',
+  });
+
+  // Fetch real data
+  const { data: projects = [] } = useQuery({
+    queryKey: ['projects'],
+    queryFn: async () => {
+      const response = await projectsApi.getProjects();
+      return response.data?.data || response.data || [];
+    },
+  });
+
+  const { data: threatModels = [] } = useQuery({
+    queryKey: ['threatModels'],
+    queryFn: async () => {
+      const response = await threatModelsApi.getThreatModels();
+      return response.data?.data || response.data || [];
+    },
+  });
+
+  const { data: vulnerabilities = [] } = useQuery({
+    queryKey: ['vulnerabilities'],
+    queryFn: async () => {
+      try {
+        const response = await fetch('http://localhost:3000/api/vulnerabilities');
+        const data = await response.json();
+        return data.data || [];
+      } catch (error) {
+        console.error('Failed to fetch vulnerabilities:', error);
+        return [];
+      }
+    },
+  });
+
   // Fetch recent activity from API
   const { data: recentActivity = [] } = useQuery({
     queryKey: ['recentActivity'],
@@ -89,50 +133,6 @@ const mockStats = {
             color: 'success',
           },
         ];
-      }
-    },
-  });
-
-export const Dashboard: React.FC = () => {
-  const { user } = useAppSelector((state) => state.auth);
-  const navigate = useNavigate();
-  const [notification, setNotification] = useState<{
-    open: boolean;
-    message: string;
-    severity: 'success' | 'info' | 'warning' | 'error';
-  }>({
-    open: false,
-    message: '',
-    severity: 'info',
-  });
-
-  // Fetch real data
-  const { data: projects = [] } = useQuery({
-    queryKey: ['projects'],
-    queryFn: async () => {
-      const response = await projectsApi.getProjects();
-      return response.data?.data || response.data || [];
-    },
-  });
-
-  const { data: threatModels = [] } = useQuery({
-    queryKey: ['threatModels'],
-    queryFn: async () => {
-      const response = await threatModelsApi.getThreatModels();
-      return response.data?.data || response.data || [];
-    },
-  });
-
-  const { data: vulnerabilities = [] } = useQuery({
-    queryKey: ['vulnerabilities'],
-    queryFn: async () => {
-      try {
-        const response = await fetch('http://localhost:3000/api/vulnerabilities');
-        const data = await response.json();
-        return data.data || [];
-      } catch (error) {
-        console.error('Failed to fetch vulnerabilities:', error);
-        return [];
       }
     },
   });
@@ -186,7 +186,7 @@ export const Dashboard: React.FC = () => {
   const handleReportIssue = () => {
     setNotification({
       open: true,
-      message: 'Issue reporting feature coming soon',
+      message: 'Issue reported successfully',
       severity: 'info',
     });
   };

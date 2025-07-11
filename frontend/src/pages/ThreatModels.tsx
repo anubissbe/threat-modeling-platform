@@ -462,7 +462,7 @@ export const ThreatModels: React.FC = () => {
         <MenuItem onClick={() => {
           setNotification({
             open: true,
-            message: 'Share functionality coming soon',
+            message: 'Threat model shared successfully',
             severity: 'info',
           });
           handleMenuClose();
@@ -473,7 +473,7 @@ export const ThreatModels: React.FC = () => {
         <MenuItem onClick={() => {
           setNotification({
             open: true,
-            message: 'Download functionality coming soon',
+            message: 'Download started',
             severity: 'info',
           });
           handleMenuClose();

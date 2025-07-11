@@ -29,11 +29,11 @@ import {
   Reply as ReplyIcon,
   Edit as EditIcon,
   Delete as DeleteIcon,
-  Resolve as ResolveIcon,
+  CheckCircleOutline as ResolveIcon,
   Undo as UndoIcon,
   Attach as AttachIcon,
   EmojiEmotions as EmojiIcon,
-  Mention as MentionIcon,
+  AlternateEmail as MentionIcon,
   CheckCircle as CheckCircleIcon,
   Schedule as ScheduleIcon
 } from '@mui/icons-material';

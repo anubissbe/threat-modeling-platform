@@ -23,6 +23,7 @@ import {
   Help,
   BugReport,
   Code,
+  Warning,
 } from '@mui/icons-material';
 import { useAppSelector } from '@/store';
 
@@ -56,22 +57,24 @@ const navigationItems: NavigationItem[] = [
     icon: <Security />,
   },
   {
+    text: 'Threats',
+    path: '/threats',
+    icon: <Warning />,
+  },
+  {
     text: 'Risk Assessment',
     path: '/risk-assessment',
     icon: <Assessment />,
-    badge: 'Beta',
   },
   {
     text: 'Vulnerabilities',
     path: '/vulnerabilities',
     icon: <BugReport />,
-    badge: 'New',
   },
   {
     text: 'TMAC Editor',
     path: '/tmac',
     icon: <Code />,
-    badge: 'New',
   },
 ];
 

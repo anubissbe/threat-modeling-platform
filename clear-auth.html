@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Clear Auth State</title>
+</head>
+<body>
+    <h1>Clear Authentication State</h1>
+    <p>Open this file in your browser at http://localhost:3006/ domain to clear auth state</p>
+    <button onclick="clearAuth()">Clear Auth State</button>
+    <pre id="output"></pre>
+    
+    <script>
+        function clearAuth() {
+            const output = document.getElementById('output');
+            
+            // Show current state
+            output.textContent = 'Current state:\n';
+            output.textContent += 'Access Token: ' + localStorage.getItem('accessToken') + '\n';
+            output.textContent += 'Refresh Token: ' + localStorage.getItem('refreshToken') + '\n\n';
+            
+            // Clear localStorage
+            localStorage.removeItem('accessToken');
+            localStorage.removeItem('refreshToken');
+            localStorage.clear();
+            
+            output.textContent += 'Auth state cleared!\n';
+            output.textContent += 'Access Token: ' + localStorage.getItem('accessToken') + '\n';
+            output.textContent += 'Refresh Token: ' + localStorage.getItem('refreshToken') + '\n';
+            
+            // Clear session storage too
+            sessionStorage.clear();
+            
+            output.textContent += '\nPlease refresh the page and try logging in again.';
+        }
+        
+        // Auto-run on load
+        window.onload = function() {
+            document.getElementById('output').textContent = 'Current tokens:\n' +
+                'Access Token: ' + (localStorage.getItem('accessToken') || 'none') + '\n' +
+                'Refresh Token: ' + (localStorage.getItem('refreshToken') || 'none');
+        }
+    </script>
+</body>
+</html>

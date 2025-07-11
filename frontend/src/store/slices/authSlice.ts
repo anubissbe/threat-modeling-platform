@@ -59,12 +59,20 @@ export const login = createAsyncThunk(
     try {
       const loginResponse = await authApi.login(credentials);
       
+      // Validate response
+      if (!loginResponse.data?.accessToken || !loginResponse.data?.refreshToken) {
+        throw new Error('Invalid login response - missing tokens');
+      }
+      
       // Store tokens in localStorage
       localStorage.setItem('accessToken', loginResponse.data.accessToken);
       localStorage.setItem('refreshToken', loginResponse.data.refreshToken);
       
       // Debug token storage
-      console.log('[AUTH] Tokens stored in localStorage');
+      console.log('[AUTH] Tokens stored in localStorage:', {
+        accessToken: loginResponse.data.accessToken.substring(0, 50) + '...',
+        refreshToken: loginResponse.data.refreshToken.substring(0, 50) + '...'
+      });
       debugAuth.checkToken();
       
       // Set token in axios immediately
@@ -188,7 +196,7 @@ export const initializeAuth = createAsyncThunk(
         console.log('Access token expired or expiring soon, refreshing...');
         
         try {
-          const refreshResponse = await authApi.refreshToken(refreshToken);
+          const refreshResponse = await authApi.refreshToken({ refreshToken });
           const newTokens = refreshResponse.data;
           
           // Update tokens in localStorage
@@ -228,7 +236,7 @@ export const initializeAuth = createAsyncThunk(
       
       // Try refreshing token if profile request failed
       try {
-        const refreshResponse = await authApi.refreshToken(refreshToken);
+        const refreshResponse = await authApi.refreshToken({ refreshToken });
         const newTokens = refreshResponse.data;
         
         // Update tokens in localStorage

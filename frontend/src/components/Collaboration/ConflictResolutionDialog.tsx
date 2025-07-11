@@ -30,7 +30,7 @@ import {
   CheckCircle as CheckCircleIcon,
   Merge as MergeIcon,
   Cancel as CancelIcon,
-  Accept as AcceptIcon,
+  Check as AcceptIcon,
   ExpandMore as ExpandMoreIcon,
   Code as CodeIcon,
   Timeline as TimelineIcon,

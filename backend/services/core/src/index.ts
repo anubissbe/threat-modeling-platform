@@ -10,6 +10,7 @@ import { createVulnerabilityRouter } from './routes/vulnerabilities';
 import { createActivityRouter } from './routes/activity';
 import { createHealthRouter } from './routes/health';
 import { createMetricsRouter, trackMetrics } from './routes/metrics';
+import { createRiskAssessmentRouter } from './routes/risk-assessments';
 import { errorHandler, notFoundHandler } from './middleware/error-handler';
 import { authenticateToken } from './middleware/auth';
 import { logger } from './utils/logger';
@@ -90,6 +91,7 @@ app.use('/api/methodologies', authenticateToken, createMethodologyRouter());
 app.use('/api/threats', authenticateToken, createThreatRouter());
 app.use('/api/vulnerabilities', authenticateToken, createVulnerabilityRouter());
 app.use('/api/activity', authenticateToken, createActivityRouter());
+app.use('/api/risk-assessments', authenticateToken, createRiskAssessmentRouter());
 
 // 404 handler
 app.use(notFoundHandler);

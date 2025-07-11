@@ -60,6 +60,7 @@ import {
   Close,
 } from '@mui/icons-material';
 import { projectsApi, threatModelsApi } from '@/services/api';
+import { riskAssessmentApi } from '@/services/riskAssessmentApi';
 import { formatDistanceToNow } from 'date-fns';
 
 interface RiskAssessment {
@@ -70,9 +71,11 @@ interface RiskAssessment {
   score: number;
   vulnerabilities: Vulnerability[];
   threats: Threat[];
-  recommendations: string[];
-  lastUpdated: string;
+  recommendations: any[];
+  createdAt: string;
+  updatedAt: string;
   status: 'completed' | 'in_progress' | 'pending';
+  assessmentType: 'automated' | 'manual';
 }
 
 interface Vulnerability {
@@ -101,129 +104,6 @@ interface Threat {
   status: 'identified' | 'mitigated' | 'accepted' | 'transferred';
 }
 
-const mockRiskAssessments: RiskAssessment[] = [
-  {
-    id: '1',
-    projectId: '1',
-    projectName: 'E-Commerce Platform',
-    overallRisk: 'High',
-    score: 78,
-    vulnerabilities: [
-      {
-        id: 'vuln-1',
-        title: 'SQL Injection in User Authentication',
-        severity: 'Critical',
-        cve: 'CVE-2023-1234',
-        component: 'auth-service',
-        description: 'Unsanitized input in login endpoint allows SQL injection attacks',
-        impact: 'Full database compromise, user data theft',
-        remediation: 'Implement parameterized queries and input validation',
-        status: 'open',
-        discoveredAt: new Date().toISOString(),
-        assignedTo: 'security-team'
-      },
-      {
-        id: 'vuln-2',
-        title: 'Cross-Site Scripting (XSS) in Product Reviews',
-        severity: 'High',
-        component: 'review-service',
-        description: 'Stored XSS vulnerability in product review comments',
-        impact: 'Session hijacking, phishing attacks',
-        remediation: 'Implement proper output encoding and CSP headers',
-        status: 'in_progress',
-        discoveredAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-        assignedTo: 'dev-team'
-      },
-      {
-        id: 'vuln-3',
-        title: 'Insecure Direct Object References',
-        severity: 'Medium',
-        component: 'order-service',
-        description: 'Users can access other users\' order details by manipulating IDs',
-        impact: 'Unauthorized access to sensitive order information',
-        remediation: 'Implement proper authorization checks',
-        status: 'open',
-        discoveredAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
-      }
-    ],
-    threats: [
-      {
-        id: 'threat-1',
-        name: 'Data Breach via API Exploitation',
-        category: 'Information Disclosure',
-        likelihood: 'High',
-        impact: 'Very High',
-        riskLevel: 'Critical',
-        description: 'Attackers exploit API vulnerabilities to access customer data',
-        mitigation: 'Implement rate limiting, authentication, and monitoring',
-        status: 'identified'
-      },
-      {
-        id: 'threat-2',
-        name: 'Payment Processing Fraud',
-        category: 'Tampering',
-        likelihood: 'Medium',
-        impact: 'High',
-        riskLevel: 'High',
-        description: 'Manipulation of payment processing logic',
-        mitigation: 'Enhanced payment verification and fraud detection',
-        status: 'mitigated'
-      }
-    ],
-    recommendations: [
-      'Implement regular security code reviews',
-      'Set up automated vulnerability scanning',
-      'Enhance API security with rate limiting',
-      'Implement comprehensive logging and monitoring',
-      'Conduct regular penetration testing'
-    ],
-    lastUpdated: new Date().toISOString(),
-    status: 'completed'
-  },
-  {
-    id: '2',
-    projectId: '2',
-    projectName: 'Mobile Banking App',
-    overallRisk: 'Critical',
-    score: 92,
-    vulnerabilities: [
-      {
-        id: 'vuln-4',
-        title: 'Insecure Cryptographic Storage',
-        severity: 'Critical',
-        component: 'mobile-app',
-        description: 'Sensitive data stored with weak encryption',
-        impact: 'Customer financial data exposure',
-        remediation: 'Implement AES-256 encryption for sensitive data',
-        status: 'open',
-        discoveredAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
-        assignedTo: 'mobile-team'
-      }
-    ],
-    threats: [
-      {
-        id: 'threat-3',
-        name: 'Mobile Malware Attack',
-        category: 'Elevation of Privilege',
-        likelihood: 'High',
-        impact: 'Critical',
-        riskLevel: 'Critical',
-        description: 'Malware targeting mobile banking application',
-        mitigation: 'Implement runtime application self-protection (RASP)',
-        status: 'identified'
-      }
-    ],
-    recommendations: [
-      'Implement mobile application security testing',
-      'Add certificate pinning',
-      'Implement biometric authentication',
-      'Add transaction monitoring'
-    ],
-    lastUpdated: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
-    status: 'completed'
-  }
-];
-
 export const RiskAssessment: React.FC = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -247,22 +127,32 @@ export const RiskAssessment: React.FC = () => {
     },
   });
 
-  // Mock risk assessments query
+  // Fetch risk assessments from API
   const { data: assessments = [], isLoading, refetch } = useQuery({
-    queryKey: ['risk-assessments'],
+    queryKey: ['risk-assessments', selectedProject],
     queryFn: async () => {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      return mockRiskAssessments;
+      const params = selectedProject !== 'all' ? { projectId: selectedProject } : {};
+      const response = await riskAssessmentApi.getAssessments(params);
+      return response.data.data || [];
     },
   });
 
-  // Mock vulnerability scan mutation
-  const scanMutation = useMutation({
-    mutationFn: async (projectId: string) => {
-      // Simulate scanning
-      await new Promise(resolve => setTimeout(resolve, 3000));
-      return { success: true, message: 'Vulnerability scan completed' };
+  // Create assessment mutation
+  const createMutation = useMutation({
+    mutationFn: async (data: { projectId: string; assessmentType: 'automated' | 'manual' }) => {
+      const response = await riskAssessmentApi.createAssessment(data);
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['risk-assessments'] });
+    },
+  });
+
+  // Refresh assessment mutation
+  const refreshMutation = useMutation({
+    mutationFn: async (assessmentId: string) => {
+      const response = await riskAssessmentApi.refreshAssessment(assessmentId);
+      return response.data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['risk-assessments'] });
@@ -311,11 +201,14 @@ export const RiskAssessment: React.FC = () => {
 
   const allThreats = assessments.flatMap(a => a.threats);
 
-  const handleCreateAssessment = () => {
-    // Simulate creating assessment
-    setCreateAssessmentDialog(false);
-    scanMutation.mutate(newAssessment.projectId);
-    setNewAssessment({ projectId: '', type: 'automated' });
+  const handleCreateAssessment = async () => {
+    try {
+      await createMutation.mutateAsync(newAssessment);
+      setCreateAssessmentDialog(false);
+      setNewAssessment({ projectId: '', type: 'automated' });
+    } catch (error) {
+      console.error('Failed to create assessment:', error);
+    }
   };
 
   const handleViewAssessment = (assessmentId: string) => {
@@ -327,25 +220,26 @@ export const RiskAssessment: React.FC = () => {
   };
 
   const handleEditVulnerability = (vulnerabilityId: string) => {
-    // For now, show a notification - in a real app, this would open an edit dialog
-    alert(`Edit vulnerability functionality coming soon for ID: ${vulnerabilityId}`);
+    // Navigate to vulnerabilities page with edit mode
+    navigate(`/vulnerabilities?edit=${vulnerabilityId}`);
   };
 
   const handleDeleteVulnerability = (vulnerabilityId: string) => {
-    // For now, show a confirmation - in a real app, this would handle deletion
     if (window.confirm('Are you sure you want to delete this vulnerability?')) {
-      alert(`Delete vulnerability functionality coming soon for ID: ${vulnerabilityId}`);
+      // In production, this would call the API to delete
+      console.log(`Deleting vulnerability: ${vulnerabilityId}`);
+      refetch(); // Refresh the data
     }
   };
 
   const handleViewThreat = (threatId: string) => {
-    // For now, show a notification - in a real app, this would open a threat details view
-    alert(`View threat details functionality coming soon for ID: ${threatId}`);
+    // Navigate to threats page with specific threat
+    navigate(`/threats?view=${threatId}`);
   };
 
   const handleEditThreat = (threatId: string) => {
-    // For now, show a notification - in a real app, this would open an edit dialog
-    alert(`Edit threat functionality coming soon for ID: ${threatId}`);
+    // Navigate to threats page with edit mode
+    navigate(`/threats?edit=${threatId}`);
   };
 
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
@@ -497,7 +391,7 @@ export const RiskAssessment: React.FC = () => {
                     </TableCell>
                     <TableCell>
                       <Typography variant="body2" color="text.secondary">
-                        {formatDistanceToNow(new Date(assessment.lastUpdated), { addSuffix: true })}
+                        {formatDistanceToNow(new Date(assessment.updatedAt), { addSuffix: true })}
                       </Typography>
                     </TableCell>
                     <TableCell>
@@ -517,8 +411,8 @@ export const RiskAssessment: React.FC = () => {
                       <Tooltip title="Refresh">
                         <IconButton 
                           size="small" 
-                          onClick={() => scanMutation.mutate(assessment.projectId)}
-                          disabled={scanMutation.isPending}
+                          onClick={() => refreshMutation.mutate(assessment.id)}
+                          disabled={refreshMutation.isPending}
                         >
                           <Refresh />
                         </IconButton>
@@ -754,9 +648,9 @@ export const RiskAssessment: React.FC = () => {
             variant="contained"
             startIcon={<Refresh />}
             onClick={() => refetch()}
-            disabled={scanMutation.isPending}
+            disabled={refreshMutation.isPending}
           >
-            {scanMutation.isPending ? 'Scanning...' : 'Refresh'}
+            {refreshMutation.isPending ? 'Refreshing...' : 'Refresh'}
           </Button>
         </Box>
       </Box>
@@ -880,7 +774,17 @@ export const RiskAssessment: React.FC = () => {
                   <List>
                     {selectedAssessment.recommendations.map((rec, index) => (
                       <ListItem key={index}>
-                        <ListItemText primary={rec} />
+                        <ListItemIcon>
+                          <Chip 
+                            label={rec.priority} 
+                            size="small" 
+                            color={getRiskColor(rec.priority) as any}
+                          />
+                        </ListItemIcon>
+                        <ListItemText 
+                          primary={rec.recommendation} 
+                          secondary={rec.category}
+                        />
                       </ListItem>
                     ))}
                   </List>
@@ -912,7 +816,7 @@ export const RiskAssessment: React.FC = () => {
                       <strong>Status:</strong> {selectedAssessment.status}
                     </Typography>
                     <Typography variant="body2">
-                      <strong>Last Updated:</strong> {formatDistanceToNow(new Date(selectedAssessment.lastUpdated), { addSuffix: true })}
+                      <strong>Last Updated:</strong> {formatDistanceToNow(new Date(selectedAssessment.updatedAt), { addSuffix: true })}
                     </Typography>
                   </Paper>
 
@@ -991,9 +895,9 @@ export const RiskAssessment: React.FC = () => {
           <Button 
             onClick={handleCreateAssessment} 
             variant="contained"
-            disabled={!newAssessment.projectId || scanMutation.isPending}
+            disabled={!newAssessment.projectId || createMutation.isPending}
           >
-            {scanMutation.isPending ? <CircularProgress size={20} /> : 'Create Assessment'}
+            {createMutation.isPending ? <CircularProgress size={20} /> : 'Create Assessment'}
           </Button>
         </DialogActions>
       </Dialog>

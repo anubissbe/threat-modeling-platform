@@ -146,6 +146,36 @@ const services = {
     target: process.env.TMAC_SERVICE_URL || 'http://tmac-service:3010',
     changeOrigin: true,
     pathRewrite: { '^/api/tmac': '/api/tmac' }
+  },
+  '/api/vulnerabilities': {
+    target: process.env.CORE_SERVICE_URL || 'http://core-service:3002',
+    changeOrigin: true,
+    pathRewrite: { '^/api/vulnerabilities': '/api/vulnerabilities' }
+  },
+  '/api/activity': {
+    target: process.env.CORE_SERVICE_URL || 'http://core-service:3002',
+    changeOrigin: true,
+    pathRewrite: { '^/api/activity': '/api/activity' }
+  },
+  '/api/metrics': {
+    target: process.env.CORE_SERVICE_URL || 'http://core-service:3002',
+    changeOrigin: true,
+    pathRewrite: { '^/api/metrics': '/api/metrics' }
+  },
+  '/api/security-tools': {
+    target: process.env.SECURITY_TOOLS_SERVICE_URL || 'http://security-tools-service:3011',
+    changeOrigin: true,
+    pathRewrite: { '^/api/security-tools': '/api/security-tools' }
+  },
+  '/api/collaboration': {
+    target: process.env.COLLABORATION_SERVICE_URL || 'http://collaboration-service:3012',
+    changeOrigin: true,
+    pathRewrite: { '^/api/collaboration': '/api/collaboration' }
+  },
+  '/api/risk-assessments': {
+    target: process.env.CORE_SERVICE_URL || 'http://core-service:3002',
+    changeOrigin: true,
+    pathRewrite: { '^/api/risk-assessments': '/api/risk-assessments' }
   }
 };
 

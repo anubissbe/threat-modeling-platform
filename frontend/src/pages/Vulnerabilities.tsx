@@ -372,8 +372,12 @@ export const Vulnerabilities: React.FC = () => {
   };
 
   const handleEditVulnerability = (vulnerabilityId: string) => {
-    // For now, show a notification - in a real app, this would open an edit dialog
-    alert(`Edit vulnerability functionality coming soon for ID: ${vulnerabilityId}`);
+    // Find the vulnerability and open create/edit dialog
+    const vuln = vulnerabilities.find(v => v.id === vulnerabilityId);
+    if (vuln) {
+      setSelectedVuln(vuln);
+      setCreateVulnDialog(true);
+    }
   };
 
   const handleExternalLink = (vulnerability: Vulnerability) => {
