@@ -37,7 +37,7 @@
     "compression": "^1.7.4",
     "express-rate-limit": "^7.1.5",
     "uuid": "^9.0.1",
-    "langchain": "^0.1.0",
+    "langchain": "^0.3.29",
     "openai": "^4.24.1",
     "pgvector": "^0.1.8",
     "ml-distance": "^4.0.1",
