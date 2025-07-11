@@ -108,7 +108,7 @@ jobs:
         npm test -- --coverage --passWithNoTests
         
     - name: Upload backend coverage to Codecov
-      uses: codecov/codecov-action@v3
+      uses: codecov/codecov-action@v5
       with:
         files: ./backend/services/auth/coverage/lcov.info
         flags: backend
@@ -137,7 +137,7 @@ jobs:
         npm test -- --coverage --run
         
     - name: Upload frontend coverage to Codecov
-      uses: codecov/codecov-action@v3
+      uses: codecov/codecov-action@v5
       with:
         files: ./frontend/coverage/lcov.info
         flags: frontend
