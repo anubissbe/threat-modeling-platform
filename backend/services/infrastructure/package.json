@@ -67,7 +67,7 @@
     "@types/uuid": "^9.0.1",
     "@types/jsonwebtoken": "^9.0.2",
     "@types/bcryptjs": "^2.4.2",
-    "@types/node": "^18.15.11",
+    "@types/node": "^22.0.0",
     "@types/lodash": "^4.14.194",
     "@types/async": "^3.2.20",
     "@types/ws": "^8.5.4",
