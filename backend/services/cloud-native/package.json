@@ -47,7 +47,7 @@
     "moment": "^2.29.4",
     "lodash": "^4.17.21",
     "eventemitter3": "^4.0.7",
-    "@kubernetes/client-node": "^0.19.0",
+    "@kubernetes/client-node": "^0.22.0",
     "dockerode": "^3.3.5",
     "js-yaml": "^4.1.0",
     "prom-client": "^14.2.0",
